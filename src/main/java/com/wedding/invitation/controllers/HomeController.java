@@ -16,6 +16,9 @@ public class HomeController {
     @GetMapping()
     public String home(Model model){
 
+        String groomName = "Józef";
+        String brideName = "Maria";
+
         //TODO {Zaimplementować pobieranie czasu z bazy danych}.
         Calendar calendar = Calendar.getInstance();
 
@@ -23,6 +26,8 @@ public class HomeController {
         calendar.add(Calendar.HOUR_OF_DAY,1);
         Date weddingDate = calendar.getTime();
         model.addAttribute("weddingDate",weddingDate);
+        model.addAttribute("groomName",groomName);
+        model.addAttribute("brideName",brideName);
         return "index";
     }
 }

@@ -121,13 +121,27 @@
                 hours: 15,
                 minutes: 0,
                 seconds: 0,
-                words: {
-                    days: 'day',
-                    hours: 'hour',
-                    minutes: 'minute',
-                    seconds: 'second',
-                    pluralLetter: 's'
-                },
+                    words: {
+                        days: {
+                            singular: 'dzień',
+                            plural: 'dni'
+                        },
+                        hours: {
+                            base: 'godzin',
+                            singularEnding: 'ę',
+                            pluralEnding: 'y'
+                        },
+                        minutes: {
+                            base: 'minut',
+                            singularEnding: 'ę',
+                            pluralEnding: 'y'
+                        },
+                        seconds: {
+                            base: 'sekund',
+                            singularEnding: 'ę',
+                            pluralEnding: 'y'
+                        }
+                    },
                 plural: true,
                 inline: false,
                 enableUtc: false,
@@ -214,21 +228,34 @@
                 }
 
                 if (parameters.plural) {
-                    dayWord = days > 1
-                        ? parameters.words.days + parameters.words.pluralLetter
-                        : parameters.words.days;
+                    dayWord = days != 1
+                        ? parameters.words.days.plural : parameters.words.days.singular;
 
-                    hourWord = hours > 1
-                        ? parameters.words.hours + parameters.words.pluralLetter
-                        : parameters.words.hours;
 
-                    minuteWord = minutes > 1
-                        ? parameters.words.minutes + parameters.words.pluralLetter
-                        : parameters.words.minutes;
+                            if (hours === 1) {
+                                hourWord = parameters.words.hours.base+parameters.words.hours.singularEnding;
+                            } else if (hours % 10 >= 2 && hours % 10 <= 4) {
+                                hourWord = parameters.words.hours.base+parameters.words.hours.pluralEnding;
+                            } else {
+                                hourWord = parameters.words.hours.base;
+                            }
 
-                    secondWord = seconds > 1
-                        ? parameters.words.seconds + parameters.words.pluralLetter
-                        : parameters.words.seconds;
+
+                            if (minutes === 1) {
+                                minuteWord = parameters.words.minutes.base+parameters.words.minutes.singularEnding;
+                            } else if (minutes % 10 >= 2 && minutes % 10 <= 4) {
+                                minuteWord = parameters.words.minutes.base+parameters.words.minutes.pluralEnding;
+                            } else {
+                                minuteWord = parameters.words.minutes.base;
+                            }
+
+                            if (seconds === 1) {
+                            secondWord = parameters.words.seconds.base+parameters.words.seconds.singularEnding;
+                            } else if (seconds % 10 >= 2 && seconds % 10 <= 4) {
+                            secondWord = parameters.words.seconds.base+parameters.words.seconds.pluralEnding;
+                            } else {
+                            secondWord = parameters.words.seconds.base;
+                            }
 
                 } else {
                     dayWord = parameters.words.days;
