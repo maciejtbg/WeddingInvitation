@@ -10,10 +10,10 @@ import java.util.Calendar;
 import java.util.Date;
 
 @Controller
-@RequestMapping()
+@RequestMapping("/home")
 public class HomeController {
 
-    @GetMapping("/home")
+    @GetMapping()
     public String home(Model model){
 
         //TODO {Zaimplementować pobieranie czasu z bazy danych}.
