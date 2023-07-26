@@ -118,7 +118,18 @@
 							<h1 th:text="${brideName}+ ' &amp; ' + ${groomName}">Joefrey &amp; Sheila</h1>
 							<h2>Pobieramy się już za</h2>
 							<div class="simply-countdown simply-countdown-one"></div>
-							<p><a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=My%20Event&details=Event%20description%20text&dates=20230727T103000/20230727T184500&location=Tarnobrzeg" class="btn btn-default btn-sm">Save the date</a></p>
+							<p><a th:href=${saveDateLink} class="btn btn-default btn-sm">Save the date</a></p>
+
+<!--							<form action="https://calendar.google.com/calendar/render" method="POST">-->
+<!--								<input type="hidden" name="action" value="TEMPLATE">-->
+<!--								<input type="hidden" name="text" th:value="${eventSubject}">-->
+<!--								<input type="hidden" name="eventDescription" th:value="${eventDescription}">-->
+<!--								<input type="hidden" name="dates" value="${formattedWeddingStartDate}/${formattedWeddingEndDate}">-->
+<!--								<input type="hidden" name="location" th:value="${weddingLocation}">-->
+<!--								<button class="btn btn-default btn-sm" type="submit">Save the date</button>-->
+<!--							</form>-->
+
+
 						</div>
 					</div>
 				</div>
@@ -612,7 +623,7 @@
 
 
 	<script th:inline="javascript">
-    var d = new Date([[${#dates.format(weddingDate, 'yyyy-MM-dd HH:mm:ss')}]]);
+    var d = new Date([[${#dates.format(weddingStartDate, 'yyyy-MM-dd HH:mm:ss')}]]);
 
     // default example
     simplyCountdown('.simply-countdown-one', {
