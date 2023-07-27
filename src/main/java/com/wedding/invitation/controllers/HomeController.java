@@ -18,11 +18,16 @@ public class HomeController {
     public String home(Model model){
 
         String groomName = "Józef";
+        String groomLastName = "Nowak";
         String brideName = "Maria";
+        String brideLastName = "Kowalska";
+        String groomDescription = "Za mglistymi osadami i wietrznymi wzgórzami, żyje wojownik samotny i gniewny. Już na moment, już za niedługo przyjdzie mu walczyć o rękę królewny.";
+        String brideDescription = "Pośród starych lasów i srebrzystych strumieni, Panna Młoda w swej urodzie tkwi, jak ze snów wyjęta królewna, która czeka na swojego rycerza, by w miłości odnaleźć spokój i szczęście wieczne.";
         String weddingLocation = "Tarnobrzeg";
         String eventSubject = brideName+"%20&%20"+groomName;
         String eventDescription = "Najlepszy ślub na świecie!";
         eventDescription = eventDescription.replace(" ","%20");
+        String shortLoveStory = "Gdzie trakty handlowe nie dochodzą, gdzie wiatry nie mają czego omijać, na mazurskiej dziewiczej ziemi, mieszkała niedaleko siebie para zakochanych nastolatków.";
 
 
 
@@ -51,8 +56,13 @@ public class HomeController {
         model.addAttribute("weddingLocation",weddingLocation);
         model.addAttribute("groomName",groomName);
         model.addAttribute("brideName",brideName);
+        model.addAttribute("groomLastName",groomLastName);
+        model.addAttribute("brideLastName",brideLastName);
+        model.addAttribute("groomDescription",groomDescription);
+        model.addAttribute("brideDescription",brideDescription);
         model.addAttribute("saveDateLink",saveDateLink);
         model.addAttribute("dateAndPlace",longDateFormat.format(weddingStartDate)+" r., "+weddingLocation);
+        model.addAttribute("shortLoveStory",shortLoveStory);
         return "index";
     }
 }
