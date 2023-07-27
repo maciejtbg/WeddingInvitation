@@ -44,6 +44,7 @@ public class HomeController {
         String saveDateLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+eventSubject+"&details="+eventDescription+"%20text&dates="+formattedWeddingStartDate+"/"+formattedWeddingEndDate+"&location="+weddingLocation;
 
 
+        SimpleDateFormat longDateFormat = new SimpleDateFormat("dd MMMM yyyy");
 
 
         model.addAttribute("weddingStartDate",weddingStartDate);
@@ -51,6 +52,7 @@ public class HomeController {
         model.addAttribute("groomName",groomName);
         model.addAttribute("brideName",brideName);
         model.addAttribute("saveDateLink",saveDateLink);
+        model.addAttribute("dateAndPlace",longDateFormat.format(weddingStartDate)+" r., "+weddingLocation);
         return "index";
     }
 }

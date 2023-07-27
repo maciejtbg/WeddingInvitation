@@ -234,7 +234,7 @@
 
                             if (hours === 1) {
                                 hourWord = parameters.words.hours.base+parameters.words.hours.singularEnding;
-                            } else if (hours % 10 >= 2 && hours % 10 <= 4) {
+                            } else if (hours % 10 >= 2 && hours % 10 <= 4 && hours > 20) {
                                 hourWord = parameters.words.hours.base+parameters.words.hours.pluralEnding;
                             } else {
                                 hourWord = parameters.words.hours.base;
@@ -243,7 +243,7 @@
 
                             if (minutes === 1) {
                                 minuteWord = parameters.words.minutes.base+parameters.words.minutes.singularEnding;
-                            } else if (minutes % 10 >= 2 && minutes % 10 <= 4) {
+                            } else if (minutes % 10 >= 2 && minutes % 10 <= 4 && minutes > 20) {
                                 minuteWord = parameters.words.minutes.base+parameters.words.minutes.pluralEnding;
                             } else {
                                 minuteWord = parameters.words.minutes.base;
@@ -251,7 +251,7 @@
 
                             if (seconds === 1) {
                             secondWord = parameters.words.seconds.base+parameters.words.seconds.singularEnding;
-                            } else if (seconds % 10 >= 2 && seconds % 10 <= 4) {
+                            } else if (seconds % 10 >= 2 && seconds % 10 <= 4 && seconds > 20) {
                             secondWord = parameters.words.seconds.base+parameters.words.seconds.pluralEnding;
                             } else {
                             secondWord = parameters.words.seconds.base;

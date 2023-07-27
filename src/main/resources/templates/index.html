@@ -118,7 +118,7 @@
 							<h1 th:text="${brideName}+ ' &amp; ' + ${groomName}">Joefrey &amp; Sheila</h1>
 							<h2>Pobieramy się już za</h2>
 							<div class="simply-countdown simply-countdown-one"></div>
-							<p><a th:href=${saveDateLink} class="btn btn-default btn-sm">Save the date</a></p>
+							<p><a th:href=${saveDateLink} class="btn btn-default btn-sm">Zapisz w kalendarzu</a></p>
 
 <!--							<form action="https://calendar.google.com/calendar/render" method="POST">-->
 <!--								<input type="hidden" name="action" value="TEMPLATE">-->
@@ -141,9 +141,9 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box">
-					<h2>Hello!</h2>
-					<h3>November 28th, 2016 New York, USA</h3>
-					<p>We invited you to celebrate our wedding</p>
+					<h2>Witaj!</h2>
+					<h3 th:text="${dateAndPlace}">November 28th, 2016 New York, USA</h3>
+					<p>Zapraszamy Cię, aby współnie celebrować nasz ślub</p>
 				</div>
 			</div>
 			<div class="couple-wrap animate-box">
