@@ -238,13 +238,12 @@
 						<ul class="timeline animate-box" th:each="event, status: ${eventList}">
 
 						<!--						<li class="animate-box">-->
-						<li th:classappend="${status.index % 2 == 0} ? 'timeline-inverted' : ''" class="animate-box">
-
+						<li th:classappend="${status.even} ? 'timeline-inverted' : ''" class="animate-box">
 						<div class="timeline-badge" th:style="'background-image:url('+${event.imageUrl}+');'"></div>
 							<div class="timeline-panel">
 								<div class="timeline-heading">
 									<h3 class="timeline-title" th:text="${event.title}">First We Meet</h3>
-									<span class="date">December 25, 2015</span>
+									<span class="date" th:text="${#dates.format(event.date, 'd MMMM, yyyy')}">December 25, 2015</span>
 								</div>
 								<div class="timeline-body">
 									<p th:text="${event.description}">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
@@ -366,7 +365,7 @@
 								</span>
 
 								<span class="counter js-counter" data-from="0" data-to="500" data-speed="5000" data-refresh-interval="50">1</span>
-								<span class="counter-label">Estimated Guest</span>
+								<span class="counter-label">Spodziewanych gości</span>
 
 							</div>
 						</div>
@@ -377,7 +376,7 @@
 								</span>
 
 								<span class="counter js-counter" data-from="0" data-to="1000" data-speed="5000" data-refresh-interval="50">1</span>
-								<span class="counter-label">We Catter</span>
+								<span class="counter-label">Potwierdzonych gości</span>
 							</div>
 						</div>
 						<div class="col-md-3 col-sm-6 animate-box">
@@ -386,7 +385,7 @@
 									<i class="icon-calendar"></i>
 								</span>
 								<span class="counter js-counter" data-from="0" data-to="402" data-speed="5000" data-refresh-interval="50">1</span>
-								<span class="counter-label">Events Done</span>
+								<span class="counter-label">Zrealizowanych imprez w tym miejscu</span>
 							</div>
 						</div>
 						<div class="col-md-3 col-sm-6 animate-box">
@@ -396,7 +395,7 @@
 								</span>
 
 								<span class="counter js-counter" data-from="0" data-to="2345" data-speed="5000" data-refresh-interval="50">1</span>
-								<span class="counter-label">Hours Spent</span>
+								<span class="counter-label">Godzin spędzonych na przygotowaniach</span>
 
 							</div>
 						</div>
@@ -411,8 +410,8 @@
 			<div class="row">
 				<div class="row animate-box">
 					<div class="col-md-8 col-md-offset-2 text-center fh5co-heading">
-						<span>Best Wishes</span>
-						<h2>Friends Wishes</h2>
+						<span>Najlepsze Życzenia</span>
+						<h2>Życzenia od przyjaciół</h2>
 					</div>
 				</div>
 				<div class="row">
@@ -522,8 +521,8 @@
 		<div class="container">
 			<div class="row animate-box">
 				<div class="col-md-8 col-md-offset-2 text-center fh5co-heading">
-					<h2>Are You Attending?</h2>
-					<p>Please Fill-up the form to notify you that you're attending. Thanks.</p>
+					<h2>Potwierdzasz obecność?</h2>
+					<p>Proszę wypełnij formularz, aby powiadomić nas, że możemy na Ciebie liczyć. Dziękujemy!</p>
 				</div>
 			</div>
 			<div class="row animate-box">
@@ -537,12 +536,18 @@
 						</div>
 						<div class="col-md-4 col-sm-4">
 							<div class="form-group">
+								<label for="phone" class="sr-only">Numer telefonu</label>
+								<input type="text" class="form-control" id="phone" placeholder="Numer telefonu">
+							</div>
+						</div>
+						<div class="col-md-4 col-sm-4">
+							<div class="form-group">
 								<label for="email" class="sr-only">Email</label>
 								<input type="email" class="form-control" id="email" placeholder="Email">
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-4">
-							<button type="submit" class="btn btn-default btn-block">I am Attending</button>
+							<button type="submit" class="btn btn-default btn-block">Potwierdzam</button>
 						</div>
 					</form>
 				</div>
