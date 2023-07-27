@@ -1,10 +1,11 @@
 package com.wedding.invitation.controllers;
 
+import com.wedding.invitation.services.EventService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -13,6 +14,13 @@ import java.util.Date;
 @Controller
 @RequestMapping("/home")
 public class HomeController {
+
+    private final EventService eventService;
+
+    @Autowired
+    public HomeController(EventService eventService) {
+        this.eventService = eventService;
+    }
 
     @GetMapping()
     public String home(Model model){
@@ -63,6 +71,8 @@ public class HomeController {
         model.addAttribute("saveDateLink",saveDateLink);
         model.addAttribute("dateAndPlace",longDateFormat.format(weddingStartDate)+" r., "+weddingLocation);
         model.addAttribute("shortLoveStory",shortLoveStory);
+
+        model.addAttribute("eventList",eventService.getAllEvents());
         return "index";
     }
 }
