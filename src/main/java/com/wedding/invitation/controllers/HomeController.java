@@ -1,6 +1,7 @@
 package com.wedding.invitation.controllers;
 
 import com.wedding.invitation.services.EventService;
+import com.wedding.invitation.services.FacilityService;
 import com.wedding.invitation.services.WishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,11 +19,13 @@ public class HomeController {
 
     private final EventService eventService;
     private final WishService wishService;
+    private final FacilityService facilityService;
 
     @Autowired
-    public HomeController(EventService eventService, WishService wishService) {
+    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService) {
         this.eventService = eventService;
         this.wishService = wishService;
+        this.facilityService = facilityService;
     }
 
     @GetMapping()
@@ -43,6 +46,8 @@ public class HomeController {
         int weddingConfirmedGuests = 125;
         int eventsDoneInThisPlace = 475;
         int hoursSpentOnPreparing = 175;
+        String videoUrl = "https://vimeo.com/channels/staffpicks/93951774";
+        String videoThumbnail = "images/img_bg_3.jpg";
 
 
 
@@ -85,7 +90,9 @@ public class HomeController {
         model.addAttribute("eventsDoneInThisPlace",eventsDoneInThisPlace);
         model.addAttribute("hoursSpentOnPreparing",hoursSpentOnPreparing);
         model.addAttribute("wishList",wishService.getAllWishes());
-
+        model.addAttribute("facilityList",facilityService.getAllFacilities());
+        model.addAttribute("videoUrl",videoUrl);
+        model.addAttribute("videoThumbnail",videoThumbnail);
 
         return "index";
     }
