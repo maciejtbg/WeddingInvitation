@@ -1,6 +1,7 @@
 package com.wedding.invitation.controllers;
 
 import com.wedding.invitation.services.EventService;
+import com.wedding.invitation.services.WishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,10 +17,12 @@ import java.util.Date;
 public class HomeController {
 
     private final EventService eventService;
+    private final WishService wishService;
 
     @Autowired
-    public HomeController(EventService eventService) {
+    public HomeController(EventService eventService, WishService wishService) {
         this.eventService = eventService;
+        this.wishService = wishService;
     }
 
     @GetMapping()
@@ -36,6 +39,10 @@ public class HomeController {
         String eventDescription = "Najlepszy ślub na świecie!";
         eventDescription = eventDescription.replace(" ","%20");
         String shortLoveStory = "Gdzie trakty handlowe nie dochodzą, gdzie wiatry nie mają czego omijać, na mazurskiej dziewiczej ziemi, mieszkała niedaleko siebie para zakochanych nastolatków.";
+        int weddingInvitedGuests = 250;
+        int weddingConfirmedGuests = 125;
+        int eventsDoneInThisPlace = 475;
+        int hoursSpentOnPreparing = 175;
 
 
 
@@ -73,6 +80,13 @@ public class HomeController {
         model.addAttribute("shortLoveStory",shortLoveStory);
 
         model.addAttribute("eventList",eventService.getAllEvents());
+        model.addAttribute("weddingInvitedGuests",weddingInvitedGuests);
+        model.addAttribute("weddingConfirmedGuests",weddingConfirmedGuests);
+        model.addAttribute("eventsDoneInThisPlace",eventsDoneInThisPlace);
+        model.addAttribute("hoursSpentOnPreparing",hoursSpentOnPreparing);
+        model.addAttribute("wishList",wishService.getAllWishes());
+
+
         return "index";
     }
 }

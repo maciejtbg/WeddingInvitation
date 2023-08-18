@@ -234,7 +234,6 @@
 			</div>
 			<div class="row">
 				<div class="col-md-12 col-md-offset-0">
-<!--					<ul class="timeline animate-box" th:each="event: ${eventList}">-->
 						<ul class="timeline animate-box" th:each="event, status: ${eventList}">
 
 						<!--						<li class="animate-box">-->
@@ -364,7 +363,7 @@
 									<i class="icon-users"></i>
 								</span>
 
-								<span class="counter js-counter" data-from="0" data-to="500" data-speed="5000" data-refresh-interval="50">1</span>
+								<span class="counter js-counter" data-from="0" th:data-to="${weddingInvitedGuests}" data-speed="5000" data-refresh-interval="50">1</span>
 								<span class="counter-label">Spodziewanych gości</span>
 
 							</div>
@@ -375,7 +374,7 @@
 									<i class="icon-user"></i>
 								</span>
 
-								<span class="counter js-counter" data-from="0" data-to="1000" data-speed="5000" data-refresh-interval="50">1</span>
+								<span class="counter js-counter" data-from="0" th:data-to="${weddingConfirmedGuests}" data-speed="5000" data-refresh-interval="50">1</span>
 								<span class="counter-label">Potwierdzonych gości</span>
 							</div>
 						</div>
@@ -384,7 +383,7 @@
 								<span class="icon">
 									<i class="icon-calendar"></i>
 								</span>
-								<span class="counter js-counter" data-from="0" data-to="402" data-speed="5000" data-refresh-interval="50">1</span>
+								<span class="counter js-counter" data-from="0" th:data-to="${eventsDoneInThisPlace}" data-speed="5000" data-refresh-interval="50">1</span>
 								<span class="counter-label">Zrealizowanych imprez w tym miejscu</span>
 							</div>
 						</div>
@@ -394,7 +393,7 @@
 									<i class="icon-clock"></i>
 								</span>
 
-								<span class="counter js-counter" data-from="0" data-to="2345" data-speed="5000" data-refresh-interval="50">1</span>
+								<span class="counter js-counter" data-from="0" th:data-to="${hoursSpentOnPreparing}" data-speed="5000" data-refresh-interval="50">1</span>
 								<span class="counter-label">Godzin spędzonych na przygotowaniach</span>
 
 							</div>
@@ -418,36 +417,14 @@
 					<div class="col-md-12 animate-box">
 						<div class="wrap-testimony">
 							<div class="owl-carousel-fullwidth">
-								<div class="item">
+								<div class="item" th:each="wish: ${wishList}">
 									<div class="testimony-slide active text-center">
 										<figure>
-											<img src="images/couple-1.jpg" alt="user">
+											<img th:src="${wish.imageUrl}" alt="user">
 										</figure>
-										<span>John Doe, via <a href="#" class="twitter">Twitter</a></span>
+										<span th:text="${wish.sender}+ ', via ' + ${wish.platform}">John Doe, via <a href="#" class="twitter" th:text="${wish.platform}">Twitter</a></span>
 										<blockquote>
-											<p>"Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics"</p>
-										</blockquote>
-									</div>
-								</div>
-								<div class="item">
-									<div class="testimony-slide active text-center">
-										<figure>
-											<img src="images/couple-2.jpg" alt="user">
-										</figure>
-										<span>John Doe, via <a href="#" class="twitter">Twitter</a></span>
-										<blockquote>
-											<p>"Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, at the coast of the Semantics, a large language ocean."</p>
-										</blockquote>
-									</div>
-								</div>
-								<div class="item">
-									<div class="testimony-slide active text-center">
-										<figure>
-											<img src="images/couple-3.jpg" alt="user">
-										</figure>
-										<span>John Doe, via <a href="#" class="twitter">Twitter</a></span>
-										<blockquote>
-											<p>"Far far away, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean."</p>
+											<p th:text="${wish.content}">"Far, far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics"</p>
 										</blockquote>
 									</div>
 								</div>
