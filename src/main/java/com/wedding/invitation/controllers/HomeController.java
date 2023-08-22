@@ -1,34 +1,46 @@
 package com.wedding.invitation.controllers;
 
-import com.wedding.invitation.services.EventService;
-import com.wedding.invitation.services.FacilityService;
-import com.wedding.invitation.services.WishService;
+import com.wedding.invitation.models.Image;
+import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 @Controller
-@RequestMapping("/home")
+@RequestMapping()
 public class HomeController {
 
     private final EventService eventService;
     private final WishService wishService;
     private final FacilityService facilityService;
 
+    private final ImageService imageService;
+
+    private final GalleryService galleryService;
+
+
+
+
+
     @Autowired
-    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService) {
+    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService) {
         this.eventService = eventService;
         this.wishService = wishService;
         this.facilityService = facilityService;
+        this.imageService = imageGalleryService;
+        this.galleryService = galleryService;
     }
 
-    @GetMapping()
+    @GetMapping("/home")
     public String home(Model model){
 
         String groomName = "Józef";
@@ -48,6 +60,7 @@ public class HomeController {
         int hoursSpentOnPreparing = 175;
         String videoUrl = "https://vimeo.com/channels/staffpicks/93951774";
         String videoThumbnail = "images/img_bg_3.jpg";
+
 
 
 
@@ -93,7 +106,25 @@ public class HomeController {
         model.addAttribute("facilityList",facilityService.getAllFacilities());
         model.addAttribute("videoUrl",videoUrl);
         model.addAttribute("videoThumbnail",videoThumbnail);
+        model.addAttribute("imageList", imageService.getAllImages());
+        model.addAttribute("galleryList", galleryService.getAllGallery());
 
         return "index";
     }
+
+    @GetMapping("/{id}")
+    @ResponseBody
+    String showImage(@PathVariable("id") Long id) {
+
+        Optional<Image> imageGalleryOptional = imageService.getImageById(id);
+        if (imageGalleryOptional.isPresent()) {
+            Image imageGallery = imageGalleryOptional.get();
+        return "<img src="+imageGallery.getImageUrl()+">";
+        } else {
+            return "Not found";
+        }
+
+    }
+
 }
+
