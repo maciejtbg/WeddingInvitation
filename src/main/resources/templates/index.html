@@ -61,10 +61,21 @@
 
 	<!-- Modernizr JS -->
 	<script src="js/modernizr-2.6.2.min.js"></script>
+
+
 	<!-- FOR IE9 below -->
 	<!--[if lt IE 9]>
         <script src="js/respond.min.js"></script>
         <![endif]-->
+
+<!--		[LightGalleryScripts]-->
+		<script src="js/plugins/lightgallery.umd.js"></script>
+
+<!--		[LightGalleryCss]-->
+		<link rel="stylesheet" href="css/demo.css" />
+		<link rel="stylesheet" href="css/lightgallery/lightgallery.css" />
+
+		<link rel="shortcut icon" href="fonts/favicon.ico">
 
 	</head>
 	<body>
@@ -143,7 +154,7 @@
 				<div class="col-md-8 col-md-offset-2 text-center fh5co-heading animate-box">
 					<h2>Witaj!</h2>
 					<h3 th:text="${dateAndPlace}">November 28th, 2016 New York, USA</h3>
-					<p>Zapraszamy Cię, aby współnie celebrować nasz ślub</p>
+					<p>Zapraszamy Cię, aby wspólnie celebrować nasz ślub</p>
 				</div>
 			</div>
 			<div class="couple-wrap animate-box">
@@ -265,22 +276,46 @@
 				</div>
 			</div>
 			<div class="row row-bottom-padded-md">
-				<div class="col-md-12">
-					<ul id="fh5co-gallery-list">
-						
-						<li th:each="gallery: ${galleryList}" class="one-third animate-box" data-animate-effect="fadeIn" th:if="${not #lists.isEmpty(gallery.images)}" th:style= "'background-image: url(' + ${gallery.images.get(0).imageUrl} + ');'">
-						<a th:href="${gallery.images.get(0).imageUrl}">
-							<div class="case-studies-summary">
-								<span>14 Photos</span>
-								<h2 th:text="${gallery.images.get(0).name}">Two Glasses of Juice</h2>
-							</div>
-						</a>
-					</li>
-					</ul>		
+<!--				<div class="col-md-12">-->
+<!--					<ul id="fh5co-gallery-list">-->
+
+<!--						<li th:each="gallery: ${galleryList}" class="one-third animate-box" data-animate-effect="fadeIn" th:if="${not #lists.isEmpty(gallery.images)}" th:style= "'background-image: url(' + ${gallery.images.get(0).imageUrl} + ');'">-->
+<!--						<a th:href="${gallery.images.get(0).imageUrl}">-->
+<!--							<div class="case-studies-summary">-->
+<!--								<span>14 Photos</span>-->
+<!--								<h2 th:text="${gallery.images.get(0).name}">Two Glasses of Juice</h2>-->
+<!--							</div>-->
+<!--						</a>-->
+<!--					</li>-->
+<!--					</ul>-->
+<!--				</div>-->
+
+				<div class="demo-gallery">
+					<ul th:each="gallery: ${galleryList}" th:id="'lightgallery'+${galleryList.indexOf(gallery)}"
+						class="list-unstyled row">
+						<li th:each="image: ${gallery.getImages()}"
+							th:data-responsive="${image.imageUrl}"
+							th:data-src="${image.imageUrl}"
+							ata-sub-html="<h4>Image Description</p>"
+							data-pinterest-text="Pin it1"
+							th:style="'background-image: url(' + ${image.imageUrl} + ');'"
+							data-tweet-text="share on twitter 1">
+							<a href="">
+								<div class="case-studies-summary">
+									<span th:text="${gallery.getImages().size()}+' Photos'">14 Photos</span>
+									<h2 th:text="${gallery.getTitle()}">Two Glasses of Juice</h2>
+								</div>
+							</a>
+						</li>
+					</ul>
 				</div>
 			</div>
 		</div>
 	</div>
+
+
+
+
 
 	<div id="fh5co-counter" class="fh5co-bg fh5co-counter" style="background-image:url(images/img_bg_5.jpg);">
 		<div class="overlay"></div>
@@ -469,7 +504,33 @@
 	<div class="gototop js-top">
 		<a href="#" class="js-gotop"><i class="icon-arrow-up"></i></a>
 	</div>
-	
+
+
+
+<!--	<div class="row row-bottom-padded-md">-->
+<!--		<div class="col-md-12">-->
+<!--			<ul id="fh5co-gallery-list">-->
+
+<!--				<li th:each="gallery: ${galleryList}" class="one-third animate-box" data-animate-effect="fadeIn" th:if="${not #lists.isEmpty(gallery.images)}" th:style= "'background-image: url(' + ${gallery.images.get(0).imageUrl} + ');'">-->
+<!--					<a th:href="${gallery.images.get(0).imageUrl}">-->
+<!--						<div class="case-studies-summary">-->
+<!--							<span>14 Photos</span>-->
+<!--							<h2 th:text="${gallery.images.get(0).name}">Two Glasses of Juice</h2>-->
+<!--						</div>-->
+<!--					</a>-->
+<!--				</li>-->
+<!--			</ul>-->
+<!--		</div>-->
+<!--	</div>-->
+
+
+<!--	th:each="gallery: ${galleryList}"-->
+
+
+
+
+
+
 	<!-- jQuery -->
 	<script src="js/jquery.min.js"></script>
 	<!-- jQuery Easing -->
@@ -506,6 +567,13 @@
     hours: d.getHours(),
     minutes: d.getMinutes()
 });
+</script>
+	<script>
+    var galleryElements = document.querySelectorAll('.list-unstyled.row');
+
+    for (var i = 0; i < galleryElements.length; i++) {
+        lightGallery(galleryElements[i]);
+    }
 </script>
 
 	</body>
