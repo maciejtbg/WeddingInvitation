@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" media="screen"
+          href="http://tarruda.github.com/bootstrap-datetimepicker/assets/css/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.css" />
+    <style>
+        #map{
+    width: 50%;
+    height: 50vh;
+}
+    </style>
+
+
+</head>
+<body>
+<p>Wedding start date-time</p>
+<input class="form-control" type="text" placeholder="dd.mm.rrrr HH:MM" aria-label="default input example">
+
+<p>Wedding location</p>
+<input id="addressInput" class="form-control" type="text" placeholder="Wprowadź adres" aria-label="default input example">
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.js"></script>
+<script>
+        const apiKey = "9098219d18994560be55415be86df062";
+        const addressInput = document.getElementById('addressInput');
+        const mapOptions = {
+            center: [54.53481, 18.54778],
+            zoom: 15
+        };
+        let map = new L.map('map',mapOptions);
+        let layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+        map.addLayer(layer);
+    </script>
+
+<p>Wedding description</p>
+<select class="form-select" multiple aria-label="multiple select example">
+    <option selected>Open this select menu</option>
+    <option value="1">One</option>
+    <option value="2">Two</option>
+    <option value="3">Three</option>
+</select>
+<p>Wedding party start date-time</p>
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+<p>Wedding party location</p>
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+<p>Groom Name</p>
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+
+<p>Groom Last Name</p>
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+
+<p>Bridge Name</p>
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+
+<p>Bridge Last Name</p>
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+
+<p>Groom Description</p>
+<div class="mb-3">
+    <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+</div>
+<p>Bridge Description</p>
+<div class="mb-3">
+    <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+</div>
+<p>Short love story</p>
+<div class="mb-3">
+    <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+</div>
+<p>Invited Guests</p>
+<ul class="list-group">
+    <li class="list-group-item">An item</li>
+    <li class="list-group-item">A second item</li>
+    <li class="list-group-item">A third item</li>
+    <li class="list-group-item">A fourth item</li>
+    <li class="list-group-item">And a fifth one</li>
+</ul>
+<p>Confirmed Quests</p>
+<ul class="list-group">
+    <li class="list-group-item">An item</li>
+    <li class="list-group-item">A second item</li>
+    <li class="list-group-item">A third item</li>
+    <li class="list-group-item">A fourth item</li>
+    <li class="list-group-item">And a fifth one</li>
+</ul>
+<p>Events done is this place</p>
+<label for="customRange3" class="form-label">Example range</label>
+<input type="range" class="form-range" min="0" max="5" step="0.5" id="customRange3">
+<p>Hours spent on preparing</p>
+<label for="customRange3" class="form-label">Example range</label>
+<input type="range" class="form-range" min="0" max="5" step="0.5" id="customRange3">
+<p>Video record</p>
+<div class="mb-3">
+    <label for="formFileMultiple" class="form-label">Multiple files input example</label>
+    <input class="form-control" type="file" id="formFileMultiple" multiple>
+</div>
+<p>Event list: title, date, image, description</p>
+<p>Gallery list: Title, description</p>
+<p>Images list: name</p>
+<p>Facility list: name, icon, content</p>
+<p>Wishes</p>
+
+<input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
+
+
+
+
+<script type="text/javascript"
+        src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js">
+</script>
+<script type="text/javascript"
+        src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js">
+</script>
+<script type="text/javascript"
+        src="http://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.min.js">
+</script>
+<script type="text/javascript"
+        src="http://tarruda.github.com/bootstrap-datetimepicker/assets/js/bootstrap-datetimepicker.pt-BR.js">
+</script>
+
+</body>
+<script type="text/javascript">
+      $('#datetimepicker').datetimepicker({
+        format: 'dd/MM/yyyy hh:mm:ss',
+        language: 'pt-BR'
+      });
+    </script>
+</html>

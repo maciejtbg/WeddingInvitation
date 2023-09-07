@@ -108,7 +108,6 @@ public class HomeController {
         model.addAttribute("videoThumbnail",videoThumbnail);
         model.addAttribute("imageList", imageService.getAllImages());
         model.addAttribute("galleryList", galleryService.getAllGallery());
-        galleryService.getAllGallery().get(0).getImages().size();
 
 
         return "index";
