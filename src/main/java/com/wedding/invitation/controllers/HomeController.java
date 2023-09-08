@@ -5,10 +5,7 @@ import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -27,17 +24,20 @@ public class HomeController {
 
     private final GalleryService galleryService;
 
+    private final SimpleDateFormat simpleDateFormat;
+
 
 
 
 
     @Autowired
-    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService) {
+    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, SimpleDateFormat simpleDateFormat) {
         this.eventService = eventService;
         this.wishService = wishService;
         this.facilityService = facilityService;
         this.imageService = imageGalleryService;
         this.galleryService = galleryService;
+        this.simpleDateFormat = simpleDateFormat;
     }
 
     @GetMapping("/home")
@@ -75,9 +75,10 @@ public class HomeController {
         calendar.add(Calendar.HOUR,weddingDuration);
         Date weddingEndDate = calendar.getTime();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        String formattedWeddingStartDate = dateFormat.format(weddingStartDate);
-        String formattedWeddingEndDate = dateFormat.format(weddingEndDate);
+        simpleDateFormat.applyPattern("yyyyMMdd'T'HHmmss");
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+        String formattedWeddingStartDate = simpleDateFormat.format(weddingStartDate);
+        String formattedWeddingEndDate = simpleDateFormat.format(weddingEndDate);
 
         String saveDateLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+eventSubject+"&details="+eventDescription+"%20text&dates="+formattedWeddingStartDate+"/"+formattedWeddingEndDate+"&location="+weddingLocation;
 
@@ -126,6 +127,5 @@ public class HomeController {
         }
 
     }
-
 }
 
