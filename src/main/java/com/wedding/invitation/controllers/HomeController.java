@@ -24,6 +24,8 @@ public class HomeController {
 
     private final GalleryService galleryService;
 
+    private final UsersService usersService;
+
     private final SimpleDateFormat simpleDateFormat;
 
 
@@ -31,84 +33,64 @@ public class HomeController {
 
 
     @Autowired
-    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, SimpleDateFormat simpleDateFormat) {
+    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, UsersService usersService, SimpleDateFormat simpleDateFormat) {
         this.eventService = eventService;
         this.wishService = wishService;
         this.facilityService = facilityService;
         this.imageService = imageGalleryService;
         this.galleryService = galleryService;
+        this.usersService = usersService;
         this.simpleDateFormat = simpleDateFormat;
     }
 
     @GetMapping("/home")
-    public String home(Model model){
-
-        String groomName = "Józef";
-        String groomLastName = "Nowak";
-        String brideName = "Maria";
-        String brideLastName = "Kowalska";
-        String groomDescription = "Za mglistymi osadami i wietrznymi wzgórzami, żyje wojownik samotny i gniewny. Już na moment, już za niedługo przyjdzie mu walczyć o rękę królewny.";
-        String brideDescription = "Pośród starych lasów i srebrzystych strumieni, Panna Młoda w swej urodzie tkwi, jak ze snów wyjęta królewna, która czeka na swojego rycerza, by w miłości odnaleźć spokój i szczęście wieczne.";
-        String weddingLocation = "Tarnobrzeg";
-        String eventSubject = brideName+"%20&%20"+groomName;
-        String eventDescription = "Najlepszy ślub na świecie!";
-        eventDescription = eventDescription.replace(" ","%20");
-        String shortLoveStory = "Gdzie trakty handlowe nie dochodzą, gdzie wiatry nie mają czego omijać, na mazurskiej dziewiczej ziemi, mieszkała niedaleko siebie para zakochanych nastolatków.";
-        int weddingInvitedGuests = 250;
-        int weddingConfirmedGuests = 125;
-        int eventsDoneInThisPlace = 475;
-        int hoursSpentOnPreparing = 175;
-        String videoUrl = "https://vimeo.com/channels/staffpicks/93951774";
-        String videoThumbnail = "images/img_bg_3.jpg";
+    public String home(Model model, @RequestParam("id") long id){
 
 
 
 
-
-        //TODO {Zaimplementować pobieranie czasu z bazy danych}.
-        Calendar calendar = Calendar.getInstance();
-
-//        calendar.set(2023, Calendar.AUGUST, 26, 12, 0, 0);
-        calendar.add(Calendar.HOUR_OF_DAY,1);
-        Date weddingStartDate = calendar.getTime();
-        int weddingDuration = 12;
-        calendar.add(Calendar.HOUR,weddingDuration);
-        Date weddingEndDate = calendar.getTime();
-
-        simpleDateFormat.applyPattern("yyyyMMdd'T'HHmmss");
 //        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        String formattedWeddingStartDate = simpleDateFormat.format(weddingStartDate);
-        String formattedWeddingEndDate = simpleDateFormat.format(weddingEndDate);
 
-        String saveDateLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+eventSubject+"&details="+eventDescription+"%20text&dates="+formattedWeddingStartDate+"/"+formattedWeddingEndDate+"&location="+weddingLocation;
+//        String saveDateLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+eventSubject+"&details="+eventDescription+"%20text&dates="+formattedWeddingStartDate+"/"+formattedWeddingEndDate+"&location="+weddingLocation;
 
 
-        SimpleDateFormat longDateFormat = new SimpleDateFormat("dd MMMM yyyy");
 
 
-        model.addAttribute("weddingStartDate",weddingStartDate);
-        model.addAttribute("weddingLocation",weddingLocation);
-        model.addAttribute("groomName",groomName);
-        model.addAttribute("brideName",brideName);
-        model.addAttribute("groomLastName",groomLastName);
-        model.addAttribute("brideLastName",brideLastName);
-        model.addAttribute("groomDescription",groomDescription);
-        model.addAttribute("brideDescription",brideDescription);
-        model.addAttribute("saveDateLink",saveDateLink);
-        model.addAttribute("dateAndPlace",longDateFormat.format(weddingStartDate)+" r., "+weddingLocation);
-        model.addAttribute("shortLoveStory",shortLoveStory);
+        if (usersService.getUserById(id).isPresent()){
+//            simpleDateFormat.applyPattern("yyyyMMdd'T'HHmmss");
+            //TODO {Tu trzeba naprawić wymgania co do obiektu dany dla countera i informacji}
+            model.addAttribute("ceremonyStartDate",usersService.getUserById(id).get().getCeremonyStartDate());
 
-        model.addAttribute("eventList",eventService.getAllEvents());
-        model.addAttribute("weddingInvitedGuests",weddingInvitedGuests);
-        model.addAttribute("weddingConfirmedGuests",weddingConfirmedGuests);
-        model.addAttribute("eventsDoneInThisPlace",eventsDoneInThisPlace);
-        model.addAttribute("hoursSpentOnPreparing",hoursSpentOnPreparing);
-        model.addAttribute("wishList",wishService.getAllWishes());
-        model.addAttribute("facilityList",facilityService.getAllFacilities());
-        model.addAttribute("videoUrl",videoUrl);
-        model.addAttribute("videoThumbnail",videoThumbnail);
-        model.addAttribute("imageList", imageService.getAllImages());
-        model.addAttribute("galleryList", galleryService.getAllGallery());
+            simpleDateFormat.applyPattern("HH:mm");
+            model.addAttribute("ceremonyEndDate",simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate()));
+            model.addAttribute("weddingPartyStartDate",simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate()));
+            model.addAttribute("weddingPartyEndDate",simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate()));
+
+            model.addAttribute("weddingLocation",usersService.getUserById(id).get().getCeremonyLocation());
+            model.addAttribute("groomName",usersService.getUserById(id).get().getGroomName());
+            model.addAttribute("brideName",usersService.getUserById(id).get().getBrideName());
+            model.addAttribute("groomLastName",usersService.getUserById(id).get().getGroomLastName());
+            model.addAttribute("brideLastName",usersService.getUserById(id).get().getBrideLastName());
+            model.addAttribute("groomDescription",usersService.getUserById(id).get().getGroomDescription());
+            model.addAttribute("brideDescription",usersService.getUserById(id).get().getBrideDescription());
+            simpleDateFormat.applyPattern("yyyyMMdd'T'HHmmss");
+            model.addAttribute("saveDateLink",usersService.getUserById(id).get().getSaveDateLink());
+            simpleDateFormat.applyPattern("dd MMMM yyyy");
+            model.addAttribute("dateAndPlace",simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate())+" r., "+usersService.getUserById(id).get().getCeremonyLocation());
+            model.addAttribute("shortLoveStory",usersService.getUserById(id).get().getShortLoveStory());
+            model.addAttribute("eventList",eventService.getAllEvents());
+            model.addAttribute("weddingInvitedGuests",usersService.getUserById(id).get().getWeddingInvitedGuests());
+            model.addAttribute("weddingConfirmedGuests",usersService.getUserById(id).get().getWeddingConfirmedGuests());
+            model.addAttribute("eventsDoneInThisPlace",usersService.getUserById(id).get().getEventsDoneInThisPlace());
+            model.addAttribute("hoursSpentOnPreparing",usersService.getUserById(id).get().getHoursSpentOnPreparing());
+            model.addAttribute("wishList",wishService.getAllWishes());
+            model.addAttribute("facilityList",facilityService.getAllFacilities());
+            model.addAttribute("videoUrl",usersService.getUserById(id).get().getVideoUrl());
+            model.addAttribute("videoThumbnail",usersService.getUserById(id).get().getVideoThumbnail());
+            model.addAttribute("imageList", imageService.getAllImages());
+            model.addAttribute("galleryList", galleryService.getAllGallery());
+        }
+
 
 
         return "index";

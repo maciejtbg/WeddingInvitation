@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -17,18 +18,20 @@ public class DbInit implements CommandLineRunner {
     private final FacilityRepository facilityRepository;
     private final ImageRepository imageRepository;
     private final GalleryRepository galleryRepository;
+    private final UsersRepository usersRepository;
 
     @Autowired
-    public DbInit(EventRepository eventRepository, WishRepository wishRepository, FacilityRepository facilityRepository, ImageRepository imageGalleryRepository, GalleryRepository galleryRepository) {
+    public DbInit(EventRepository eventRepository, WishRepository wishRepository, FacilityRepository facilityRepository, ImageRepository imageGalleryRepository, GalleryRepository galleryRepository, UsersRepository usersRepository) {
         this.eventRepository = eventRepository;
         this.wishRepository = wishRepository;
         this.facilityRepository = facilityRepository;
         this.imageRepository = imageGalleryRepository;
         this.galleryRepository = galleryRepository;
+        this.usersRepository = usersRepository;
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         eventRepository.saveAll(List.of(
                 new Event("Pierwsze spojrzenie",new Date(System.currentTimeMillis()),"images/couple-1.jpg","Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat."),
                 new Event("Drugie spojrzenie",new Date(System.currentTimeMillis()),"images/couple-2.jpg","Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat."),
@@ -52,7 +55,6 @@ public class DbInit implements CommandLineRunner {
                 gallery2,
                 gallery3
         ));
-
         imageRepository.saveAll(List.of(
                 new Image("Zdjęcie nr 1", "images/gallery-1.jpg",gallery1),
                 new Image("Zdjęcie nr 2", "images/gallery-2.jpg",gallery1),
@@ -65,7 +67,33 @@ public class DbInit implements CommandLineRunner {
                 new Image("Zdjęcie nr 9", "images/gallery-9.jpg",gallery3)
         ));
 
-
+        usersRepository.save(
+                new Users(
+                        "username",
+                        "password",
+                        "email@email.pl",
+                        new Date(System.currentTimeMillis()+1000*60*60),
+                        new Date(System.currentTimeMillis()+1000*60*60),
+                        new Date(System.currentTimeMillis()+1000*60*60),
+                        new Date(System.currentTimeMillis()+1000*60*60),
+                        "Kościów w Tarnobrzeg",
+                        "Lokal w Sandomierz",
+                        "Józef",
+                        "Nowak",
+                        "123456789",
+                        "Maria",
+                        "Kowalska",
+                        "987654321",
+                        "Za mglistymi osadami i wietrznymi wzgórzami, żyje wojownik samotny i gniewny. Już na moment, już za niedługo przyjdzie mu walczyć o rękę królewny.",
+                        "Pośród starych lasów i srebrzystych strumieni, Panna Młoda w swej urodzie tkwi, jak ze snów wyjęta królewna, która czeka na swojego rycerza, by w miłości odnaleźć spokój i szczęście wieczne.",
+                        "Gdzie trakty handlowe nie dochodzą, gdzie wiatry nie mają czego omijać, na mazurskiej dziewiczej ziemi, mieszkała niedaleko siebie para zakochanych nastolatków.",
+                        "http://www.google.pl", //save date link
+                        250,
+                        125,
+                        475,
+                        175,
+                        "https://vimeo.com/channels/staffpicks/93951774",
+                        "images/img_bg_3.jpg"
+        ));
     }
-
 }

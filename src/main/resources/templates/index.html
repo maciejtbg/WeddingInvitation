@@ -200,8 +200,8 @@
 									<h3>Main Ceremony</h3>
 									<div class="event-col">
 										<i class="icon-clock"></i>
-										<span>4:00 PM</span>
-										<span>6:00 PM</span>
+<!--										<span th:text="${ceremonyStartDate}">4:00 PM</span>-->
+										<span th:text="${ceremonyEndDate}">6:00 PM</span>
 									</div>
 									<div class="event-col">
 										<i class="icon-calendar"></i>
@@ -216,8 +216,8 @@
 									<h3>Wedding Party</h3>
 									<div class="event-col">
 										<i class="icon-clock"></i>
-										<span>7:00 PM</span>
-										<span>12:00 AM</span>
+										<span th:text="${weddingPartyStartDate}">7:00 PM</span>
+										<span th:text="${weddingPartyEndDate}">12:00 AM</span>
 									</div>
 									<div class="event-col">
 										<i class="icon-calendar"></i>
@@ -557,7 +557,7 @@
 
 
 	<script th:inline="javascript">
-    var d = new Date([[${#dates.format(weddingStartDate, 'yyyy-MM-dd HH:mm:ss')}]]);
+    var d = new Date([[${#dates.format(ceremonyStartDate, 'yyyy-MM-dd HH:mm:ss')}]]);
 
     // default example
     simplyCountdown('.simply-countdown-one', {
