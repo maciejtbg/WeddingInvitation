@@ -43,13 +43,14 @@ public class Users {
     //descriptions
     private String groomDescription;
     private String brideDescription;
+    private String ceremonyDescription;
+    private String weddingPartyDescription;
 
     //history
 
     private String shortLoveStory;
 
     //wedding data
-    private String saveDateLink;
     private int weddingInvitedGuests;
     private int weddingConfirmedGuests;
     private int eventsDoneInThisPlace;
@@ -77,8 +78,9 @@ public class Users {
                  String bridePhoneNumber,
                  String groomDescription,
                  String brideDescription,
+                 String ceremonyDescription,
+                 String weddingPartyDescription,
                  String shortLoveStory,
-                 String saveDateLink,
                  int weddingInvitedGuests,
                  int weddingConfirmedGuests,
                  int eventsDoneInThisPlace,
@@ -102,8 +104,9 @@ public class Users {
         this.bridePhoneNumber = bridePhoneNumber;
         this.groomDescription = groomDescription;
         this.brideDescription = brideDescription;
+        this.ceremonyDescription = ceremonyDescription;
+        this.weddingPartyDescription = weddingPartyDescription;
         this.shortLoveStory = shortLoveStory;
-        this.saveDateLink = saveDateLink;
         this.weddingInvitedGuests = weddingInvitedGuests;
         this.weddingConfirmedGuests = weddingConfirmedGuests;
         this.eventsDoneInThisPlace = eventsDoneInThisPlace;

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -72,10 +74,10 @@ public class DbInit implements CommandLineRunner {
                         "username",
                         "password",
                         "email@email.pl",
-                        new Date(System.currentTimeMillis()+1000*60*60),
-                        new Date(System.currentTimeMillis()+1000*60*60),
-                        new Date(System.currentTimeMillis()+1000*60*60),
-                        new Date(System.currentTimeMillis()+1000*60*60),
+                        Date.from(LocalDateTime.of(2023, 12, 31, 8, 0).atZone(ZoneId.systemDefault()).toInstant()),
+                        Date.from(LocalDateTime.of(2023, 12, 31, 9, 0).atZone(ZoneId.systemDefault()).toInstant()),
+                        Date.from(LocalDateTime.of(2023, 12, 31, 9, 30).atZone(ZoneId.systemDefault()).toInstant()),
+                        Date.from(LocalDateTime.of(2024, 1, 1, 6, 0).atZone(ZoneId.systemDefault()).toInstant()),
                         "Kościów w Tarnobrzeg",
                         "Lokal w Sandomierz",
                         "Józef",
@@ -86,14 +88,16 @@ public class DbInit implements CommandLineRunner {
                         "987654321",
                         "Za mglistymi osadami i wietrznymi wzgórzami, żyje wojownik samotny i gniewny. Już na moment, już za niedługo przyjdzie mu walczyć o rękę królewny.",
                         "Pośród starych lasów i srebrzystych strumieni, Panna Młoda w swej urodzie tkwi, jak ze snów wyjęta królewna, która czeka na swojego rycerza, by w miłości odnaleźć spokój i szczęście wieczne.",
+                        "Blablabla ślub",
+                        "Blablabla wesele",
                         "Gdzie trakty handlowe nie dochodzą, gdzie wiatry nie mają czego omijać, na mazurskiej dziewiczej ziemi, mieszkała niedaleko siebie para zakochanych nastolatków.",
-                        "http://www.google.pl", //save date link
                         250,
                         125,
                         475,
                         175,
                         "https://vimeo.com/channels/staffpicks/93951774",
                         "images/img_bg_3.jpg"
-        ));
+                )
+);
     }
 }

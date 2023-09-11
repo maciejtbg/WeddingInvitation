@@ -8,10 +8,10 @@
 	<head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title th:text="ŚLUB+' &mdash; '+${brideName}+' &amp; '+${groomName}">Wedding</title>
+	<title th:text="${eventTitle}">Wedding</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="To jest strona ślubna" />
-	<meta name="keywords" th:content="ŚLUB+' &mdash; '+${brideName}+' &amp; '+${groomName}" />
+	<meta name="keywords" th:text="${eventTitle}" />
 	<meta name="author" th:content="${brideName}+' &amp; '+${groomName}" />
 
   <!-- 
@@ -200,15 +200,15 @@
 									<h3>Main Ceremony</h3>
 									<div class="event-col">
 										<i class="icon-clock"></i>
-<!--										<span th:text="${ceremonyStartDate}">4:00 PM</span>-->
-										<span th:text="${ceremonyEndDate}">6:00 PM</span>
+										<span th:text="${#dates.format(ceremonyStartObject, 'HH:mm')}">4:00 PM</span>
+										<span th:text="${#dates.format(ceremonyEndObject, 'HH:mm')}">6:00 PM</span>
 									</div>
 									<div class="event-col">
 										<i class="icon-calendar"></i>
-										<span>Monday 28</span>
-										<span>November, 2016</span>
+										<span th:text="${#strings.capitalize(#dates.format(ceremonyStartObject, 'EEEE'))}"></span>
+										<span th:utext="${#dates.format(ceremonyEndObject, 'dd MMMM, yyyy')}+' r.'"></span>
 									</div>
-									<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
+									<p th:text="${ceremonyDescription}">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
 								</div>
 							</div>
 							<div class="col-md-6 col-sm-6 text-center">
@@ -216,15 +216,18 @@
 									<h3>Wedding Party</h3>
 									<div class="event-col">
 										<i class="icon-clock"></i>
-										<span th:text="${weddingPartyStartDate}">7:00 PM</span>
-										<span th:text="${weddingPartyEndDate}">12:00 AM</span>
+										<span th:text="${#dates.format(weddingPartyStartObject, 'HH:mm')}">7:00 PM</span>
+										<span th:text="${#dates.format(weddingPartyEndObject, 'HH:mm')}">12:00 AM</span>
 									</div>
 									<div class="event-col">
 										<i class="icon-calendar"></i>
-										<span>Monday 28</span>
-										<span>November, 2016</span>
+<!--										<span th:text="${#dates.format(weddingPartyStartObject, '')}">Monday 28</span>-->
+<!--										<span th:text="${#dates.format(weddingPartyStartObject, '')}">November, 2016</span>-->
+										<span th:text="${#strings.capitalize(#dates.format(weddingPartyStartObject, 'EEEE'))}"></span>
+										<span th:utext="${#dates.format(weddingPartyStartObject, 'dd MMMM, yyyy')}+' r.'"></span>
+
 									</div>
-									<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
+									<p th:text="${weddingPartyDescription}">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
 								</div>
 							</div>
 						</div>
@@ -557,7 +560,7 @@
 
 
 	<script th:inline="javascript">
-    var d = new Date([[${#dates.format(ceremonyStartDate, 'yyyy-MM-dd HH:mm:ss')}]]);
+    var d = new Date([[${#dates.format(ceremonyStartObject, 'yyyy-MM-dd HH:mm:ss')}]]);
 
     // default example
     simplyCountdown('.simply-countdown-one', {
@@ -568,6 +571,7 @@
     minutes: d.getMinutes()
 });
 </script>
+
 	<script>
     var galleryElements = document.querySelectorAll('.list-unstyled.row');
 
