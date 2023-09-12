@@ -7,6 +7,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -37,25 +40,27 @@ public class HomeController {
 
     @GetMapping("/home")
     public String home(Model model, @RequestParam("id") long id) {
-
         if (usersService.getUserById(id).isPresent()) {
-            model.addAttribute("eventTitle", "ŚLUB" + ' ' + usersService.getUserById(id).get().getBrideName() + " & " + usersService.getUserById(id).get().getGroomName());
-            model.addAttribute("ceremonyStartObject", usersService.getUserById(id).get().getCeremonyStartDate());
+            String eventTitle = "ŚLUB " + usersService.getUserById(id).get().getBrideName() + "&" + usersService.getUserById(id).get().getGroomName();
+            String ceremonyDescription = usersService.getUserById(id).get().getCeremonyDescription();
+            String eventLocation = usersService.getUserById(id).get().getCeremonyLocation();
+            Date ceremonyDate = usersService.getUserById(id).get().getCeremonyStartDate();
+            Date weddingEnd = usersService.getUserById(id).get().getWeddingPartyEndDate();
+            model.addAttribute("eventTitle", eventTitle);
+            model.addAttribute("ceremonyStartObject", ceremonyDate);
             model.addAttribute("ceremonyEndObject", usersService.getUserById(id).get().getCeremonyEndDate());
             model.addAttribute("weddingPartyStartObject", usersService.getUserById(id).get().getWeddingPartyStartDate());
-            model.addAttribute("weddingPartyEndObject", usersService.getUserById(id).get().getWeddingPartyEndDate());
-            model.addAttribute("weddingLocation", usersService.getUserById(id).get().getCeremonyLocation());
+            model.addAttribute("weddingPartyEndObject", weddingEnd);
+            model.addAttribute("weddingLocation", eventLocation);
             model.addAttribute("groomName", usersService.getUserById(id).get().getGroomName());
             model.addAttribute("brideName", usersService.getUserById(id).get().getBrideName());
             model.addAttribute("groomLastName", usersService.getUserById(id).get().getGroomLastName());
             model.addAttribute("brideLastName", usersService.getUserById(id).get().getBrideLastName());
             model.addAttribute("groomDescription", usersService.getUserById(id).get().getGroomDescription());
             model.addAttribute("brideDescription", usersService.getUserById(id).get().getBrideDescription());
-            model.addAttribute("ceremonyDescription", usersService.getUserById(id).get().getCeremonyDescription());
-            model.addAttribute("weddingPartyDescription",usersService.getUserById(id).get().getWeddingPartyDescription());
-            simpleDateFormat.applyPattern("yyyyMMdd'T'HHmmss");
-            //TODO {Fix link}
-            model.addAttribute("saveDateLink","https://calendar.google.com/calendar/render?action=TEMPLATE&text="+usersService.getUserById(id).get().getBrideName() + "&" + usersService.getUserById(id).get().getGroomName()+"&details="+usersService.getUserById(id).get().getCeremonyDescription()+"%20text&dates="+simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate())+"/"+simpleDateFormat.format(usersService.getUserById(id).get().getWeddingPartyEndDate())+"&location="+usersService.getUserById(id).get().getCeremonyLocation());
+            model.addAttribute("ceremonyDescription", ceremonyDescription);
+            model.addAttribute("weddingPartyDescription", usersService.getUserById(id).get().getWeddingPartyDescription());
+            model.addAttribute("saveDateLink", generateGoogleCalendarLink(eventTitle, ceremonyDescription, eventLocation, ceremonyDate, weddingEnd));
             simpleDateFormat.applyPattern("dd MMMM yyyy");
             model.addAttribute("dateAndPlace", simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate()) + " r., " + usersService.getUserById(id).get().getCeremonyLocation());
             model.addAttribute("shortLoveStory", usersService.getUserById(id).get().getShortLoveStory());
@@ -87,5 +92,24 @@ public class HomeController {
         }
 
     }
+
+
+    public String generateGoogleCalendarLink(
+            String eventName,
+            String eventDescription,
+            String eventLocation,
+            Date eventStartDate,
+            Date eventEndDate) {
+
+        simpleDateFormat.applyPattern("yyyyMMdd'T'HHmmss'Z'");
+        String result = "https://www.google.com/calendar/event?action=TEMPLATE" +
+                "&text=" + URLEncoder.encode(eventName, StandardCharsets.UTF_8) +
+                "&details=" + URLEncoder.encode(eventDescription, StandardCharsets.UTF_8) +
+                "&location=" + URLEncoder.encode(eventLocation, StandardCharsets.UTF_8) +
+                "&dates=" + simpleDateFormat.format(eventStartDate) + "/" + simpleDateFormat.format(eventEndDate);
+        System.out.println(result);
+        return result;
+    }
+
 }
 

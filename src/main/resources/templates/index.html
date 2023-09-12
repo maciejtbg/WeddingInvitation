@@ -11,7 +11,7 @@
 	<title th:text="${eventTitle}">Wedding</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="To jest strona ślubna" />
-	<meta name="keywords" th:text="${eventTitle}" />
+	<meta name="keywords" th:content="${eventTitle}" />
 	<meta name="author" th:content="${brideName}+' &amp; '+${groomName}" />
 
   <!-- 
