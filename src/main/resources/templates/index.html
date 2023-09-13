@@ -452,23 +452,23 @@
 			</div>
 			<div class="row animate-box">
 				<div class="col-md-10 col-md-offset-1">
-					<form class="form-inline">
+					<form class="form-inline" action="/send-email" method="post">
 						<div class="col-md-4 col-sm-4">
 							<div class="form-group">
 								<label for="name" class="sr-only">Name</label>
-								<input type="name" class="form-control" id="name" placeholder="Name">
+								<input type="text" class="form-control" id="name" name="name" placeholder="Name">
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-4">
 							<div class="form-group">
 								<label for="phone" class="sr-only">Numer telefonu</label>
-								<input type="text" class="form-control" id="phone" placeholder="Numer telefonu">
+								<input type="text" class="form-control" id="phone" name="phone" placeholder="Numer telefonu">
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-4">
 							<div class="form-group">
 								<label for="email" class="sr-only">Email</label>
-								<input type="email" class="form-control" id="email" placeholder="Email">
+								<input type="email" class="form-control" id="email" name="email" placeholder="Email">
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-4">
@@ -578,7 +578,40 @@
     for (var i = 0; i < galleryElements.length; i++) {
         lightGallery(galleryElements[i]);
     }
-</script>
+<!--</script>-->
+
+<!--	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
+<!--	<script>-->
+<!--    $(document).ready(function () {-->
+<!--        $("#emailForm").submit(function (event) {-->
+<!--            event.preventDefault();-->
+
+<!--            // Pobierz dane z formularza-->
+<!--            var name = $("#name").val();-->
+<!--            var phone = $("#phone").val();-->
+<!--            var email = $("#email").val();-->
+
+<!--            // Wysyłka danych na serwer-->
+<!--            $.ajax({-->
+<!--                url: "/send-email",-->
+<!--                type: "POST",-->
+<!--                data: {-->
+<!--                    name: name,-->
+<!--                    phone: phone,-->
+<!--                    email: email-->
+<!--                },-->
+<!--                success: function (response) {-->
+<!--                    // Obsługa sukcesu (np. wyświetlenie komunikatu)-->
+<!--                    alert("E-mail został wysłany!");-->
+<!--                },-->
+<!--                error: function (error) {-->
+<!--                    // Obsługa błędów (np. wyświetlenie komunikatu o błędzie)-->
+<!--                    alert("Wystąpił błąd podczas wysyłania e-maila.");-->
+<!--                }-->
+<!--            });-->
+<!--        });-->
+<!--    });-->
+<!--</script>-->
 
 	</body>
 </html>

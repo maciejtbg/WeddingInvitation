@@ -7,11 +7,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
 
@@ -26,9 +24,11 @@ public class HomeController {
     private final GalleryService galleryService;
     private final UsersService usersService;
     private final SimpleDateFormat simpleDateFormat;
+    private final EmailService emailService;
+
 
     @Autowired
-    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, UsersService usersService, SimpleDateFormat simpleDateFormat) {
+    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, UsersService usersService, SimpleDateFormat simpleDateFormat, EmailService emailService) {
         this.eventService = eventService;
         this.wishService = wishService;
         this.facilityService = facilityService;
@@ -36,6 +36,7 @@ public class HomeController {
         this.galleryService = galleryService;
         this.usersService = usersService;
         this.simpleDateFormat = simpleDateFormat;
+        this.emailService = emailService;
     }
 
     @GetMapping("/home")
@@ -107,9 +108,36 @@ public class HomeController {
                 "&details=" + URLEncoder.encode(eventDescription, StandardCharsets.UTF_8) +
                 "&location=" + URLEncoder.encode(eventLocation, StandardCharsets.UTF_8) +
                 "&dates=" + simpleDateFormat.format(eventStartDate) + "/" + simpleDateFormat.format(eventEndDate);
-        System.out.println(result);
         return result;
     }
 
+
+
+//    @ResponseBody
+//    @PostMapping("/send-email")
+//    public String sendEmail(
+//            @RequestParam(value = "to") String to,
+//            @RequestParam(value = "subject") String subject,
+//            @RequestParam(value = "body") String body) {
+//        emailService.sendEmail(to, subject, body);
+//        return "Mail sent to: "+to;
+//    }
+
+
+
+    @ResponseBody
+    @PostMapping("/send-email")
+    public String sendEmail(
+            @RequestParam(value = "name") String name,
+            @RequestParam(value = "phone") String phone,
+            @RequestParam(value = "email") String email) {
+        String to = "m.wyr@o2.pl";
+        String subject = "Potwierdzenie obecności.";
+        String body = name + " potwierdził(a) obecność. \nNumer telefonu: " + phone+ "\nAdres email: "+email;
+        emailService.sendEmail(to, subject, body);
+        return "Mail sent to: "+to;
+    }
 }
+
+
 
