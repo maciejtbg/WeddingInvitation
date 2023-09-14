@@ -452,7 +452,9 @@
 			</div>
 			<div class="row animate-box">
 				<div class="col-md-10 col-md-offset-1">
-					<form class="form-inline" action="/send-email" method="post">
+<!--					<form class="form-inline" action="/send-email" method="post">-->
+						<form class="form-inline" id="confirmation-form">
+
 						<div class="col-md-4 col-sm-4">
 							<div class="form-group">
 								<label for="name" class="sr-only">Name</label>
@@ -472,7 +474,9 @@
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-4">
-							<button type="submit" class="btn btn-default btn-block">Potwierdzam</button>
+<!--							<button type="submit" class="btn btn-default btn-block">Potwierdzam</button>-->
+							<button type="button" id="submit-button" class="btn btn-default btn-block">Potwierdzam</button>
+
 						</div>
 					</form>
 				</div>
@@ -508,6 +512,56 @@
 		<a href="#" class="js-gotop"><i class="icon-arrow-up"></i></a>
 	</div>
 
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLongTitle">Potwierdzenie obecności</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div id="result-message"></div> <!-- Tutaj będzie wyświetlana odpowiedź -->
+				</div>
+				<div class="modal-footer">
+<!--					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>-->
+<!--					<button type="button" class="btn btn-primary">Save changes</button>					-->
+<!--					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>-->
+					<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+<!--	&lt;!&ndash; Button trigger modal &ndash;&gt;-->
+<!--	<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">-->
+<!--		Launch demo modal-->
+<!--	</button>-->
+
+<!--	&lt;!&ndash; Modal &ndash;&gt;-->
+<!--	<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">-->
+<!--		<div class="modal-dialog modal-dialog-centered" role="document">-->
+<!--			<div class="modal-content">-->
+<!--				<div class="modal-header">-->
+<!--					<h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>-->
+<!--					<button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--						<span aria-hidden="true">&times;</span>-->
+<!--					</button>-->
+<!--				</div>-->
+<!--				<div class="modal-body">-->
+<!--					...-->
+<!--				</div>-->
+<!--				<div class="modal-footer">-->
+<!--					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>-->
+<!--					<button type="button" class="btn btn-primary">Save changes</button>-->
+<!--				</div>-->
+<!--			</div>-->
+<!--		</div>-->
+<!--	</div>-->
 
 
 <!--	<div class="row row-bottom-padded-md">-->
@@ -578,7 +632,7 @@
     for (var i = 0; i < galleryElements.length; i++) {
         lightGallery(galleryElements[i]);
     }
-<!--</script>-->
+</script>
 
 <!--	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
 <!--	<script>-->
@@ -612,6 +666,40 @@
 <!--        });-->
 <!--    });-->
 <!--</script>-->
+<script>
+$(document).ready(function () {
+    $('#submit-button').click(function () {
+        // Pobierz dane z formularza
+        var name = $('#name').val();
+        var phone = $('#phone').val();
+        var email = $('#email').val();
+
+        // Wyślij dane za pomocą AJAX
+        $.ajax({
+            type: 'POST',
+            url: '/send-email',
+            data: {
+                name: name,
+                phone: phone,
+                email: email
+            },
+            success: function (response) {
+                // Wyświetl odpowiedź w okienku modalnym
+                $('#result-message').html('<div class="alert alert-success">' + response + '</div>');
+                $('#exampleModalCenter').modal('show'); // Pokaż okno modalne sukcesu
+            },
+            error: function (error) {
+                // Wyświetl błąd w okienku modalnym
+                $('#result-message').html('<div class="alert alert-danger">' + response + '</div>');
+                $('#exampleModalCenter').modal('show'); // Pokaż okno modalne błędu
+            }
+        });
+    });
+});
+
+
+</script>
+
 
 	</body>
 </html>

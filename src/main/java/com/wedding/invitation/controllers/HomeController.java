@@ -3,6 +3,8 @@ package com.wedding.invitation.controllers;
 import com.wedding.invitation.models.Image;
 import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
+import java.util.regex.Pattern;
+
 
 @Controller
 @RequestMapping()
@@ -125,17 +129,46 @@ public class HomeController {
 
 
 
-    @ResponseBody
+//    @ResponseBody
+//    @PostMapping("/send-email")
+//    public String sendEmail(
+//            @RequestParam(value = "name") String name,
+//            @RequestParam(value = "phone") String phone,
+//            @RequestParam(value = "email") String email) {
+//        String to = "m.wyr@o2.pl";
+//        String subject = "Potwierdzenie obecności.";
+//        String body = name + " potwierdził(a) obecność. \nNumer telefonu: " + phone+ "\nAdres email: "+email;
+//        emailService.sendEmail(to, subject, body);
+//        return "Mail sent to: "+to;
+//    }
+
+    private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private static final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+
+    //TODO: Nie przyjmuje odpowiedzi w postaci wyjątków.
     @PostMapping("/send-email")
-    public String sendEmail(
+    public ResponseEntity<String> sendEmail(
             @RequestParam(value = "name") String name,
             @RequestParam(value = "phone") String phone,
             @RequestParam(value = "email") String email) {
-        String to = "m.wyr@o2.pl";
-        String subject = "Potwierdzenie obecności.";
-        String body = name + " potwierdził(a) obecność. \nNumer telefonu: " + phone+ "\nAdres email: "+email;
-        emailService.sendEmail(to, subject, body);
-        return "Mail sent to: "+to;
+        if (!isValidEmail(email)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Niepoprawny adres email.");
+        }
+
+        try {
+            String to = "m.wyr@o2.pl";
+            String subject = "Potwierdzenie obecności.";
+            String body = name + " potwierdził(a) obecność. \nNumer telefonu: " + phone + "\nAdres email: " + email;
+            emailService.sendEmail(to, subject, body);
+            return ResponseEntity.ok("Email został wysłany.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Wystąpił błąd podczas wysyłania emaila.");
+        }
+    }
+
+    private boolean isValidEmail(String email) {
+        return pattern.matcher(email).matches();
     }
 }
 
