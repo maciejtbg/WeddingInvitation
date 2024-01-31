@@ -18,7 +18,27 @@ public class UsersService {
         this.usersRepository = usersRepository;
     }
 
+
+    public Optional<Users> getUserByAlias(String alias){
+        System.out.println("Alias: "+alias);
+        return usersRepository.findByAlias(alias);
+    }
+
+    public long getUserIdByAlias(String alias) throws UserNotFoundException {
+        if (usersRepository.findByAlias(alias).isEmpty()) {
+            throw new UserNotFoundException("User not found with alias: " + alias);
+        }
+        return usersRepository.findByAlias(alias).get().getId();
+    }
+
     public Optional<Users> getUserById(long id){
         return usersRepository.findById(id);
+    }
+
+
+    public static class UserNotFoundException extends Exception {
+        public UserNotFoundException(String message) {
+            super(message);
+        }
     }
 }

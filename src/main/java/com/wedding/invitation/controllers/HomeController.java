@@ -1,6 +1,7 @@
 package com.wedding.invitation.controllers;
 
 import com.wedding.invitation.models.Image;
+import com.wedding.invitation.models.Users;
 import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,40 +45,43 @@ public class HomeController {
     }
 
     @GetMapping("/home")
-    public String home(Model model, @RequestParam("id") long id) {
-        if (usersService.getUserById(id).isPresent()) {
-            String eventTitle = "ŚLUB " + usersService.getUserById(id).get().getBrideName() + "&" + usersService.getUserById(id).get().getGroomName();
-            String ceremonyDescription = usersService.getUserById(id).get().getCeremonyDescription();
-            String eventLocation = usersService.getUserById(id).get().getCeremonyLocation();
-            Date ceremonyDate = usersService.getUserById(id).get().getCeremonyStartDate();
-            Date weddingEnd = usersService.getUserById(id).get().getWeddingPartyEndDate();
+    public String home(Model model, @RequestParam("alias") String alias) {
+        Optional<Users> userOptional = usersService.getUserByAlias(alias);
+
+        if (userOptional.isPresent()) {
+            Users user = userOptional.get();
+            String eventTitle = "ŚLUB " + user.getBrideName() + "&" + user.getGroomName();
+            String ceremonyDescription = user.getCeremonyDescription();
+            String eventLocation = user.getCeremonyLocation();
+            Date ceremonyDate = user.getCeremonyStartDate();
+            Date weddingEnd = user.getWeddingPartyEndDate();
             model.addAttribute("eventTitle", eventTitle);
             model.addAttribute("ceremonyStartObject", ceremonyDate);
-            model.addAttribute("ceremonyEndObject", usersService.getUserById(id).get().getCeremonyEndDate());
-            model.addAttribute("weddingPartyStartObject", usersService.getUserById(id).get().getWeddingPartyStartDate());
+            model.addAttribute("ceremonyEndObject", user.getCeremonyEndDate());
+            model.addAttribute("weddingPartyStartObject", user.getWeddingPartyStartDate());
             model.addAttribute("weddingPartyEndObject", weddingEnd);
             model.addAttribute("weddingLocation", eventLocation);
-            model.addAttribute("groomName", usersService.getUserById(id).get().getGroomName());
-            model.addAttribute("brideName", usersService.getUserById(id).get().getBrideName());
-            model.addAttribute("groomLastName", usersService.getUserById(id).get().getGroomLastName());
-            model.addAttribute("brideLastName", usersService.getUserById(id).get().getBrideLastName());
-            model.addAttribute("groomDescription", usersService.getUserById(id).get().getGroomDescription());
-            model.addAttribute("brideDescription", usersService.getUserById(id).get().getBrideDescription());
+            model.addAttribute("groomName", user.getGroomName());
+            model.addAttribute("brideName", user.getBrideName());
+            model.addAttribute("groomLastName", user.getGroomLastName());
+            model.addAttribute("brideLastName", user.getBrideLastName());
+            model.addAttribute("groomDescription", user.getGroomDescription());
+            model.addAttribute("brideDescription", user.getBrideDescription());
             model.addAttribute("ceremonyDescription", ceremonyDescription);
-            model.addAttribute("weddingPartyDescription", usersService.getUserById(id).get().getWeddingPartyDescription());
+            model.addAttribute("weddingPartyDescription", user.getWeddingPartyDescription());
             model.addAttribute("saveDateLink", generateGoogleCalendarLink(eventTitle, ceremonyDescription, eventLocation, ceremonyDate, weddingEnd));
             simpleDateFormat.applyPattern("dd MMMM yyyy");
-            model.addAttribute("dateAndPlace", simpleDateFormat.format(usersService.getUserById(id).get().getCeremonyStartDate()) + " r., " + usersService.getUserById(id).get().getCeremonyLocation());
-            model.addAttribute("shortLoveStory", usersService.getUserById(id).get().getShortLoveStory());
+            model.addAttribute("dateAndPlace", simpleDateFormat.format(user.getCeremonyStartDate()) + " r., " + user.getCeremonyLocation());
+            model.addAttribute("shortLoveStory", user.getShortLoveStory());
             model.addAttribute("eventList", eventService.getAllEvents());
-            model.addAttribute("weddingInvitedGuests", usersService.getUserById(id).get().getWeddingInvitedGuests());
-            model.addAttribute("weddingConfirmedGuests", usersService.getUserById(id).get().getWeddingConfirmedGuests());
-            model.addAttribute("eventsDoneInThisPlace", usersService.getUserById(id).get().getEventsDoneInThisPlace());
-            model.addAttribute("hoursSpentOnPreparing", usersService.getUserById(id).get().getHoursSpentOnPreparing());
+            model.addAttribute("weddingInvitedGuests", user.getWeddingInvitedGuests());
+            model.addAttribute("weddingConfirmedGuests", user.getWeddingConfirmedGuests());
+            model.addAttribute("eventsDoneInThisPlace", user.getEventsDoneInThisPlace());
+            model.addAttribute("hoursSpentOnPreparing", user.getHoursSpentOnPreparing());
             model.addAttribute("wishList", wishService.getAllWishes());
             model.addAttribute("facilityList", facilityService.getAllFacilities());
-            model.addAttribute("videoUrl", usersService.getUserById(id).get().getVideoUrl());
-            model.addAttribute("videoThumbnail", usersService.getUserById(id).get().getVideoThumbnail());
+            model.addAttribute("videoUrl", user.getVideoUrl());
+            model.addAttribute("videoThumbnail", user.getVideoThumbnail());
             model.addAttribute("imageList", imageService.getAllImages());
             model.addAttribute("galleryList", galleryService.getAllGallery());
         }

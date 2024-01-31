@@ -74,6 +74,7 @@ public class DbInit implements CommandLineRunner {
                         "username",
                         "password",
                         "email@email.pl",
+                        "mariajozef", //tu nie może być znaków specjalych używanych w zapytaniach np. ? $
                         Date.from(LocalDateTime.of(2023, 12, 31, 8, 0).atZone(ZoneId.systemDefault()).toInstant()),
                         Date.from(LocalDateTime.of(2023, 12, 31, 9, 0).atZone(ZoneId.systemDefault()).toInstant()),
                         Date.from(LocalDateTime.of(2023, 12, 31, 9, 30).atZone(ZoneId.systemDefault()).toInstant()),

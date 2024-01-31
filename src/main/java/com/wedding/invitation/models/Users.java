@@ -23,6 +23,7 @@ public class Users {
     private String username;
     private String password;
     private String email;
+    private String alias;
     //times
     private Date ceremonyStartDate;
     private Date ceremonyEndDate;
@@ -64,6 +65,7 @@ public class Users {
     public Users(String username,
                  String password,
                  String email,
+                 String alias,
                  Date ceremonyStartDate,
                  Date ceremonyEndDate,
                  Date weddingPartyStartDate,
@@ -90,6 +92,7 @@ public class Users {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.alias = alias;
         this.ceremonyStartDate = ceremonyStartDate;
         this.ceremonyEndDate = ceremonyEndDate;
         this.weddingPartyStartDate = weddingPartyStartDate;
