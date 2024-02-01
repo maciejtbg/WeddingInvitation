@@ -44,9 +44,11 @@ public class HomeController {
         this.emailService = emailService;
     }
 
-    @GetMapping("/home")
-    public String home(Model model, @RequestParam("alias") String alias) {
+    @GetMapping("/home/{alias}")
+    public String home(Model model, @PathVariable String alias) {
         Optional<Users> userOptional = usersService.getUserByAlias(alias);
+        System.out.println(alias);
+        System.out.println(userOptional.get());
 
         if (userOptional.isPresent()) {
             Users user = userOptional.get();
