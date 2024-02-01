@@ -44,7 +44,7 @@ public class HomeController {
         this.emailService = emailService;
     }
 
-    @GetMapping("/home/{alias}")
+    @GetMapping("/{alias}")
     public String home(Model model, @PathVariable String alias) {
         Optional<Users> userOptional = usersService.getUserByAlias(alias);
         System.out.println(alias);
@@ -90,19 +90,19 @@ public class HomeController {
         return "index";
     }
 
-    @GetMapping("/{id}")
-    @ResponseBody
-    String showImage(@PathVariable("id") Long id) {
-
-        Optional<Image> imageGalleryOptional = imageService.getImageById(id);
-        if (imageGalleryOptional.isPresent()) {
-            Image imageGallery = imageGalleryOptional.get();
-            return "<img src=" + imageGallery.getImageUrl() + ">";
-        } else {
-            return "Not found";
-        }
-
-    }
+//    @GetMapping("/{id}")
+//    @ResponseBody
+//    String showImage(@PathVariable("id") Long id) {
+//
+//        Optional<Image> imageGalleryOptional = imageService.getImageById(id);
+//        if (imageGalleryOptional.isPresent()) {
+//            Image imageGallery = imageGalleryOptional.get();
+//            return "<img src=" + imageGallery.getImageUrl() + ">";
+//        } else {
+//            return "Not found";
+//        }
+//
+//    }
 
 
     public String generateGoogleCalendarLink(

@@ -21,33 +21,37 @@ public class DbInit implements CommandLineRunner {
     private final ImageRepository imageRepository;
     private final GalleryRepository galleryRepository;
     private final UsersRepository usersRepository;
+    private final GuestsRepository guestsRepository;
+
 
     @Autowired
-    public DbInit(EventRepository eventRepository, WishRepository wishRepository, FacilityRepository facilityRepository, ImageRepository imageGalleryRepository, GalleryRepository galleryRepository, UsersRepository usersRepository) {
+    public DbInit(EventRepository eventRepository, WishRepository wishRepository, FacilityRepository facilityRepository, ImageRepository imageGalleryRepository, GalleryRepository galleryRepository, UsersRepository usersRepository, GuestsRepository guestsRepository) {
         this.eventRepository = eventRepository;
         this.wishRepository = wishRepository;
         this.facilityRepository = facilityRepository;
         this.imageRepository = imageGalleryRepository;
         this.galleryRepository = galleryRepository;
         this.usersRepository = usersRepository;
+        this.guestsRepository = guestsRepository;
+
     }
 
     @Override
     public void run(String... args) {
         eventRepository.saveAll(List.of(
-                new Event("Pierwsze spojrzenie",new Date(System.currentTimeMillis()),"images/couple-1.jpg","Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat."),
-                new Event("Drugie spojrzenie",new Date(System.currentTimeMillis()),"images/couple-2.jpg","Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat."),
-                new Event("Trzecie spojrzenie",new Date(System.currentTimeMillis()),"images/couple-3.jpg","Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.")
+                new Event("Pierwsze spojrzenie", new Date(System.currentTimeMillis()), "/images/couple-1.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat."),
+                new Event("Drugie spojrzenie", new Date(System.currentTimeMillis()), "/images/couple-2.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat."),
+                new Event("Trzecie spojrzenie", new Date(System.currentTimeMillis()), "/images/couple-3.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.")
         ));
         wishRepository.saveAll(List.of(
-                new Wish("Krzysztof", "Twitter", "images/couple-1.jpg", "Wszystkiego najlepszego!"),
-                new Wish("Piotr", "Facebook", "images/couple-2.jpg", "100 lat na nowej drodze życia!"),
-                new Wish("Marek", "SMS", "images/couple-3.jpg", "Najlepszego dla Was! Dużo zdrówka!")
-                ));
+                new Wish("Krzysztof", "Twitter", "/images/couple-1.jpg", "Wszystkiego najlepszego!"),
+                new Wish("Piotr", "Facebook", "/images/couple-2.jpg", "100 lat na nowej drodze życia!"),
+                new Wish("Marek", "SMS", "/images/couple-3.jpg", "Najlepszego dla Was! Dużo zdrówka!")
+        ));
         facilityRepository.saveAll(List.of(
-                new Facility("Menu do wyboru","icon-calendar", "Oprócz całej masy przekąsek, mamy również do wyboru kilka rodzajów dań głównych, w których najbardziej wymagający smakosze znajdą coś dla siebie. Rozumiemy również wszelkie alergie, nietolerancje i filozofie odżywiania. Chcemy wyjść im naprzeciw, zapewniając bogate menu weselne."),
-                new Facility("Animacje dla dzieci","icon-image", "Nie tylko dorośli bawią się dobrze na naszym weselu. Każdy musi czy się świetnie, w tym Wasze pociechy. Zespół doświadczonych animatorów już czeka z głową pełną pomysłów i wielkimi torbami zabawek."),
-                new Facility("Fotobudka","icon-video", "Myślisz, że jesteś na to zbyt poważny? To nieprawda, załóż śmieszną czapkę i zrób minę do kamery. Obiecujemy, że będziemy się z Ciebie śmiać.")
+                new Facility("Menu do wyboru", "icon-calendar", "Oprócz całej masy przekąsek, mamy również do wyboru kilka rodzajów dań głównych, w których najbardziej wymagający smakosze znajdą coś dla siebie. Rozumiemy również wszelkie alergie, nietolerancje i filozofie odżywiania. Chcemy wyjść im naprzeciw, zapewniając bogate menu weselne."),
+                new Facility("Animacje dla dzieci", "icon-image", "Nie tylko dorośli bawią się dobrze na naszym weselu. Każdy musi czy się świetnie, w tym Wasze pociechy. Zespół doświadczonych animatorów już czeka z głową pełną pomysłów i wielkimi torbami zabawek."),
+                new Facility("Fotobudka", "icon-video", "Myślisz, że jesteś na to zbyt poważny? To nieprawda, załóż śmieszną czapkę i zrób minę do kamery. Obiecujemy, że będziemy się z Ciebie śmiać.")
         ));
         Gallery gallery1 = new Gallery("Galeria nr 1", "Super galeria");
         Gallery gallery2 = new Gallery("Galeria nr 2", "Też świetna galeria");
@@ -58,15 +62,15 @@ public class DbInit implements CommandLineRunner {
                 gallery3
         ));
         imageRepository.saveAll(List.of(
-                new Image("Zdjęcie nr 1", "images/gallery-1.jpg",gallery1),
-                new Image("Zdjęcie nr 2", "images/gallery-2.jpg",gallery1),
-                new Image("Zdjęcie nr 3", "images/gallery-3.jpg",gallery2),
-                new Image("Zdjęcie nr 4", "images/gallery-4.jpg",gallery2),
-                new Image("Zdjęcie nr 5", "images/gallery-5.jpg",gallery2),
-                new Image("Zdjęcie nr 6", "images/gallery-6.jpg",gallery2),
-                new Image("Zdjęcie nr 7", "images/gallery-7.jpg",gallery2),
-                new Image("Zdjęcie nr 8", "images/gallery-8.jpg",gallery3),
-                new Image("Zdjęcie nr 9", "images/gallery-9.jpg",gallery3)
+                new Image("Zdjęcie nr 1", "/images/gallery-1.jpg", gallery1),
+                new Image("Zdjęcie nr 2", "/images/gallery-2.jpg", gallery1),
+                new Image("Zdjęcie nr 3", "/images/gallery-3.jpg", gallery2),
+                new Image("Zdjęcie nr 4", "/images/gallery-4.jpg", gallery2),
+                new Image("Zdjęcie nr 5", "/images/gallery-5.jpg", gallery2),
+                new Image("Zdjęcie nr 6", "/images/gallery-6.jpg", gallery2),
+                new Image("Zdjęcie nr 7", "/images/gallery-7.jpg", gallery2),
+                new Image("Zdjęcie nr 8", "/images/gallery-8.jpg", gallery3),
+                new Image("Zdjęcie nr 9", "/images/gallery-9.jpg", gallery3)
         ));
 
         usersRepository.save(
@@ -97,8 +101,12 @@ public class DbInit implements CommandLineRunner {
                         475,
                         175,
                         "https://vimeo.com/channels/staffpicks/93951774",
-                        "images/img_bg_3.jpg"
+                        "/images/img_bg_3.jpg"
                 )
-);
+        );
+        guestsRepository.save(
+                new Guests("Maciej Wyrzykowski", "aa@bb.cc", "123456789")
+        );
+
     }
 }
