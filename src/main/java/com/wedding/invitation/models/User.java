@@ -3,6 +3,7 @@ package com.wedding.invitation.models;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Users {
+public class User {
     @Id
     @GeneratedValue
     private long id;
@@ -62,33 +63,41 @@ public class Users {
     private String videoUrl;
     private String videoThumbnail;
 
-    public Users(String username,
-                 String password,
-                 String email,
-                 String alias,
-                 Date ceremonyStartDate,
-                 Date ceremonyEndDate,
-                 Date weddingPartyStartDate,
-                 Date weddingPartyEndDate,
-                 String ceremonyLocation,
-                 String weddingLocation,
-                 String groomName,
-                 String groomLastName,
-                 String groomPhoneNumber,
-                 String brideName,
-                 String brideLastName,
-                 String bridePhoneNumber,
-                 String groomDescription,
-                 String brideDescription,
-                 String ceremonyDescription,
-                 String weddingPartyDescription,
-                 String shortLoveStory,
-                 int weddingInvitedGuests,
-                 int weddingConfirmedGuests,
-                 int eventsDoneInThisPlace,
-                 int hoursSpentOnPreparing,
-                 String videoUrl,
-                 String videoThumbnail) {
+
+    @OneToMany(mappedBy = "user")
+    private List<Gallery> galleries;
+    private List<Event> events;
+    private List<Facility> facilities;
+    private List<Guest> guests;
+    private List<Wish> wishes;
+
+    public User(String username,
+                String password,
+                String email,
+                String alias,
+                Date ceremonyStartDate,
+                Date ceremonyEndDate,
+                Date weddingPartyStartDate,
+                Date weddingPartyEndDate,
+                String ceremonyLocation,
+                String weddingLocation,
+                String groomName,
+                String groomLastName,
+                String groomPhoneNumber,
+                String brideName,
+                String brideLastName,
+                String bridePhoneNumber,
+                String groomDescription,
+                String brideDescription,
+                String ceremonyDescription,
+                String weddingPartyDescription,
+                String shortLoveStory,
+                int weddingInvitedGuests,
+                int weddingConfirmedGuests,
+                int eventsDoneInThisPlace,
+                int hoursSpentOnPreparing,
+                String videoUrl,
+                String videoThumbnail) {
         this.username = username;
         this.password = password;
         this.email = email;

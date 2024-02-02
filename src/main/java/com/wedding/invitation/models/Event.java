@@ -1,9 +1,7 @@
 package com.wedding.invitation.models;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,11 +21,15 @@ public class Event {
     private String imageUrl;
     private String description;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id",nullable = false)
+    private User user;
 
-    public Event (String title, Date date, String imageUrl, String description){
+    public Event (String title, Date date, String imageUrl, String description, User user){
         this.title = title;
         this.date = date;
         this.imageUrl = imageUrl;
         this.description = description;
+        this.user = user;
     }
 }

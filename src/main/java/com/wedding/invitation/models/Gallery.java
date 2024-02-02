@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,9 +19,14 @@ public class Gallery {
     private String title;
     private String description;
 
-    public Gallery(String title, String description) {
+    @ManyToOne
+    @JoinColumn(name = "user_id",nullable = false)
+    private User user;
+
+    public Gallery(String title, String description, User user) {
         this.title = title;
         this.description = description;
+        this.user = user;
     }
 
     @OneToMany(mappedBy = "gallery")

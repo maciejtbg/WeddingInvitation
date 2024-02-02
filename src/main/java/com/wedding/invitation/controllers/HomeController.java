@@ -1,7 +1,6 @@
 package com.wedding.invitation.controllers;
 
-import com.wedding.invitation.models.Image;
-import com.wedding.invitation.models.Users;
+import com.wedding.invitation.models.User;
 import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -46,12 +45,12 @@ public class HomeController {
 
     @GetMapping("/{alias}")
     public String home(Model model, @PathVariable String alias) {
-        Optional<Users> userOptional = usersService.getUserByAlias(alias);
+        Optional<User> userOptional = usersService.getUserByAlias(alias);
         System.out.println(alias);
         System.out.println(userOptional.get());
 
         if (userOptional.isPresent()) {
-            Users user = userOptional.get();
+            User user = userOptional.get();
             String eventTitle = "ŚLUB " + user.getBrideName() + "&" + user.getGroomName();
             String ceremonyDescription = user.getCeremonyDescription();
             String eventLocation = user.getCeremonyLocation();

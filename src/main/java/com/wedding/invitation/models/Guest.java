@@ -1,19 +1,15 @@
 package com.wedding.invitation.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.Date;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class Guests {
+public class Guest {
     @Id
     @GeneratedValue
     private long id;
@@ -23,11 +19,16 @@ public class Guests {
     private String questEmail;
     private String questPhone;
 
-    public Guests(String guestName,
-                  String questEmail,
-                  String questPhone) {
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    public Guest(String guestName,
+                 String questEmail,
+                 String questPhone, User user) {
         this.guestName = guestName;
         this.questEmail = questEmail;
         this.questPhone = questPhone;
+        this.user = user;
     }
 }

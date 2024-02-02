@@ -1,7 +1,7 @@
 package com.wedding.invitation.services;
 
 
-import com.wedding.invitation.models.Users;
+import com.wedding.invitation.models.User;
 import com.wedding.invitation.repositories.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class UsersService {
     }
 
 
-    public Optional<Users> getUserByAlias(String alias){
+    public Optional<User> getUserByAlias(String alias){
         System.out.println("Alias: "+alias);
         return usersRepository.findByAlias(alias);
     }
@@ -31,7 +31,7 @@ public class UsersService {
         return usersRepository.findByAlias(alias).get().getId();
     }
 
-    public Optional<Users> getUserById(long id){
+    public Optional<User> getUserById(long id){
         return usersRepository.findById(id);
     }
 

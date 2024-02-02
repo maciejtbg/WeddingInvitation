@@ -1,8 +1,6 @@
 package com.wedding.invitation.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,11 +20,17 @@ public class Wish {
     private String imageUrl;
     private String content;
 
-    public Wish(String sender, String platform, String imageUrl, String content) {
+
+    @ManyToOne
+    @JoinColumn(name = "user_id",nullable = false)
+    private User user;
+
+    public Wish(String sender, String platform, String imageUrl, String content,User user) {
         this.sender = sender;
         this.platform = platform;
         this.imageUrl = imageUrl;
         this.content = content;
+        this.user = user;
     }
 
 }

@@ -1,9 +1,6 @@
 package com.wedding.invitation.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,9 +18,14 @@ public class Facility {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    public Facility(String name, String iconUrl, String content) {
+    @ManyToOne
+    @JoinColumn(name = "user_id",nullable = false)
+    private User user;
+
+    public Facility(String name, String iconUrl, String content, User user) {
         this.name = name;
         this.iconUrl = iconUrl;
         this.content = content;
+        this.user = user;
     }
 }
