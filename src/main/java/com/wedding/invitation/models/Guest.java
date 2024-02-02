@@ -20,15 +20,15 @@ public class Guest {
     private String questPhone;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "usr_id", nullable = false)
+    private Usr usr;
 
     public Guest(String guestName,
                  String questEmail,
-                 String questPhone, User user) {
+                 String questPhone, Usr usr) {
         this.guestName = guestName;
         this.questEmail = questEmail;
         this.questPhone = questPhone;
-        this.user = user;
+        this.usr = usr;
     }
 }

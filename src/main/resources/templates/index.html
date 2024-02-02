@@ -119,7 +119,7 @@
 		</div>
 	</nav>
 
-	<header id="fh5co-header" class="fh5co-cover" role="banner" style="background-image:url(/images/img_bg_2.jpg);" data-stellar-background-ratio="0.5">
+	<header id="fh5co-header" class="fh5co-cover" role="banner" th:style="'background-image:url('+ ${backgroundTop} + ');'" data-stellar-background-ratio="0.5">
 		<div class="overlay"></div>
 		<div class="container">
 			<div class="row">
@@ -160,7 +160,7 @@
 			<div class="couple-wrap animate-box">
 				<div class="couple-half">
 					<div class="groom">
-						<img src="/images/groom.jpg" alt="groom" class="img-responsive">
+						<img th:src="${groomImage}" alt="groom" class="img-responsive">
 					</div>
 					<div class="desc-groom">
 
@@ -171,7 +171,7 @@
 				<p class="heart text-center"><i class="icon-heart2"></i></p>
 				<div class="couple-half">
 					<div class="bride">
-						<img src="/images/bride.jpg" alt="groom" class="img-responsive">
+						<img th:src="${brideImage}" alt="groom" class="img-responsive">
 					</div>
 					<div class="desc-bride">
 						<h3 th:text="${brideName}+' '+${brideLastName}">Sheila Mahusay</h3>
@@ -182,7 +182,7 @@
 		</div>
 	</div>
 
-	<div id="fh5co-event" class="fh5co-bg" style="background-image:url(/images/img_bg_3.jpg);">
+	<div id="fh5co-event" class="fh5co-bg" th:style="'background-image:url('+${backgroundMiddle}+');'">
 		<div class="overlay"></div>
 		<div class="container">
 			<div class="row">
@@ -320,7 +320,7 @@
 
 
 
-	<div id="fh5co-counter" class="fh5co-bg fh5co-counter" style="background-image:url(/images/img_bg_5.jpg);">
+	<div id="fh5co-counter" class="fh5co-bg fh5co-counter" th:style="'background-image:url('+${backgroundNumbers}+');'">
 		<div class="overlay"></div>
 		<div class="container">
 			<div class="row">
@@ -441,7 +441,7 @@
 	</div>
 
 
-	<div id="fh5co-started" class="fh5co-bg" style="background-image:url(/images/img_bg_4.jpg);">
+	<div id="fh5co-started" class="fh5co-bg" th:style="'background-image:url('+${backgroundBottom}+');'">
 		<div class="overlay"></div>
 		<div class="container">
 			<div class="row animate-box">

@@ -20,13 +20,13 @@ public class Gallery {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    @JoinColumn(name = "usr_id",nullable = false)
+    private Usr usr;
 
-    public Gallery(String title, String description, User user) {
+    public Gallery(String title, String description, Usr usr) {
         this.title = title;
         this.description = description;
-        this.user = user;
+        this.usr = usr;
     }
 
     @OneToMany(mappedBy = "gallery")

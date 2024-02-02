@@ -1,6 +1,6 @@
 package com.wedding.invitation.controllers;
 
-import com.wedding.invitation.models.User;
+import com.wedding.invitation.models.Usr;
 import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,70 +21,65 @@ import java.util.regex.Pattern;
 @RequestMapping()
 public class HomeController {
 
-    private final EventService eventService;
-    private final WishService wishService;
-    private final FacilityService facilityService;
-    private final ImageService imageService;
-    private final GalleryService galleryService;
-    private final UsersService usersService;
+    private final UsrService usrService;
     private final SimpleDateFormat simpleDateFormat;
     private final EmailService emailService;
 
 
     @Autowired
-    public HomeController(EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, UsersService usersService, SimpleDateFormat simpleDateFormat, EmailService emailService) {
-        this.eventService = eventService;
-        this.wishService = wishService;
-        this.facilityService = facilityService;
-        this.imageService = imageGalleryService;
-        this.galleryService = galleryService;
-        this.usersService = usersService;
+    public HomeController(UsrService usrService, SimpleDateFormat simpleDateFormat, EmailService emailService) {
+        this.usrService = usrService;
         this.simpleDateFormat = simpleDateFormat;
         this.emailService = emailService;
     }
 
     @GetMapping("/{alias}")
     public String home(Model model, @PathVariable String alias) {
-        Optional<User> userOptional = usersService.getUserByAlias(alias);
-        System.out.println(alias);
-        System.out.println(userOptional.get());
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            String eventTitle = "ŚLUB " + user.getBrideName() + "&" + user.getGroomName();
-            String ceremonyDescription = user.getCeremonyDescription();
-            String eventLocation = user.getCeremonyLocation();
-            Date ceremonyDate = user.getCeremonyStartDate();
-            Date weddingEnd = user.getWeddingPartyEndDate();
+        Optional<Usr> usrOptional = usrService.getUsrByAlias(alias);
+        if (usrOptional.isPresent()) {
+            Usr usr = usrOptional.get();
+            String ceremonyDescription = usr.getCeremonyDescription();
+            String eventLocation = usr.getCeremonyLocation();
+            Date ceremonyDate = usr.getCeremonyStartDate();
+            Date weddingEnd = usr.getWeddingPartyEndDate();
+            String eventTitle = "ŚLUB " + usr.getBrideName() + "&" + usr.getGroomName();
             model.addAttribute("eventTitle", eventTitle);
             model.addAttribute("ceremonyStartObject", ceremonyDate);
-            model.addAttribute("ceremonyEndObject", user.getCeremonyEndDate());
-            model.addAttribute("weddingPartyStartObject", user.getWeddingPartyStartDate());
+            model.addAttribute("ceremonyEndObject", usr.getCeremonyEndDate());
+            model.addAttribute("weddingPartyStartObject", usr.getWeddingPartyStartDate());
             model.addAttribute("weddingPartyEndObject", weddingEnd);
             model.addAttribute("weddingLocation", eventLocation);
-            model.addAttribute("groomName", user.getGroomName());
-            model.addAttribute("brideName", user.getBrideName());
-            model.addAttribute("groomLastName", user.getGroomLastName());
-            model.addAttribute("brideLastName", user.getBrideLastName());
-            model.addAttribute("groomDescription", user.getGroomDescription());
-            model.addAttribute("brideDescription", user.getBrideDescription());
+            model.addAttribute("groomName", usr.getGroomName());
+            model.addAttribute("brideName", usr.getBrideName());
+            model.addAttribute("groomLastName", usr.getGroomLastName());
+            model.addAttribute("brideLastName", usr.getBrideLastName());
+            model.addAttribute("groomDescription", usr.getGroomDescription());
+            model.addAttribute("brideDescription", usr.getBrideDescription());
             model.addAttribute("ceremonyDescription", ceremonyDescription);
-            model.addAttribute("weddingPartyDescription", user.getWeddingPartyDescription());
+            model.addAttribute("weddingPartyDescription", usr.getWeddingPartyDescription());
             model.addAttribute("saveDateLink", generateGoogleCalendarLink(eventTitle, ceremonyDescription, eventLocation, ceremonyDate, weddingEnd));
             simpleDateFormat.applyPattern("dd MMMM yyyy");
-            model.addAttribute("dateAndPlace", simpleDateFormat.format(user.getCeremonyStartDate()) + " r., " + user.getCeremonyLocation());
-            model.addAttribute("shortLoveStory", user.getShortLoveStory());
-            model.addAttribute("eventList", eventService.getAllEvents());
-            model.addAttribute("weddingInvitedGuests", user.getWeddingInvitedGuests());
-            model.addAttribute("weddingConfirmedGuests", user.getWeddingConfirmedGuests());
-            model.addAttribute("eventsDoneInThisPlace", user.getEventsDoneInThisPlace());
-            model.addAttribute("hoursSpentOnPreparing", user.getHoursSpentOnPreparing());
-            model.addAttribute("wishList", wishService.getAllWishes());
-            model.addAttribute("facilityList", facilityService.getAllFacilities());
-            model.addAttribute("videoUrl", user.getVideoUrl());
-            model.addAttribute("videoThumbnail", user.getVideoThumbnail());
-            model.addAttribute("imageList", imageService.getAllImages());
-            model.addAttribute("galleryList", galleryService.getAllGallery());
+            model.addAttribute("dateAndPlace", simpleDateFormat.format(usr.getCeremonyStartDate()) + " r., " + usr.getCeremonyLocation());
+            model.addAttribute("shortLoveStory", usr.getShortLoveStory());
+            model.addAttribute("eventList", usr.getEvents());
+            model.addAttribute("weddingInvitedGuests", usr.getWeddingInvitedGuests());
+            model.addAttribute("weddingConfirmedGuests", usr.getWeddingConfirmedGuests());
+            model.addAttribute("eventsDoneInThisPlace", usr.getEventsDoneInThisPlace());
+            model.addAttribute("hoursSpentOnPreparing", usr.getHoursSpentOnPreparing());
+            model.addAttribute("wishList", usr.getWishes());
+            model.addAttribute("facilityList", usr.getFacilities());
+            model.addAttribute("backgroundTop", usr.getBackgroundTop());
+            model.addAttribute("groomImage", usr.getGroomImage());
+            model.addAttribute("brideImage", usr.getBrideImage());
+            model.addAttribute("backgroundMiddle", usr.getBackgroundMiddle());
+            model.addAttribute("backgroundNumbers", usr.getBackgroundNumbers());
+            model.addAttribute("backgroundBottom", usr.getBackgroundBottom());
+            model.addAttribute("videoUrl", usr.getVideoUrl());
+            model.addAttribute("videoThumbnail", usr.getVideoThumbnail());
+//            model.addAttribute("imageList", imageService.getAllImages());
+            model.addAttribute("galleryList", usr.getGalleries());
+        }else {
+            //TODO{Zachowanie w przypadku braku aliasu.}
         }
         return "index";
     }

@@ -19,13 +19,13 @@ public class Facility {
     private String content;
 
     @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    @JoinColumn(name = "usr_id",nullable = false)
+    private Usr usr;
 
-    public Facility(String name, String iconUrl, String content, User user) {
+    public Facility(String name, String iconUrl, String content, Usr usr) {
         this.name = name;
         this.iconUrl = iconUrl;
         this.content = content;
-        this.user = user;
+        this.usr = usr;
     }
 }

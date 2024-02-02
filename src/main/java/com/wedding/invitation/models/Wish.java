@@ -22,15 +22,15 @@ public class Wish {
 
 
     @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    @JoinColumn(name = "usr_id",nullable = false)
+    private Usr usr;
 
-    public Wish(String sender, String platform, String imageUrl, String content,User user) {
+    public Wish(String sender, String platform, String imageUrl, String content,Usr usr) {
         this.sender = sender;
         this.platform = platform;
         this.imageUrl = imageUrl;
         this.content = content;
-        this.user = user;
+        this.usr = usr;
     }
 
 }

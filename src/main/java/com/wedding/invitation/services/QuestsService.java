@@ -1,7 +1,7 @@
 package com.wedding.invitation.services;
 
 
-import com.wedding.invitation.models.User;
+import com.wedding.invitation.models.Guest;
 import com.wedding.invitation.repositories.GuestsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class QuestsService {
     }
 
 
-    public Optional<User> getUserById(long id){
+    public Optional<Guest> getUserById(long id){
         return guestsRepository.findById(id);
     }
 

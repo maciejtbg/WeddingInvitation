@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
+public class Usr {
     @Id
     @GeneratedValue
     private long id;
@@ -58,46 +58,63 @@ public class User {
     private int eventsDoneInThisPlace;
     private int hoursSpentOnPreparing;
 
+    //images
+    private String backgroundTop;
+    private String groomImage;
+    private String brideImage;
+    private String backgroundMiddle;
+    private String backgroundNumbers;
+    private String backgroundBottom;
 
     //video
     private String videoUrl;
     private String videoThumbnail;
 
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "usr")
     private List<Gallery> galleries;
+    @OneToMany(mappedBy = "usr")
     private List<Event> events;
+    @OneToMany(mappedBy = "usr")
     private List<Facility> facilities;
+    @OneToMany(mappedBy = "usr")
     private List<Guest> guests;
+    @OneToMany(mappedBy = "usr")
     private List<Wish> wishes;
 
-    public User(String username,
-                String password,
-                String email,
-                String alias,
-                Date ceremonyStartDate,
-                Date ceremonyEndDate,
-                Date weddingPartyStartDate,
-                Date weddingPartyEndDate,
-                String ceremonyLocation,
-                String weddingLocation,
-                String groomName,
-                String groomLastName,
-                String groomPhoneNumber,
-                String brideName,
-                String brideLastName,
-                String bridePhoneNumber,
-                String groomDescription,
-                String brideDescription,
-                String ceremonyDescription,
-                String weddingPartyDescription,
-                String shortLoveStory,
-                int weddingInvitedGuests,
-                int weddingConfirmedGuests,
-                int eventsDoneInThisPlace,
-                int hoursSpentOnPreparing,
-                String videoUrl,
-                String videoThumbnail) {
+    public Usr(String username,
+               String password,
+               String email,
+               String alias,
+               Date ceremonyStartDate,
+               Date ceremonyEndDate,
+               Date weddingPartyStartDate,
+               Date weddingPartyEndDate,
+               String ceremonyLocation,
+               String weddingLocation,
+               String groomName,
+               String groomLastName,
+               String groomPhoneNumber,
+               String brideName,
+               String brideLastName,
+               String bridePhoneNumber,
+               String groomDescription,
+               String brideDescription,
+               String ceremonyDescription,
+               String weddingPartyDescription,
+               String shortLoveStory,
+               int weddingInvitedGuests,
+               int weddingConfirmedGuests,
+               int eventsDoneInThisPlace,
+               int hoursSpentOnPreparing,
+               String backgroundTop,
+               String groomImage,
+               String brideImage,
+               String backgroundMiddle,
+               String backgroundNumbers,
+               String backgroundBottom,
+               String videoUrl,
+               String videoThumbnail) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -123,6 +140,12 @@ public class User {
         this.weddingConfirmedGuests = weddingConfirmedGuests;
         this.eventsDoneInThisPlace = eventsDoneInThisPlace;
         this.hoursSpentOnPreparing = hoursSpentOnPreparing;
+        this.backgroundTop = backgroundTop;
+        this.groomImage = groomImage;
+        this.brideImage = brideImage;
+        this.backgroundMiddle = backgroundMiddle;
+        this.backgroundNumbers = backgroundNumbers;
+        this.backgroundBottom = backgroundBottom;
         this.videoUrl = videoUrl;
         this.videoThumbnail = videoThumbnail;
     }

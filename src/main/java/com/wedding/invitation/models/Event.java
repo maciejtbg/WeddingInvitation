@@ -22,14 +22,14 @@ public class Event {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false)
-    private User user;
+    @JoinColumn(name = "usr_id",nullable = false)
+    private Usr usr;
 
-    public Event (String title, Date date, String imageUrl, String description, User user){
+    public Event (String title, Date date, String imageUrl, String description, Usr usr){
         this.title = title;
         this.date = date;
         this.imageUrl = imageUrl;
         this.description = description;
-        this.user = user;
+        this.usr = usr;
     }
 }

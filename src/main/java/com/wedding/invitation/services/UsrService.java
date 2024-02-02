@@ -1,38 +1,38 @@
 package com.wedding.invitation.services;
 
 
-import com.wedding.invitation.models.User;
-import com.wedding.invitation.repositories.UsersRepository;
+import com.wedding.invitation.models.Usr;
+import com.wedding.invitation.repositories.UsrRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-public class UsersService {
+public class UsrService {
 
-    private final UsersRepository usersRepository;
+    private final UsrRepository usrRepository;
 
     @Autowired
-    public UsersService(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public UsrService(UsrRepository usrRepository) {
+        this.usrRepository = usrRepository;
     }
 
 
-    public Optional<User> getUserByAlias(String alias){
+    public Optional<Usr> getUsrByAlias(String alias){
         System.out.println("Alias: "+alias);
-        return usersRepository.findByAlias(alias);
+        return usrRepository.findByAlias(alias);
     }
 
     public long getUserIdByAlias(String alias) throws UserNotFoundException {
-        if (usersRepository.findByAlias(alias).isEmpty()) {
+        if (usrRepository.findByAlias(alias).isEmpty()) {
             throw new UserNotFoundException("User not found with alias: " + alias);
         }
-        return usersRepository.findByAlias(alias).get().getId();
+        return usrRepository.findByAlias(alias).get().getId();
     }
 
-    public Optional<User> getUserById(long id){
-        return usersRepository.findById(id);
+    public Optional<Usr> getUsrById(long id){
+        return usrRepository.findById(id);
     }
 
 
