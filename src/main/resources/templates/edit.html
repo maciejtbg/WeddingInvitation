@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pl">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -7,417 +8,618 @@
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 
     <title>Wedding Invitation Form</title>
     <link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css"
-          crossorigin="anonymous">
+        crossorigin="anonymous">
 
     <!-- Format Images loader CSS -->
     <link rel="stylesheet"
-          href="https://www.jqueryscript.net/demo/multi-image-uploader-bootstrap/jquery.imagesloader.css">
+        href="https://www.jqueryscript.net/demo/multi-image-uploader-bootstrap/jquery.imagesloader.css">
 
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"
-            crossorigin="anonymous"></script>
+        crossorigin="anonymous"></script>
 
     <!-- Font awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/js/all.min.js"
-            crossorigin="anonymous"></script>
+        crossorigin="anonymous"></script>
 
     <!-- Images loader -->
-    <script src="https://www.jqueryscript.net/demo/multi-image-uploader-bootstrap/jquery.imagesloader-1.0.1.js"></script>
+    <script
+        src="https://www.jqueryscript.net/demo/multi-image-uploader-bootstrap/jquery.imagesloader-1.0.1.js"></script>
+
+    <!-- Font Awesome 5 -->
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css'>
+    <!-- Multi-step Form CSS -->
+    <link rel="stylesheet" href="/css/multi-step-style.css">
 </head>
+
 <body>
-<div class="container mt-4">
-    <h2>Wedding Invitation Form</h2>
-    <form>
-        <!-- Login and Password -->
-        <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" id="username" name="username" required>
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" required>
-        </div>
-        <div class="mb-3">
-            <label for="alias" class="form-label">Alias</label>
-            <input type="text" class="form-control" id="alias" name="alias" required>
-        </div>
-
-        <!-- Times -->
-        <div class="mb-3">
-            <label for="ceremonyStartDate" class="form-label">Ceremony Start Date</label>
-            <input type="date" class="form-control" id="ceremonyStartDate" name="ceremonyStartDate" required>
-        </div>
-        <div class="mb-3">
-            <label for="ceremonyEndDate" class="form-label">Ceremony End Date</label>
-            <input type="date" class="form-control" id="ceremonyEndDate" name="ceremonyEndDate" required>
-        </div>
-        <div class="mb-3">
-            <label for="weddingPartyStartDate" class="form-label">Wedding Party Start Date</label>
-            <input type="date" class="form-control" id="weddingPartyStartDate" name="weddingPartyStartDate" required>
-        </div>
-        <div class="mb-3">
-            <label for="weddingPartyEndDate" class="form-label">Wedding Party End Date</label>
-            <input type="date" class="form-control" id="weddingPartyEndDate" name="weddingPartyEndDate" required>
-        </div>
-
-        <!-- Locations -->
-        <div class="mb-3">
-            <label for="ceremonyLocation" class="form-label">Ceremony Location</label>
-            <input type="text" class="form-control" id="ceremonyLocation" name="ceremonyLocation" required>
-        </div>
-        <div class="mb-3">
-            <label for="weddingLocation" class="form-label">Wedding Location</label>
-            <input type="text" class="form-control" id="weddingLocation" name="weddingLocation" required>
-        </div>
-
-        <!-- Personal Data -->
-        <!-- Groom -->
-        <div class="mb-3">
-            <label for="groomName" class="form-label">Groom's Name</label>
-            <input type="text" class="form-control" id="groomName" name="groomName" required>
-        </div>
-        <div class="mb-3">
-            <label for="groomLastName" class="form-label">Groom's Last Name</label>
-            <input type="text" class="form-control" id="groomLastName" name="groomLastName" required>
-        </div>
-        <div class="mb-3">
-            <label for="groomPhoneNumber" class="form-label">Groom's Phone Number</label>
-            <input type="tel" class="form-control" id="groomPhoneNumber" name="groomPhoneNumber" required>
-        </div>
-        <!-- Bride -->
-        <div class="mb-3">
-            <label for="brideName" class="form-label">Bride's Name</label>
-            <input type="text" class="form-control" id="brideName" name="brideName" required>
-        </div>
-        <div class="mb-3">
-            <label for="brideLastName" class="form-label">Bride's Last Name</label>
-            <input type="text" class="form-control" id="brideLastName" name="brideLastName" required>
-        </div>
-        <div class="mb-3">
-            <label for="bridePhoneNumber" class="form-label">Bride's Phone Number</label>
-            <input type="tel" class="form-control" id="bridePhoneNumber" name="bridePhoneNumber" required>
-        </div>
-
-        <!-- Descriptions -->
-        <div class="mb-3">
-            <label for="groomDescription" class="form-label">Groom Description</label>
-            <textarea class="form-control" id="groomDescription" name="groomDescription" rows="3" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="brideDescription" class="form-label">Bride Description</label>
-            <textarea class="form-control" id="brideDescription" name="brideDescription" rows="3" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="ceremonyDescription" class="form-label">Ceremony Description</label>
-            <textarea class="form-control" id="ceremonyDescription" name="ceremonyDescription" rows="3"
-                      required></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="weddingPartyDescription" class="form-label">Wedding Party Description</label>
-            <textarea class="form-control" id="weddingPartyDescription" name="weddingPartyDescription" rows="3"
-                      required></textarea>
-        </div>
-
-        <!-- History -->
-        <div class="mb-3">
-            <label for="shortLoveStory" class="form-label">Short Love Story</label>
-            <textarea class="form-control" id="shortLoveStory" name="shortLoveStory" rows="4" required></textarea>
-        </div>
-
-        <!-- Wedding Data -->
-        <div class="mb-3">
-            <label for="weddingInvitedGuests" class="form-label">Wedding Invited Guests</label>
-            <input type="number" class="form-control" id="weddingInvitedGuests" name="weddingInvitedGuests" required>
-        </div>
-        <div class="mb-3">
-            <label for="weddingConfirmedGuests" class="form-label">Wedding Confirmed Guests</label>
-            <input type="number" class="form-control" id="weddingConfirmedGuests" name="weddingConfirmedGuests"
-                   required>
-        </div>
-        <div class="mb-3">
-            <label for="eventsDoneInThisPlace" class="form-label">Events Done In This Place</label>
-            <input type="number" class="form-control" id="eventsDoneInThisPlace" name="eventsDoneInThisPlace" required>
-        </div>
-        <div class="mb-3">
-            <label for="hoursSpentOnPreparing" class="form-label">Hours Spent On Preparing</label>
-            <input type="number" class="form-control" id="hoursSpentOnPreparing" name="hoursSpentOnPreparing" required>
-        </div>
 
 
-        <div class="container mt-4">
-            <h2>Upload Gallery Images</h2>
-            <form action="/upload-target" method="post" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="galleryName" class="form-label">Gallery Name</label>
-                    <input type="text" class="form-control" id="galleryName" name="galleryName" required>
+    <div class="container d-flex justify-content-center" style="min-width:720px!important">
+        <div class="col-11 col-offset-2">
+            <div class="progress mt-3" style="height: 30px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                    style="font-weight:bold; font-size:15px;" role="progressbar" aria-valuemin="0" aria-valuemax="100">
                 </div>
-                <div class="mb-3">
-                    <label for="galleryDescription" class="form-label">Gallery Description</label>
-                    <textarea class="form-control" id="galleryDescription" name="galleryDescription" rows="3"
-                              required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label for="galleryImages" class="form-label">Select Images</label>
-                    <input class="form-control" type="file" id="galleryImages" name="galleryImages[]" multiple>
-                    <div class="form-text">Hold down the Ctrl (Windows) or Command (Mac) button to select multiple
-                        images.
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Upload</button>
-            </form>
-        </div>
-
-        <div class="container col-md-6">
-            <div class="mb-5">
-                <label for="formFile" class="form-label">Bootstrap 5 image Upload with Preview</label>
-                <input class="form-control" type="file" id="formFile" onchange="preview()">
-                <button onclick="clearImage()" class="btn btn-primary mt-3">Click me</button>
             </div>
-            <img id="frame" src="" class="img-fluid"/>
-        </div>
+            <div class="card mt-3">
+                <div class="card-header font-weight-bold">Formularz tworzenia strony ślubu</div>
+                <!-- Username, Password, Email and Alias card -->
+                <div class="card-body p-4 step">
+                    <!-- <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alias" class="form-label">Alias</label>
+                        <input type="text" class="form-control" id="alias" name="alias" required>
+                    </div>
+                    <button class="btn btn-primary" id="create-account">Sprawdź dostępność</button> -->
+
+                    <form id="checkAvailabilityForm">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div id="usernameFeedback" class="feedback"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div id="emailFeedback" class="feedback"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="alias">Alias</label>
+                            <input type="text" class="form-control" id="alias" name="alias" required>
+                            <div id="aliasFeedback" class="feedback"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sprawdź dostępność</button>
+                    </form>
+                    <div id="loader" style="display:none;">Loading...</div>
 
 
-        <div class="container col-8  mx-5">
-            <form id="frm" method="post" class="needs-validation" novalidate="">
 
-                <!--Image Upload-->
-                <div class="row mt-3 mb-2">
+                </div>
+                <script>
+                    document.getElementById('checkAvailabilityForm').addEventListener('submit', function (event) {
+                        event.preventDefault(); // Zapobieganie domyślnej akcji formularza
 
-<!--                    <div class="col-12 pr-0 text-left">-->
-<!--                        <label for="Images" class="col-form-label text-nowrap"><strong>Images loader</strong></label>-->
-<!--                    </div>-->
+                        const username = document.getElementById('username').value;
+                        const email = document.getElementById('email').value;
+                        const alias = document.getElementById('alias').value;
+
+                        // Wyświetlenie loadera
+                        document.getElementById('loader').style.display = 'block';
+
+                        // Resetowanie komunikatów
+                        resetFeedback();
+
+                        // Przygotowanie danych do wysłania
+                        const requestData = { username, email, alias };
+
+                        fetch('/api/usr/check-availability', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(requestData),
+                        })
+                            .then(response => {
+                                if (!response.ok) throw response;
+                                return response.json();
+                            })
+                            .then(data => {
+                                document.getElementById('loader').style.display = 'none'; // Ukrywanie loadera
+                                if (data.message === "Użytkownik jest unikalny") {
+                                    setFeedback('usernameFeedback', 'Username jest unikalny', true);
+                                    setFeedback('emailFeedback', 'Email jest unikalny', true);
+                                    setFeedback('aliasFeedback', 'Alias jest unikalny', true);
+                                } else {
+                                    data.existingData.forEach(item => {
+                                        const field = item.split(": ")[0];
+                                        const message = item.split(": ")[1] + " już istnieje";
+                                        setFeedback(`${field}Feedback`, message, false);
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                error.json().then(err => {
+                                    document.getElementById('loader').style.display = 'none'; // Ukrywanie loadera
+                                    console.error(err);
+                                });
+                            });
+                    });
+
+                    function setFeedback(id, message, isSuccess) {
+                        const feedbackElement = document.getElementById(id);
+                        feedbackElement.textContent = message;
+                        if (isSuccess) {
+                            feedbackElement.classList.add('success');
+                        }
+                    }
+
+                    function resetFeedback() {
+                        document.querySelectorAll('.feedback').forEach(element => {
+                            element.textContent = '';
+                            element.classList.remove('success');
+                        });
+                    }
+
+                </script>
+                <!--            All dates card-->
+                <div class="card-body p-4 step" style="display: none">
+                    <!-- Times -->
+                    <div class="mb-3">
+                        <label for="ceremonyStartDate" class="form-label">Ceremony Start Date</label>
+                        <input type="date" class="form-control" id="ceremonyStartDate" name="ceremonyStartDate"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ceremonyEndDate" class="form-label">Ceremony End Date</label>
+                        <input type="date" class="form-control" id="ceremonyEndDate" name="ceremonyEndDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weddingPartyStartDate" class="form-label">Wedding Party Start Date</label>
+                        <input type="date" class="form-control" id="weddingPartyStartDate" name="weddingPartyStartDate"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weddingPartyEndDate" class="form-label">Wedding Party End Date</label>
+                        <input type="date" class="form-control" id="weddingPartyEndDate" name="weddingPartyEndDate"
+                            required>
+                    </div>
+                </div>
+                <!-- Locations -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="ceremonyLocation" class="form-label">Ceremony Location</label>
+                        <input type="text" class="form-control" id="ceremonyLocation" name="ceremonyLocation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weddingLocation" class="form-label">Wedding Location</label>
+                        <input type="text" class="form-control" id="weddingLocation" name="weddingLocation" required>
+                    </div>
+                </div>
+                <!-- Personal Groom Info -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="groomName" class="form-label">Groom's Name</label>
+                        <input type="text" class="form-control" id="groomName" name="groomName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="groomLastName" class="form-label">Groom's Last Name</label>
+                        <input type="text" class="form-control" id="groomLastName" name="groomLastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="groomPhoneNumber" class="form-label">Groom's Phone Number</label>
+                        <input type="tel" class="form-control" id="groomPhoneNumber" name="groomPhoneNumber" required>
+                    </div>
+                </div>
+                <!--            Personal Bride Info-->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="brideName" class="form-label">Bride's Name</label>
+                        <input type="text" class="form-control" id="brideName" name="brideName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brideLastName" class="form-label">Bride's Last Name</label>
+                        <input type="text" class="form-control" id="brideLastName" name="brideLastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bridePhoneNumber" class="form-label">Bride's Phone Number</label>
+                        <input type="tel" class="form-control" id="bridePhoneNumber" name="bridePhoneNumber" required>
+                    </div>
+                </div>
+                <!-- Descriptions -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="groomDescription" class="form-label">Groom Description</label>
+                        <textarea class="form-control" id="groomDescription" name="groomDescription" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brideDescription" class="form-label">Bride Description</label>
+                        <textarea class="form-control" id="brideDescription" name="brideDescription" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ceremonyDescription" class="form-label">Ceremony Description</label>
+                        <textarea class="form-control" id="ceremonyDescription" name="ceremonyDescription" rows="3"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weddingPartyDescription" class="form-label">Wedding Party Description</label>
+                        <textarea class="form-control" id="weddingPartyDescription" name="weddingPartyDescription"
+                            rows="3" required></textarea>
+                    </div>
                 </div>
 
-                <!--Image container -->
-                <div class="row"
-                     data-type="imagesloader"
-                     data-errorformat="Accepted file formats"
-                     data-errorsize="Maximum size accepted"
-                     data-errorduplicate="File already loaded"
-                     data-errormaxfiles="Maximum number of images you can upload"
-                     data-errorminfiles="Minimum number of images to upload"
-                     data-modifyimagetext="Modify immage">
-
-                    <!-- Progress bar -->
-                    <div class="col-12 order-1 mt-2">
-                        <div data-type="progress" class="progress" style="height: 25px; display:none;">
-                            <div data-type="progressBar"
-                                 class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                                 role="progressbar" style="width: 100%;">Load in progress...
-                            </div>
-                        </div>
+                <!-- History -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="shortLoveStory" class="form-label">Short Love Story</label>
+                        <textarea class="form-control" id="shortLoveStory" name="shortLoveStory" rows="4"
+                            required></textarea>
                     </div>
-
-                    <!-- Model -->
-                    <div data-type="image-model" class="col-4 pl-2 pr-2 pt-2" style="max-width:200px; display:none;">
-
-                        <div class="ratio-box text-center" data-type="image-ratio-box">
-                            <img data-type="noimage"
-                                 class="btn btn-light ratio-img img-fluid p-2 image border dashed rounded"
-                                 src="https://www.jqueryscript.net/demo/multi-image-uploader-bootstrap/img/photo-camera-gray.svg" style="cursor:pointer;">
-                            <div data-type="loading" class="img-loading" style="color:#218838; display:none;">
-                                <span class="fa fa-2x fa-spin fa-spinner"></span>
-                            </div>
-                            <img data-type="preview"
-                                 class="btn btn-light ratio-img img-fluid p-2 image border dashed rounded" src=""
-                                 style="display: none; cursor: default;">
-                            <span class="badge badge-pill badge-success p-2 w-50 main-tag"
-                                  style="display:none;">Main</span>
-                        </div>
-
-                        <!-- Buttons -->
-                        <div data-type="image-buttons" class="row justify-content-center mt-2">
-                            <button data-type="add" class="btn btn-outline-success" type="button"><span
-                                    class="fa fa-camera mr-2"></span>Add
-                            </button>
-                            <button data-type="btn-modify" type="button" class="btn btn-outline-success m-0"
-                                    data-toggle="popover" data-placement="right" style="display:none;">
-                                <span class="fa fa-pencil-alt mr-2"></span>Modify
-                            </button>
-                        </div>
+                </div>
+                <!-- Wedding In Numbers -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="weddingInvitedGuests" class="form-label">Wedding Invited Guests</label>
+                        <input type="number" class="form-control" id="weddingInvitedGuests" name="weddingInvitedGuests"
+                            required>
                     </div>
+                    <div class="mb-3">
+                        <label for="weddingConfirmedGuests" class="form-label">Wedding Confirmed Guests</label>
+                        <input type="number" class="form-control" id="weddingConfirmedGuests"
+                            name="weddingConfirmedGuests" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventsDoneInThisPlace" class="form-label">Events Done In This Place</label>
+                        <input type="number" class="form-control" id="eventsDoneInThisPlace"
+                            name="eventsDoneInThisPlace" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hoursSpentOnPreparing" class="form-label">Hours Spent On Preparing</label>
+                        <input type="number" class="form-control" id="hoursSpentOnPreparing"
+                            name="hoursSpentOnPreparing" required>
+                    </div>
+                </div>
+                <!-- Core Images -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="mb-3">
+                        <label for="galleryImages" class="form-label">Select Images</label>
+                        <input class="form-control" type="file" id="galleryImages" name="galleryImages[]">
+                        <div class="form-text">Zdjęcie powinno mieć szerokośc ok. 800 pikseli.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="galleryImages" class="form-label">Select Images</label>
+                        <input class="form-control" type="file" id="galleryImages" name="galleryImages[]">
+                        <div class="form-text">Zdjęcie powinno mieć szerokośc ok. 800 pikseli.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="galleryImages" class="form-label">Select Images</label>
+                        <input class="form-control" type="file" id="galleryImages" name="galleryImages[]">
+                        <div class="form-text">Zdjęcie powinno mieć szerokośc ok. 800 pikseli.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="galleryImages" class="form-label">Select Images</label>
+                        <input class="form-control" type="file" id="galleryImages" name="galleryImages[]">
+                        <div class="form-text">Zdjęcie powinno mieć szerokośc ok. 800 pikseli.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="galleryImages" class="form-label">Select Images</label>
+                        <input class="form-control" type="file" id="galleryImages" name="galleryImages[]">
+                        <div class="form-text">Zdjęcie powinno mieć szerokośc ok. 800 pikseli.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="galleryImages" class="form-label">Select Images</label>
+                        <input class="form-control" type="file" id="galleryImages" name="galleryImages[]">
+                        <div class="form-text">Zdjęcie powinno mieć szerokośc ok. 800 pikseli.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+                <!-- Videos -->
+                <div class="card-body p-4 step" style="display: none">
 
-                    <!-- Popover operations -->
-                    <div data-type="popover-model" style="display:none">
-                        <div data-type="popover" class="ml-3 mr-3" style="min-width:150px;">
-                            <div class="row">
-                                <div class="col p-0">
-                                    <button data-operation="main" class="btn btn-block btn-success btn-sm rounded-pill"
-                                            type="button"><span class="fa fa-angle-double-up mr-2"></span>Main
-                                    </button>
+                </div>
+                <!-- Gallery Images -->
+                <div class="card-body p-4 step" style="display: none">
+                    <div class="container mt-4">
+                        <h2>Upload Gallery Images</h2>
+                        <form action="/upload-target" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="galleryName" class="form-label">Gallery Name</label>
+                                <input type="text" class="form-control" id="galleryName" name="galleryName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="galleryDescription" class="form-label">Gallery Description</label>
+                                <textarea class="form-control" id="galleryDescription" name="galleryDescription"
+                                    rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="galleryImages" class="form-label">Select Images</label>
+                                <input class="form-control" type="file" id="galleryImages" name="galleryImages[]"
+                                    multiple>
+                                <div class="form-text">Hold down the Ctrl (Windows) or Command (Mac) button to select
+                                    multiple
+                                    images.
                                 </div>
                             </div>
-                            <div class="row mt-2">
-                                <div class="col-6 p-0 pr-1">
-                                    <button data-operation="left"
-                                            class="btn btn-block btn-outline-success btn-sm rounded-pill" type="button">
-                                        <span class="fa fa-angle-left mr-2"></span>Left
-                                    </button>
+                            <button type="submit" class="btn btn-primary">Upload</button>
+                        </form>
+                    </div>
+                    <div class="container col-8  mx-5">
+                        <form id="frm" method="post" class="needs-validation" novalidate="">
+
+                            <!--Image Upload-->
+                            <div class="row mt-3 mb-2">
+
+                                <!--                    <div class="col-12 pr-0 text-left">-->
+                                <!--                        <label for="Images" class="col-form-label text-nowrap"><strong>Images loader</strong></label>-->
+                                <!--                    </div>-->
+                            </div>
+
+                            <!--Image container -->
+                            <div class="row" data-type="imagesloader" data-errorformat="Accepted file formats"
+                                data-errorsize="Maximum size accepted" data-errorduplicate="File already loaded"
+                                data-errormaxfiles="Maximum number of images you can upload"
+                                data-errorminfiles="Minimum number of images to upload"
+                                data-modifyimagetext="Modify immage">
+
+                                <!-- Progress bar -->
+                                <div class="col-12 order-1 mt-2">
+                                    <div data-type="progress" class="progress" style="height: 25px; display:none;">
+                                        <div data-type="progressBar"
+                                            class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                            role="progressbar" style="width: 100%;">Load in progress...
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-6 p-0 pl-1">
-                                    <button data-operation="right"
-                                            class="btn btn-block btn-outline-success btn-sm rounded-pill" type="button">
-                                        Right<span class="fa fa-angle-right ml-2"></span></button>
+
+                                <!-- Model -->
+                                <div data-type="image-model" class="col-4 pl-2 pr-2 pt-2"
+                                    style="max-width:200px; display:none;">
+
+                                    <div class="ratio-box text-center" data-type="image-ratio-box">
+                                        <img data-type="noimage"
+                                            class="btn btn-light ratio-img img-fluid p-2 image border dashed rounded"
+                                            src="https://www.jqueryscript.net/demo/multi-image-uploader-bootstrap/img/photo-camera-gray.svg"
+                                            style="cursor:pointer;">
+                                        <div data-type="loading" class="img-loading"
+                                            style="color:#218838; display:none;">
+                                            <span class="fa fa-2x fa-spin fa-spinner"></span>
+                                        </div>
+                                        <img data-type="preview"
+                                            class="btn btn-light ratio-img img-fluid p-2 image border dashed rounded"
+                                            src="" style="display: none; cursor: default;">
+                                        <span class="badge badge-pill badge-success p-2 w-50 main-tag"
+                                            style="display:none;">Main</span>
+                                    </div>
+
+                                    <!-- Buttons -->
+                                    <div data-type="image-buttons" class="row justify-content-center mt-2">
+                                        <button data-type="add" class="btn btn-outline-success" type="button"><span
+                                                class="fa fa-camera mr-2"></span>Add
+                                        </button>
+                                        <button data-type="btn-modify" type="button" class="btn btn-outline-success m-0"
+                                            data-toggle="popover" data-placement="right" style="display:none;">
+                                            <span class="fa fa-pencil-alt mr-2"></span>Modify
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Popover operations -->
+                                <div data-type="popover-model" style="display:none">
+                                    <div data-type="popover" class="ml-3 mr-3" style="min-width:150px;">
+                                        <div class="row">
+                                            <div class="col p-0">
+                                                <button data-operation="main"
+                                                    class="btn btn-block btn-success btn-sm rounded-pill"
+                                                    type="button"><span class="fa fa-angle-double-up mr-2"></span>Main
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6 p-0 pr-1">
+                                                <button data-operation="left"
+                                                    class="btn btn-block btn-outline-success btn-sm rounded-pill"
+                                                    type="button">
+                                                    <span class="fa fa-angle-left mr-2"></span>Left
+                                                </button>
+                                            </div>
+                                            <div class="col-6 p-0 pl-1">
+                                                <button data-operation="right"
+                                                    class="btn btn-block btn-outline-success btn-sm rounded-pill"
+                                                    type="button">
+                                                    Right<span class="fa fa-angle-right ml-2"></span></button>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6 p-0 pr-1">
+                                                <button data-operation="rotateanticlockwise"
+                                                    class="btn btn-block btn-outline-success btn-sm rounded-pill"
+                                                    type="button">
+                                                    <span class="fas fa-undo-alt mr-2"></span>Rotate
+                                                </button>
+                                            </div>
+                                            <div class="col-6 p-0 pl-1">
+                                                <button data-operation="rotateclockwise"
+                                                    class="btn btn-block btn-outline-success btn-sm rounded-pill"
+                                                    type="button">
+                                                    Rotate<span class="fas fa-redo-alt ml-2"></span></button>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <button data-operation="remove"
+                                                class="btn btn-outline-danger btn-sm btn-block" type="button"><span
+                                                    class="fa fa-times mr-2"></span>Remove
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row mt-2">
-                                <div class="col-6 p-0 pr-1">
-                                    <button data-operation="rotateanticlockwise"
-                                            class="btn btn-block btn-outline-success btn-sm rounded-pill" type="button">
-                                        <span class="fas fa-undo-alt mr-2"></span>Rotate
-                                    </button>
-                                </div>
-                                <div class="col-6 p-0 pl-1">
-                                    <button data-operation="rotateclockwise"
-                                            class="btn btn-block btn-outline-success btn-sm rounded-pill" type="button">
-                                        Rotate<span class="fas fa-redo-alt ml-2"></span></button>
+                            <div class="form-group row">
+                                <div class="input-group">
+                                    <!--Hidden file input for images-->
+                                    <input id="files" type="file" name="files[]" data-button="" multiple=""
+                                        accept="image/jpeg, image/png, image/gif," style="display:none;">
                                 </div>
                             </div>
-                            <div class="row mt-2">
-                                <button data-operation="remove" class="btn btn-outline-danger btn-sm btn-block"
-                                        type="button"><span class="fa fa-times mr-2"></span>Remove
+                        </form>
+                        <div class="row mt-2">
+                            <div class="col-md-4 offset-md-8 text-center mb-4">
+                                <button id="btnContinue" type="submit" form="frm"
+                                    class="btn btn-block btn-outline-success float-right" data-toggle="tooltip"
+                                    data-trigger="manual" data-placement="top" data-title="Continue">
+                                    Continue<span id="btnContinueIcon"
+                                        class="fa fa-chevron-circle-right ml-2"></span><span id="btnContinueLoading"
+                                        class="fa fa-spin fa-spinner ml-2" style="display:none"></span>
                                 </button>
                             </div>
                         </div>
                     </div>
-
                 </div>
-
-                <div class="form-group row">
-                    <div class="input-group">
-                        <!--Hidden file input for images-->
-                        <input id="files" type="file" name="files[]" data-button="" multiple=""
-                               accept="image/jpeg, image/png, image/gif," style="display:none;">
+                <div id="userinfo" class="card-body p-4 step" style="display: none">
+                    <div class="text-center">
+                        <h5 class="card-title font-weight-bold pb-2">User information</h5>
                     </div>
+
+                    <div class="form-group row">
+                        <div class="col-2"></div>
+                        <div class="col-4">
+                            <label for="fname">First Name<b style="color: #dc3545;">*</b></label>
+                            <input type="text" name="name" class="form-control" id="fname" required>
+                            <div class="invalid-feedback">This field is required</div>
+                        </div>
+                        <div class="col-4">
+                            <label for="lname">Last Name<b style="color: #dc3545;">*</b></label>
+                            <input type="text" class="form-control" id="lname" required>
+                            <div class="invalid-feedback">This field is required</div>
+                        </div>
+                    </div>
+                    <div class="form-group row pt-2">
+                        <label for="team" class="col-2 text-end control-label col-form-label">Team</label>
+                        <div class="col-8">
+                            <input type="text" class="form-control" id="team">
+                        </div>
+                    </div>
+                    <div class="form-group row pt-2">
+                        <label for="address" class="col-2 text-end control-label col-form-label">Address</label>
+                        <div class="col-8">
+                            <input type="text" class="form-control" id="address">
+                        </div>
+                    </div>
+                    <div class="form-group row pt-2">
+                        <label for="tel" class="col-2 text-end control-label col-form-label">Tel/Gsm</label>
+                        <div class="col-8">
+                            <input type="text" class="form-control" id="tel">
+                        </div>
+                    </div>
+                    <div class="text-center text-muted"><b style="color: #dc3545;">*</b> required fields</div>
                 </div>
-
-            </form>
-
-            <div class="row mt-2">
-                <div class="col-md-4 offset-md-8 text-center mb-4">
-                    <button id="btnContinue" type="submit" form="frm"
-                            class="btn btn-block btn-outline-success float-right" data-toggle="tooltip"
-                            data-trigger="manual" data-placement="top" data-title="Continue">
-                        Continue<span id="btnContinueIcon" class="fa fa-chevron-circle-right ml-2"></span><span
-                            id="btnContinueLoading" class="fa fa-spin fa-spinner ml-2" style="display:none"></span>
+                <div class="card-body p-5 step" style="display: none">Step 3</div>
+                <div class="card-body p-5 step" style="display: none">Step 4</div>
+                <div class="card-body p-5 step" style="display: none">Step 5</div>
+                <div class="card-footer">
+                    <button class="action back btn btn-sm btn-outline-warning" style="display: none">Back</button>
+                    <button class="action next btn btn-sm btn-outline-secondary float-end">Next</button>
+                    <button class="action submit btn btn-sm btn-outline-success float-end" style="display: none">Submit
                     </button>
                 </div>
             </div>
 
         </div>
+    </div>
 
+    <!--<div class="container mt-4">-->
+    <!--    <h2>Wedding Invitation Form</h2>-->
+    <!--    <div class="container col-md-6">-->
+    <!--        <div class="mb-5">-->
+    <!--            <label for="formFile" class="form-label">Bootstrap 5 image Upload with Preview</label>-->
+    <!--            <input class="form-control" type="file" id="formFile" onchange="preview()">-->
+    <!--            <button onclick="clearImage()" class="btn btn-primary mt-3">Click me</button>-->
+    <!--        </div>-->
+    <!--        <img id="frame" src="" class="img-fluid"/>-->
+    <!--    </div>-->
+    <!--</div>-->
+    <!-- Multi-step Form JS -->
+    <script src="/js/bootstrap-multi-step-form.js"></script>
 
-        <!-- Video -->
-        <div class="mb-3">
-            <label for="videoUrl" class="form-label">Video URL</label>
-            <input type="url" class="form-control" id="videoUrl" name="videoUrl" required>
-        </div>
-        <div class="mb-3">
-            <label for="videoThumbnail" class="form-label">Video Thumbnail</label>
-            <input type="text" class="form-control" id="videoThumbnail" name="videoThumbnail" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"
         integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB"
         crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
         integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13"
         crossorigin="anonymous"></script>
 
-<script>
-    function preview() {
-        frame.src = URL.createObjectURL(event.target.files[0]);
-    }
-    function clearImage() {
-        document.getElementById('formFile').value = null;
-        frame.src = "";
-    }
-</script>
+    <script>
+        function preview() {
+            frame.src = URL.createObjectURL(event.target.files[0]);
+        }
+        function clearImage() {
+            document.getElementById('formFile').value = null;
+            frame.src = "";
+        }
+    </script>
 
-<!-- Custom javascript -->
-<script type="text/javascript">
+    <!-- Custom javascript -->
+    <script type="text/javascript">
 
-    // Ready
-    $(document).ready(function () {
+        // Ready
+        $(document).ready(function () {
 
-      //Image loader var to use when you need a function from object
-      var auctionImages = null;
+            //Image loader var to use when you need a function from object
+            var auctionImages = null;
 
-      // Create image loader plugin
-      var imagesloader = $('[data-type=imagesloader]').imagesloader({
-        maxFiles: 4
-        , minSelect: 1
-        , imagesToLoad: auctionImages
-      });
+            // Create image loader plugin
+            var imagesloader = $('[data-type=imagesloader]').imagesloader({
+                maxFiles: 4
+                , minSelect: 1
+                , imagesToLoad: auctionImages
+            });
 
-      //Form
-      $frm = $('#frm');
+            //Form
+            $frm = $('#frm');
 
-      // Form submit
-      $frm.submit(function (e) {
+            // Form submit
+            $frm.submit(function (e) {
 
-        var $form = $(this);
+                var $form = $(this);
 
-        var files = imagesloader.data('format.imagesloader').AttachmentArray;
+                var files = imagesloader.data('format.imagesloader').AttachmentArray;
 
-        var il = imagesloader.data('format.imagesloader');
+                var il = imagesloader.data('format.imagesloader');
 
-        if (il.CheckValidity())
-          alert('Upload ' + files.length + ' files');
+                if (il.CheckValidity())
+                    alert('Upload ' + files.length + ' files');
 
-        e.preventDefault();
-        e.stopPropagation();
-      });
+                e.preventDefault();
+                e.stopPropagation();
+            });
 
-    });
-
-</script>
-<script type="text/javascript">
-
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-36251023-1']);
-    _gaq.push(['_setDomainName', 'jqueryscript.net']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-
-</script>
-<script>
-    try {
-      fetch(new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' })).then(function(response) {
-        return true;
-      }).catch(function(e) {
-        var carbonScript = document.createElement("script");
-        carbonScript.src = "//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet";
-        carbonScript.id = "_carbonads_js";
-        document.getElementById("carbon-block").appendChild(carbonScript);
-      });
-    } catch (error) {
-      console.log(error);
-    }
-</script>
-
-
-</body>
+        });
+    </script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-36251023-1']);
+        _gaq.push(['_setDomainName', 'jqueryscript.net']);
+        _gaq.push(['_trackPageview']);
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+    <script>
+        try {
+            fetch(new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' })).then(function (response) {
+                return true;
+            }).catch(function (e) {
+                var carbonScript = document.createElement("script");
+                carbonScript.src = "//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet";
+                carbonScript.id = "_carbonads_js";
+                document.getElementById("carbon-block").appendChild(carbonScript);
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    </script>
 </body>
 
 </html>

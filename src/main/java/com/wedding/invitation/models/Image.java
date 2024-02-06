@@ -1,6 +1,7 @@
 package com.wedding.invitation.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,7 +11,18 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Image {
+    public Image(String name, String imageUrl, Gallery gallery) {
+        this.name = name;
+        this.imageUrl = imageUrl;
+        this.gallery = gallery;
+    }
+
+    public Image(String name, String imageUrl) {
+        this.name = name;
+        this.imageUrl = imageUrl;
+    }
 
     @Id
     @GeneratedValue
@@ -24,14 +36,7 @@ public class Image {
     private String imageUrl;
 
     @ManyToOne
-    @JoinColumn(name = "gallery_id",nullable = false)
+    @JoinColumn(name = "gallery_id")
     private Gallery gallery;
-
-
-    public Image(String name, String imageUrl, Gallery gallery) {
-        this.name = name;
-        this.imageUrl = imageUrl;
-        this.gallery = gallery;
-    }
 
 }

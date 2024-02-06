@@ -21,9 +21,12 @@ repositories {
 	mavenCentral()
 }
 
-dependencies {
-	implementation 'org.springframework:spring-context:6.0.9'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+		dependencies {
+	implementation 'org.springframework:spring-context'
+			implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+			implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-quartz'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'

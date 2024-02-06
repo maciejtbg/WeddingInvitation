@@ -1,6 +1,7 @@
 package com.wedding.invitation.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Facility {
     @Id
     @GeneratedValue
@@ -18,14 +20,20 @@ public class Facility {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @ManyToOne
-    @JoinColumn(name = "usr_id",nullable = false)
-    private Usr usr;
-
-    public Facility(String name, String iconUrl, String content, Usr usr) {
+    public Facility(String name, String iconUrl, String content) {
         this.name = name;
         this.iconUrl = iconUrl;
         this.content = content;
-        this.usr = usr;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "wedding_details_id")
+    private WeddingDetails weddingDetails;
+
+    public Facility(String name, String iconUrl, String content, WeddingDetails weddingDetails) {
+        this.name = name;
+        this.iconUrl = iconUrl;
+        this.content = content;
+        this.weddingDetails = weddingDetails;
     }
 }
