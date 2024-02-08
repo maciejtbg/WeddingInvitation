@@ -12,17 +12,17 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Guest {
-    public Guest(String guestName, String questEmail, String questPhone, WeddingStory weddingStory) {
+    public Guest(String guestName, String guestEmail, String guestPhone, WeddingStory weddingStory) {
         this.guestName = guestName;
-        this.questEmail = questEmail;
-        this.questPhone = questPhone;
+        this.guestEmail = guestEmail;
+        this.guestPhone = guestPhone;
         this.weddingStory = weddingStory;
     }
 
-    public Guest(String guestName, String questEmail, String questPhone) {
+    public Guest(String guestName, String guestEmail, String guestPhone) {
         this.guestName = guestName;
-        this.questEmail = questEmail;
-        this.questPhone = questPhone;
+        this.guestEmail = guestEmail;
+        this.guestPhone = guestPhone;
     }
 
     @Id
@@ -31,8 +31,9 @@ public class Guest {
 
     //login and password
     private String guestName;
-    private String questEmail;
-    private String questPhone;
+    private String guestEmail;
+    private String guestPhone;
+    private boolean confirmed = false;
 
     @ManyToOne
     @JoinColumn(name = "wedding_story_id",nullable = false)

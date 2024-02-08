@@ -17,7 +17,7 @@ public class DbInit implements CommandLineRunner {
     private final EventRepository eventRepository;
     private final FacilityRepository facilityRepository;
     private final GalleryRepository galleryRepository;
-    private final GuestsRepository guestsRepository;
+    private final GuestRepository guestRepository;
     private final ImageRepository imageRepository;
     private final PartnerDetailsRepository partnerDetailsRepository;
     private final UserAccountRepository userAccountRepository;
@@ -27,11 +27,11 @@ public class DbInit implements CommandLineRunner {
     private final WishRepository wishRepository;
 
     @Autowired
-    public DbInit(EventRepository eventRepository, FacilityRepository facilityRepository, GalleryRepository galleryRepository, GuestsRepository guestsRepository, ImageRepository imageRepository, PartnerDetailsRepository partnerDetailsRepository, UserAccountRepository userAccountRepository, WeddingDetailsRepository weddingDetailsRepository, WeddingMediaRepository weddingMediaRepository, WeddingStoryRepository weddingStoryRepository, WishRepository wishRepository) {
+    public DbInit(EventRepository eventRepository, FacilityRepository facilityRepository, GalleryRepository galleryRepository, GuestRepository guestRepository, ImageRepository imageRepository, PartnerDetailsRepository partnerDetailsRepository, UserAccountRepository userAccountRepository, WeddingDetailsRepository weddingDetailsRepository, WeddingMediaRepository weddingMediaRepository, WeddingStoryRepository weddingStoryRepository, WishRepository wishRepository) {
         this.eventRepository = eventRepository;
         this.facilityRepository = facilityRepository;
         this.galleryRepository = galleryRepository;
-        this.guestsRepository = guestsRepository;
+        this.guestRepository = guestRepository;
         this.imageRepository = imageRepository;
         this.partnerDetailsRepository = partnerDetailsRepository;
         this.userAccountRepository = userAccountRepository;
@@ -159,8 +159,10 @@ public class DbInit implements CommandLineRunner {
         eventRepository.saveAll(List.of(event1, event2, event3));
 
         Guest guest1 = new Guest("Maciej Wyrzykowski", "aa@bb.cc", "123456789");
+        Guest guest2 = new Guest("Piotr Nowak", "dd@ee.ff", "987654321");
         guest1.setWeddingStory(weddingStory);
-        guestsRepository.saveAll(List.of(guest1));
+        guest2.setWeddingStory(weddingStory);
+        guestRepository.saveAll(List.of(guest1,guest2));
 
         Wish wish1 = new Wish("Krzysztof", "Twitter", "/images/user1/couple-1.jpg", "Wszystkiego najlepszego!");
         Wish wish2 = new Wish("Piotr", "Facebook", "/images/user1/couple-2.jpg", "100 lat na nowej drodze życia!");
