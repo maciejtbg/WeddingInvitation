@@ -8,10 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/guest")
@@ -27,6 +24,19 @@ public class GuestController {
     @PostMapping("/confirm")
     public ResponseEntity<?> confirm(@Valid @RequestBody GuestDto guestDto){
         return  guestService.confirmGuestAttendance(guestDto);
+    }
+    @GetMapping("/list")
+    public ResponseEntity<?> getListOfAllGuests(){
+        return guestService.getListOfAllGuests();
+    }
 
+    @GetMapping("/list/confirmed")
+    public ResponseEntity<?> getListOfConfirmedGuests(){
+        return guestService.getListOfConfirmedGuests();
+    }
+
+    @GetMapping("/list/unconfirmed")
+    public ResponseEntity<?> getListOfUnconfirmedGuests(){
+        return guestService.getListOfUnconfirmedGuests();
     }
 }

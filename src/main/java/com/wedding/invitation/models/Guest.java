@@ -1,5 +1,6 @@
 package com.wedding.invitation.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,7 @@ public class Guest {
         this.guestPhone = guestPhone;
     }
 
+    @JsonIgnore
     @Id
     @GeneratedValue
     private long id;
@@ -33,8 +35,11 @@ public class Guest {
     private String guestName;
     private String guestEmail;
     private String guestPhone;
+
+    @JsonIgnore
     private boolean confirmed = false;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "wedding_story_id",nullable = false)
     private WeddingStory weddingStory;
