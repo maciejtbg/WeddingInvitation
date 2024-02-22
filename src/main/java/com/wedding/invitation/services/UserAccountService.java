@@ -20,7 +20,6 @@ public class UserAccountService {
 
 
     public Optional<UserAccount> getUserByAlias(String alias){
-        System.out.println("Alias: "+alias);
         return userAccountRepository.findByAlias(alias);
     }
 

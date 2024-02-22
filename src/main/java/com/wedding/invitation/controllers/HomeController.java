@@ -35,15 +35,9 @@ public class HomeController {
 
     @GetMapping("/{alias}")
     public String home(Model model, @PathVariable String alias) {
-
-
-
-        System.out.println("Alias: "+userAccountService);
         Optional<UserAccount> userAccountOptional = userAccountService.getUserByAlias(alias);
-
         if (userAccountOptional.isPresent()) {
             UserAccount userAccount = userAccountOptional.get();
-            System.out.println(userAccount);
             String ceremonyDescription = userAccount.getWeddingDetails().getCeremonyDescription();
             String eventLocation = userAccount.getWeddingDetails().getCeremonyLocation();
             Date ceremonyDate = userAccount.getWeddingDetails().getCeremonyStartDate();
@@ -56,6 +50,7 @@ public class HomeController {
             String eventTitle = "ŚLUB " + bride.getFirstName() + "&" + groom.getFirstName();
 
 
+            model.addAttribute("alias",alias);
             model.addAttribute("eventTitle", eventTitle);
             model.addAttribute("ceremonyStartObject", ceremonyDate);
             model.addAttribute("ceremonyEndObject", weddingDetails.getCeremonyEndDate());

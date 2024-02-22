@@ -100,14 +100,14 @@ public class DbInit implements CommandLineRunner {
         facilityRepository.saveAll(List.of(facility1, facility2, facility3));
 
         WeddingMedia weddingMedia = new WeddingMedia(
-                "/images/user1/img_bg_2.jpg",
-                "/images/user1/groom.jpg",
-                "/images/user1/bride.jpg",
-                "/images/user1/img_bg_3.jpg",
-                "/images/user1/img_bg_5.jpg",
-                "/images/user1/img_bg_4.jpg",
+                "img_bg_2.jpg",
+                "groom.jpg",
+                "bride.jpg",
+                "img_bg_3.jpg",
+                "img_bg_5.jpg",
+                "img_bg_4.jpg",
                 "https://vimeo.com/channels/staffpicks/93951774",
-                "/images/user1/img_bg_3.jpg"
+                "img_bg_3.jpg"
         );
         weddingMedia.setUserAccount(userAccount);
         weddingMediaRepository.saveAll(List.of(weddingMedia));

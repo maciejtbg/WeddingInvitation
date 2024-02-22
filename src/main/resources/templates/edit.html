@@ -1,74 +1,192 @@
-
 <!doctype html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<title>Sidebar 04</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/css/style.css">
-<meta name="robots" content="noindex, follow">
+    <title>Sidebar 04</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link href="/css/html5imageupload.css" rel="stylesheet">
+    <meta name="robots" content="noindex, follow">
 </head>
+
 <body>
 <div class="wrapper d-flex align-items-stretch">
-<nav id="sidebar">
-<div class="custom-menu">
-<button type="button" id="sidebarCollapse" class="btn btn-primary">
-<i class="fa fa-bars"></i>
-<span class="sr-only">Toggle Menu</span>
-</button>
-</div>
-<h1><a href="index.html" class="logo">Panel sterowania</a></h1>
-<ul class="list-unstyled components mb-5">
-<li class="active">
-<a href="#"><span class="fa fa-info mr-3"></span>Informacje o koncie</a>
-</li>
-<li>
-<a href="#"><span class="fa fa-female mr-3"></span>Panna młoda</a>
-</li>
-<li>
-<a href="#"><span class="fa fa-male mr-3"></span>Pan młody</a>
-</li>
-<li>
-<a href="#"><span class="fa fa-sticky-note mr-3"></span>Daty i miejsca</a>
-</li>
-<li>
-<a href="#"><span class="fa fa-gamepad mr-3"></span>Udogodnienia</a>
-</li>
-<li>
-<a href="#"><span class="fa fa-puzzle-piece mr-3"></span>Grafika</a>
-</li>
-<li>
-  <a href="#"><span class="fa fa-object-group mr-3"></span>Galerie</a>
-  </li>
-  <li>
-    <a href="#"><span class="fa fa-image mr-3"></span>Zdjęcia</a>
-    </li>
-    <li>
-      <a href="#"><span class="fa fa-hourglass mr-3"></span>Historia i dane</a>
-      </li>
-      <li>
-        <a href="#"><span class="fa fa-line-chart mr-3"></span>Wydarzenia</a>
-        </li>
-        <li>
-          <a href="#"><span class="fa fa-group mr-3"></span>Goście</a>
-          </li>
-          <li>
-            <a href="#"><span class="fa fa-quote-right mr-3"></span>Życzenia</a>
+    <nav id="sidebar">
+        <div class="custom-menu">
+            <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                <i class="fa fa-bars"></i>
+                <span class="sr-only">Toggle Menu</span>
+            </button>
+        </div>
+        <h1><a href="index.html" class="logo">Panel sterowania</a></h1>
+        <ul class="list-unstyled components mb-5">
+            <li class="active">
+                <a href="#" data-target="informacje"><span class="fa fa-info mr-3"></span>Informacje o koncie</a>
             </li>
-</ul>
-</nav>
+            <li>
+                <a href="#" data-target="panna"><span class="fa fa-female mr-3"></span>Panna młoda</a>
+            </li>
+            <li>
+                <a href="#" data-target="pan"><span class="fa fa-male mr-3"></span>Pan młody</a>
+            </li>
+            <li>
+                <a href="#" data-target="miejsca"><span class="fa fa-sticky-note mr-3"></span>Daty i miejsca</a>
+            </li>
+            <li>
+                <a href="#" data-target="udogodnienia"><span class="fa fa-gamepad mr-3"></span>Udogodnienia</a>
+            </li>
+            <li>
+                <a href="#" data-target="grafika"><span class="fa fa-puzzle-piece mr-3"></span>Grafika</a>
+            </li>
+            <li>
+                <a href="#" data-target="galerie"><span class="fa fa-object-group mr-3"></span>Galerie</a>
+            </li>
+            <li>
+                <a href="#" data-target="zdjecia"><span class="fa fa-image mr-3"></span>Zdjęcia</a>
+            </li>
+            <li>
+                <a href="#" data-target="historia"><span class="fa fa-hourglass mr-3"></span>Historia i dane</a>
+            </li>
+            <li>
+                <a href="#" data-target="wydarzenia"><span class="fa fa-line-chart mr-3"></span>Wydarzenia</a>
+            </li>
+            <li>
+                <a href="#" data-target="goscie"><span class="fa fa-group mr-3"></span>Goście</a>
+            </li>
+            <li>
+                <a href="#" data-target="zyczenia"><span class="fa fa-quote-right mr-3"></span>Życzenia</a>
+            </li>
+        </ul>
+    </nav>
 
-<div id="content" class="p-4 p-md-5 pt-5">
-<h2 class="mb-4">Sidebar #04</h2>
-<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    <div id="content" class="p-4 p-md-5 pt-5">
+        <div id="informacje" class="tab-content" style="display: none;">
+            <h2 class="mb-4">Informacje o koncie</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="panna" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Informacje o Pannie Młodej</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="pan" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Informacje o Panie Młodym</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="miejsca" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Informacje o datach i miejscach</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="udogodnienia" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Informacje o udogodnieniach</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="grafika" class="tab-content" style="display:block;">
+            <h2 class="mb-4">Grafika główna strony</h2>
+            <p>Ta grafika jest niezbędna do prawidłowego wyświatlania strony. Nie stanowi elementu galerii, ale jest
+                zasadniczym elementem wizualizacji zawszego zaproszenia</p>
+            <section class="my-5">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <h2>Upload Image Example</h2>
+                    <form method="post" action="upload">
+                        <div class="form-group">
+                            <label>Image</label>
+                            <div class="dropzone"
+                                 data-width="960"
+                                 data-height="540"
+                                 data-ajax="false"
+                                 th:data-image="'/images/'+${alias}+'/'+${backgroundTop}"
+                                 data-editstart="true"
+                                 data-canvas="true"
+                                 data-originalsave="true"
+                                 style="width: 100%;">
+                                <input type="file" name="image" required="required" accept="image/*"/>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-default">Submit</button>
+                    </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div id="galerie" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Galerie</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="zdjecia" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Zdjęcia</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="historia" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Historia miłości i liczby</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="wydarzenia" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Wydarzenia</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="goscie" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Goście</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <div id="zyczenia" class="tab-content" style="display:none;">
+            <h2 class="mb-4">Życzenia</h2>
+            <p>Tu możesz ...</p>
+        </div>
+        <!-- Dodaj więcej sekcji zgodnie z potrzebami -->
+    </div>
 </div>
-</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const sidebarLinks = document.querySelectorAll('#sidebar a');
+      sidebarLinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+
+          // Ukryj wszystkie sekcje
+          document.querySelectorAll('.tab-content').forEach(section => {
+            section.style.display = 'none';
+          });
+
+          // Pobierz identyfikator sekcji z atrybutu data-target
+          const sectionId = link.getAttribute('data-target');
+
+          // Pokaż klikniętą sekcję
+          const activeSection = document.getElementById(sectionId);
+          if (activeSection) {
+            activeSection.style.display = 'block';
+          }
+        });
+      });
+    });
+</script>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/js/bootstrap.min.js"></script>
+
+<script src="/js/html5imageupload.js"></script>
+<script>
+
+    $('.dropzone').html5imageupload();
+
+
+</script>
 <script src="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/js/jquery.min.js"></script>
 <script src="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/js/popper.js"></script>
 <script src="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/js/bootstrap.min.js"></script>
 <script src="https://colorlib.com/etc/bootstrap-sidebar/sidebar-04/js/main.js"></script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon='{"rayId":"853f08588baabfad","version":"2024.2.0","token":"cd0b4b3a733644fc843ef0b185f98241"}' crossorigin="anonymous"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317"
+        integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA=="
+        data-cf-beacon='{"rayId":"853f08588baabfad","version":"2024.2.0","token":"cd0b4b3a733644fc843ef0b185f98241"}'
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
