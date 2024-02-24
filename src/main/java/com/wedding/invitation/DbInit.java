@@ -120,15 +120,15 @@ public class DbInit implements CommandLineRunner {
         gallery3.setWeddingMedia(weddingMedia);
         galleryRepository.saveAll(List.of(gallery1, gallery2, gallery3));
 
-        Image image1 = new Image("Zdjęcie nr 1", "/images/user1/gallery-1.jpg");
-        Image image2 = new Image("Zdjęcie nr 2", "/images/user1/gallery-2.jpg");
-        Image image3 = new Image("Zdjęcie nr 3", "/images/user1/gallery-3.jpg");
-        Image image4 = new Image("Zdjęcie nr 4", "/images/user1/gallery-4.jpg");
-        Image image5 = new Image("Zdjęcie nr 5", "/images/user1/gallery-5.jpg");
-        Image image6 = new Image("Zdjęcie nr 6", "/images/user1/gallery-6.jpg");
-        Image image7 = new Image("Zdjęcie nr 7", "/images/user1/gallery-7.jpg");
-        Image image8 = new Image("Zdjęcie nr 8", "/images/user1/gallery-8.jpg");
-        Image image9 = new Image("Zdjęcie nr 9", "/images/user1/gallery-9.jpg");
+        Image image1 = new Image("Zdjęcie nr 1", "gallery-1.jpg");
+        Image image2 = new Image("Zdjęcie nr 2", "gallery-2.jpg");
+        Image image3 = new Image("Zdjęcie nr 3", "gallery-3.jpg");
+        Image image4 = new Image("Zdjęcie nr 4", "gallery-4.jpg");
+        Image image5 = new Image("Zdjęcie nr 5", "gallery-5.jpg");
+        Image image6 = new Image("Zdjęcie nr 6", "gallery-6.jpg");
+        Image image7 = new Image("Zdjęcie nr 7", "gallery-7.jpg");
+        Image image8 = new Image("Zdjęcie nr 8", "gallery-8.jpg");
+        Image image9 = new Image("Zdjęcie nr 9", "gallery-9.jpg");
         image1.setGallery(gallery1);
         image2.setGallery(gallery1);
         image3.setGallery(gallery1);
@@ -150,9 +150,9 @@ public class DbInit implements CommandLineRunner {
         weddingStory.setUserAccount(userAccount);
         weddingStoryRepository.saveAll(List.of(weddingStory));
 
-        Event event1 = new Event("Pierwsze spojrzenie", new Date(System.currentTimeMillis()), "/images/user1/couple-1.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.");
-        Event event2 = new Event("Drugie spojrzenie", new Date(System.currentTimeMillis()), "/images/user1/couple-2.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.");
-        Event event3 = new Event("Trzecie spojrzenie", new Date(System.currentTimeMillis()), "/images/user1/couple-3.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.");
+        Event event1 = new Event("Pierwsze spojrzenie", new Date(System.currentTimeMillis()), "couple-1.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.");
+        Event event2 = new Event("Drugie spojrzenie", new Date(System.currentTimeMillis()), "couple-2.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.");
+        Event event3 = new Event("Trzecie spojrzenie", new Date(System.currentTimeMillis()), "couple-3.jpg", "Para młoda poznała się podczas przypadkowego spotkania na plaży. Gdy ich spojrzenia się skrzyżowały, natychmiast wiedzieli, że są dla siebie stworzeni i zakochali się od pierwszego wejrzenia, odczuwając silne połączenie, które trwało przez wiele lat.");
         event1.setWeddingStory(weddingStory);
         event2.setWeddingStory(weddingStory);
         event3.setWeddingStory(weddingStory);
@@ -164,9 +164,9 @@ public class DbInit implements CommandLineRunner {
         guest2.setWeddingStory(weddingStory);
         guestRepository.saveAll(List.of(guest1,guest2));
 
-        Wish wish1 = new Wish("Krzysztof", "Twitter", "/images/user1/couple-1.jpg", "Wszystkiego najlepszego!");
-        Wish wish2 = new Wish("Piotr", "Facebook", "/images/user1/couple-2.jpg", "100 lat na nowej drodze życia!");
-        Wish wish3 = new Wish("Marek", "SMS", "/images/user1/couple-3.jpg", "Najlepszego dla Was! Dużo zdrówka!");
+        Wish wish1 = new Wish("Krzysztof", "Twitter", "couple-1.jpg", "Wszystkiego najlepszego!");
+        Wish wish2 = new Wish("Piotr", "Facebook", "couple-2.jpg", "100 lat na nowej drodze życia!");
+        Wish wish3 = new Wish("Marek", "SMS", "couple-3.jpg", "Najlepszego dla Was! Dużo zdrówka!");
         wish1.setWeddingStory(weddingStory);
         wish2.setWeddingStory(weddingStory);
         wish3.setWeddingStory(weddingStory);

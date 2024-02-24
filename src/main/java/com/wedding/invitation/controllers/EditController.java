@@ -68,8 +68,15 @@ public class EditController {
         byte[] imageBytes = Base64.getDecoder().decode(base64ImageWithoutHeader);
 
         System.out.println(imageValues.getName());
-        // Zapis do pliku
-        Path path = Paths.get(UPLOAD_DIR, alias, "POST_"+imageValues.getName()); //TODO{Problem ze ścieżkami jeśli podstawiam zdjęcie}
+        // TODO {To rozwiązanie nie jest elastyczne ale narazie działa}
+        String imageName;
+        if (imageValues.getName().contains(alias)){
+            imageName = imageValues.getName().substring(imageValues.getName().indexOf(alias)+alias.length()+1);
+        } else {
+            imageName = imageValues.getName();
+        }
+        Path path = Path.of(UPLOAD_DIR+alias+'/'+"POST_"+imageName);
+//        Path path = Paths.get(UPLOAD_DIR, alias) + Path.of("POST_"+imageValues.getName()); //TODO{Problem ze ścieżkami jeśli podstawiam zdjęcie}
         Files.write(path, imageBytes);
 
         return "Obraz został pomyślnie przesłany";

@@ -317,8 +317,8 @@
                     <ul th:each="gallery: ${galleryList}" th:id="'lightgallery'+${galleryList.indexOf(gallery)}"
                         class="list-unstyled row">
                         <li th:each="image: ${gallery.getImages()}"
-                            th:data-responsive="${image.imageUrl}"
-                            th:data-src="${image.imageUrl}"
+                            th:data-responsive="${'/images/'+alias+'/'+image.imageUrl}"
+                            th:data-src="${'/images/'+alias+'/'+image.imageUrl}"
                             ata-sub-html="<h4>Image Description</p>"
                             data-pinterest-text="Pin it1"
                             th:style="'background-image: url(/images/'+${alias+'/'+image.imageUrl} + ');'"
