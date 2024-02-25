@@ -6,6 +6,7 @@ import com.wedding.invitation.models.UserAccount;
 import com.wedding.invitation.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,18 +31,19 @@ public class EditController {
     private final FacilityService facilityService;
     private final ImageService imageService;
     private final GalleryService galleryService;
-
+    private final WeddingMediaService weddingMediaService;
     private final SimpleDateFormat simpleDateFormat;
 
 
     @Autowired
-    public EditController(UserAccountService userAccountService, EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, SimpleDateFormat simpleDateFormat) {
+    public EditController(UserAccountService userAccountService, EventService eventService, WishService wishService, FacilityService facilityService, ImageService imageGalleryService, GalleryService galleryService, WeddingMediaService weddingMediaService, SimpleDateFormat simpleDateFormat) {
         this.userAccountService = userAccountService;
         this.eventService = eventService;
         this.wishService = wishService;
         this.facilityService = facilityService;
         this.imageService = imageGalleryService;
         this.galleryService = galleryService;
+        this.weddingMediaService = weddingMediaService;
         this.simpleDateFormat = simpleDateFormat;
     }
     @GetMapping("/{alias}/edit")
@@ -56,31 +58,35 @@ public class EditController {
             return null;
         }
     }
-    private static final String UPLOAD_DIR = "./src/main/resources/static/images/";
 
     @ResponseBody
     @PostMapping(value = "{alias}/upload", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public String upload(ImageUploadDto imageUploadDto, @PathVariable String alias) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ImageUploadDto.ImageValues imageValues = objectMapper.readValue(imageUploadDto.getImage_values(), ImageUploadDto.ImageValues.class);
-        String base64ImageWithoutHeader = imageValues.getData().split(",")[1];
-        // Dekodowanie base64 do tablicy bajtów
-        byte[] imageBytes = Base64.getDecoder().decode(base64ImageWithoutHeader);
-
-        System.out.println(imageValues.getName());
-        // TODO {To rozwiązanie nie jest elastyczne ale narazie działa}
-        String imageName;
-        if (imageValues.getName().contains(alias)){
-            imageName = imageValues.getName().substring(imageValues.getName().indexOf(alias)+alias.length()+1);
-        } else {
-            imageName = imageValues.getName();
-        }
-        Path path = Path.of(UPLOAD_DIR+alias+'/'+"POST_"+imageName);
-//        Path path = Paths.get(UPLOAD_DIR, alias) + Path.of("POST_"+imageValues.getName()); //TODO{Problem ze ścieżkami jeśli podstawiam zdjęcie}
-        Files.write(path, imageBytes);
-
-        return "Obraz został pomyślnie przesłany";
+    public ResponseEntity<?> upload(ImageUploadDto.ImageValues imageValuesUploadDto, @PathVariable String alias) throws IOException {
+        return weddingMediaService.uploadImage(imageValuesUploadDto,alias);
     }
+
+    //Ten kod może się przydać gdy będę wysyłał zdjęcie w formularzu HTML
+//    @ResponseBody
+//    @PostMapping(value = "{alias}/upload", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+//    public String upload(ImageUploadDto imageUploadDto, @PathVariable String alias) throws IOException {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        ImageUploadDto.ImageValues imageValues = objectMapper.readValue(imageUploadDto.getImage_values(), ImageUploadDto.ImageValues.class);
+//        String base64ImageWithoutHeader = imageValues.getData().split(",")[1];
+//        // Dekodowanie base64 do tablicy bajtów
+//        byte[] imageBytes = Base64.getDecoder().decode(base64ImageWithoutHeader);
+//
+//        System.out.println(imageValues.getName());
+//        String imageName;
+//        if (imageValues.getName().contains(alias)){
+//            imageName = imageValues.getName().substring(imageValues.getName().indexOf(alias)+alias.length()+1);
+//        } else {
+//            imageName = imageValues.getName();
+//        }
+//        Path path = Path.of(UPLOAD_DIR+alias+'/'+"POST_"+imageName);
+//        Files.write(path, imageBytes);
+//
+//        return "Obraz został pomyślnie przesłany";
+//    }
 
 
 

@@ -4,14 +4,12 @@ import com.wedding.invitation.models.Image;
 import com.wedding.invitation.repositories.ImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ImageService {
     private final ImageRepository imageGalleryRepository;
-
 
     @Autowired
     public ImageService(ImageRepository imageGalleryRepository) {

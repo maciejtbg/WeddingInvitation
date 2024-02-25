@@ -10,8 +10,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ImageUploadDto {
-    private String image; // Może być puste w twoim przypadku
-    private String image_values; // Zmienione na String, aby przechowywać zserializowany JSON jako tekst
+//cała klasa ImageUploadDto przydaje się, gdy zdjęcie wysyłamy w formularzu bez wykorzystania AJAX
+    //
+    private String image;
+    private String image_values;
 
     @Override
     public String toString() {
@@ -21,13 +23,12 @@ public class ImageUploadDto {
                 '}';
     }
 
-    // Klasa ImageValues pozostaje niezmieniona, ale teraz będziesz musiał ją deserializować ręcznie z wartości imageValues
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ImageValues {
-        private String data; // Zakładam, że to pole przechowuje dane obrazu w Base64, jeśli nie, usunąć lub zmodyfikować
+        private String data;
         private String name;
         private int imageOriginalWidth;
         private int imageOriginalHeight;
