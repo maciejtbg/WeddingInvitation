@@ -1,0 +1,133 @@
+// WAŻNE - podział funkcji w tym pliku jest świadomy i chroni prywatność gości:
+//
+//  - funkcje z przedrostkiem `admin*` zwracają PEŁNE dane (całą listę gości,
+//    prywatne notatki pary typu groupLabel) - wolno je wywoływać WYŁĄCZNIE
+//    z tras zabezpieczonych sesją pary (requireCoupleSession, patrz
+//    src/lib/auth/couple.ts), nigdy z tras dostępnych dla gościa.
+//
+//  - funkcje z przedrostkiem `guest*` zwracają lub modyfikują dane TYLKO
+//    jednego, konkretnego gościa wskazanego przez jego własne id z sesji
+//    (requireGuestSession) - nie da się nimi pobrać ani zmienić danych
+//    innego gościa, nawet znając jego id, bo zapytania SQL zawsze filtrują
+//    dodatkowo po guestId z sesji.
+//
+// Innymi słowy: to nie jest kwestia "ukrycia" czegoś w interfejsie, tylko
+// fizycznego braku zapytania, które zwróciłoby więcej niż powinno.
+
+import { db, newId, newGuestToken } from "./client";
+import type { Guest, GuestSelfView, RsvpStatus, SqliteRow } from "./types";
+
+function rowToGuest(row: SqliteRow): Guest {
+  return {
+    id: row.id as string,
+    weddingId: row.wedding_id as string,
+    token: row.token as string,
+    firstName: row.first_name as string,
+    lastName: row.last_name as string | null,
+    groupLabel: row.group_label as string | null,
+    allowPlusOne: !!row.allow_plus_one,
+    plusOneName: row.plus_one_name as string | null,
+    rsvpStatus: row.rsvp_status as RsvpStatus,
+    rsvpRespondedAt: row.rsvp_responded_at as string | null,
+    dietaryNotes: row.dietary_notes as string | null,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
+
+function toSelfView(g: Guest): GuestSelfView {
+  return {
+    id: g.id,
+    firstName: g.firstName,
+    lastName: g.lastName,
+    allowPlusOne: g.allowPlusOne,
+    plusOneName: g.plusOneName,
+    rsvpStatus: g.rsvpStatus,
+    dietaryNotes: g.dietaryNotes,
+  };
+}
+
+// --- Dostęp administracyjny (konto pary) ---
+
+export function adminListGuests(weddingId: string): Guest[] {
+  const rows = db
+    .prepare("SELECT * FROM guests WHERE wedding_id = ? ORDER BY created_at ASC")
+    .all(weddingId);
+  return rows.map(rowToGuest);
+}
+
+export function adminFindGuestById(weddingId: string, guestId: string): Guest | null {
+  const row = db
+    .prepare("SELECT * FROM guests WHERE id = ? AND wedding_id = ?")
+    .get(guestId, weddingId);
+  return row ? rowToGuest(row) : null;
+}
+
+export function adminCreateGuest(params: {
+  weddingId: string;
+  firstName: string;
+  lastName?: string | null;
+  groupLabel?: string | null;
+  allowPlusOne?: boolean;
+}): Guest {
+  const id = newId("guest");
+  const token = newGuestToken();
+  db.prepare(
+    `INSERT INTO guests (id, wedding_id, token, first_name, last_name, group_label, allow_plus_one)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    id,
+    params.weddingId,
+    token,
+    params.firstName,
+    params.lastName ?? null,
+    params.groupLabel ?? null,
+    params.allowPlusOne ? 1 : 0
+  );
+  const guest = adminFindGuestById(params.weddingId, id);
+  if (!guest) throw new Error("Nie udało się dodać gościa");
+  return guest;
+}
+
+export function adminDeleteGuest(weddingId: string, guestId: string): void {
+  db.prepare("DELETE FROM guests WHERE id = ? AND wedding_id = ?").run(guestId, weddingId);
+}
+
+// --- Dostęp gościa (sesja ograniczona do jego własnego guestId) ---
+
+/** Używane wyłącznie przy pierwszym wejściu przez unikalny link - żeby
+ * zamienić token z URL na sesję. Nigdzie indziej nie wolno wyszukiwać po token. */
+export function findGuestByTokenForLogin(token: string): Guest | null {
+  const row = db.prepare("SELECT * FROM guests WHERE token = ?").get(token);
+  return row ? rowToGuest(row) : null;
+}
+
+export function guestGetSelf(guestId: string): GuestSelfView | null {
+  const row = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId);
+  return row ? toSelfView(rowToGuest(row)) : null;
+}
+
+export function guestGetWeddingId(guestId: string): string | null {
+  const row = db.prepare("SELECT wedding_id FROM guests WHERE id = ?").get(guestId) as
+    | { wedding_id: string }
+    | undefined;
+  return row?.wedding_id ?? null;
+}
+
+export function guestSubmitRsvp(
+  guestId: string,
+  params: { rsvpStatus: RsvpStatus; dietaryNotes?: string | null; plusOneName?: string | null }
+): GuestSelfView | null {
+  db.prepare(
+    `UPDATE guests
+     SET rsvp_status = ?, dietary_notes = ?, plus_one_name = ?,
+         rsvp_responded_at = datetime('now'), updated_at = datetime('now')
+     WHERE id = ?`
+  ).run(
+    params.rsvpStatus,
+    params.dietaryNotes ?? null,
+    params.plusOneName ?? null,
+    guestId
+  );
+  return guestGetSelf(guestId);
+}

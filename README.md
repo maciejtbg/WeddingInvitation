@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wedding App - strony ślubne z RSVP
 
-## Getting Started
+Szkielet aplikacji: konto pary młodej, strona-zaproszenie z unikalnym adresem,
+lista gości, prywatne linki dla każdego gościa, RSVP i czat gość-para.
+Kontekst biznesowy (analiza konkurencji, hosting, wybór funkcji) jest
+opisany osobno, w rozmowie, w której powstał ten projekt.
 
-First, run the development server:
+## Status
+
+To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
+(patrz `npm run smoke` niżej), ale brakuje jeszcze m.in.:
+
+- planera stołów (schemat bazy już jest - tabele `tables_` i `seat_assignments`,
+  patrz `prisma/`... a właściwie `src/lib/db/client.ts`, bo nie ma tu Prisma,
+  patrz sekcja "Dlaczego nie Prisma" niżej),
+- logowania Google/Facebook dla gości (wymaga założenia aplikacji OAuth
+  u dostawcy - patrz sekcja "Logowanie Google" niżej),
+- galerii zdjęć od gości,
+- panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
+  wejście z listy gości, jeden na jednego).
+
+## Stack
+
+- Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind CSS 4.
+- Baza danych: `node:sqlite` (wbudowane w Node.js 22) na etapie developmentu.
+- Sesje: podpisywane ciasteczka JWT (`jose`), dwa niezależne systemy -
+  jedno dla konta pary, drugie dla gościa (patrz `src/lib/auth/`).
+- Hasła: `bcryptjs`.
+- Zero zależności od next/font/google - fonty systemowe, żeby build działał
+  też bez dostępu do fonts.googleapis.com.
+
+### Dlaczego nie Prisma
+
+Pierwotny plan zakładał Prisma (łatwe przejście SQLite -> Postgres jedną
+zmianą w schemacie). Prisma przy pierwszym użyciu pobiera natywną binarkę
+silnika z `binaries.prisma.sh` - w środowisku, w którym to pisaliśmy, ten
+host był zablokowany, więc `prisma generate` się nie udawało i nie dało się
+zweryfikować builda. Zamiast tego jest wbudowany w Node.js 22 moduł
+`node:sqlite` (eksperymentalny, ale działa) plus własna, cienka warstwa
+repozytoriów w `src/lib/db/*.ts`.
+
+**To nie powinno być problemem na Twoim komputerze ani na docelowym VPS-ie**
+(zwykły dostęp do internetu wystarczy) - jeśli wolisz wrócić do Prismy,
+zamień `src/lib/db/client.ts` i pliki w `src/lib/db/*.ts` na odpowiedniki
+z `@prisma/client`, reszta aplikacji korzysta wyłącznie z funkcji tych
+plików (np. `adminListGuests`, `guestSubmitRsvp`), więc migracja nie dotyka
+logiki biznesowej ani stron.
+
+### Przejście na Postgres na produkcji
+
+Zgodnie z wcześniejszą analizą hostingu: docelowo Postgres w tym samym
+Dockerze co aplikacja, na VPS-ie (np. mikr.us). Migracja: podmienić
+`src/lib/db/client.ts` (połączenie + `CREATE TABLE` na składnię Postgresa,
+albo faktycznie wrócić do Prismy, patrz wyżej) - repozytoria w
+`src/lib/db/couples.ts`, `weddings.ts`, `guests.ts`, `chat.ts` zachowują te
+same nazwy i sygnatury funkcji, więc strony i akcje w `src/app/` nie
+wymagają zmian.
+
+## Jak uruchomić lokalnie
 
 ```bash
+npm install
+cp .env.example .env
+# ustaw w .env losowy SESSION_SECRET, np.:
+openssl rand -base64 32
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otwórz http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Jak przetestować (end-to-end)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Jest gotowy skrypt, który przechodzi całą ścieżkę: rejestracja pary, dodanie
+gościa, wejście na jego prywatny link, RSVP, czat w obie strony, oraz
+sprawdza izolację (gość nie widzi cudzych danych, nie dostaje się do panelu
+admina, zgadnięty token nie działa).
 
-## Learn More
+```bash
+npm run build
+npm run start &          # osobny terminal albo w tle
+npx playwright install chromium   # tylko raz, pobiera przeglądarkę testową
+npm run smoke
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Model prywatności gości (ważne, żeby to rozumieć zanim się coś zmieni)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Opisane dokładnie w komentarzach w `src/lib/db/guests.ts`, w skrócie:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Każdy gość ma unikalny, losowy `token` (część linku `/z/<token>`) - to
+  jedyny sposób, żeby "zalogować się" jako ten gość.
+- Wejście na `/z/<token>` zamienia token na podpisane ciasteczko sesji
+  (`src/lib/auth/guest.ts`) - od tej pory gość używa strony bez tokenu
+  w adresie.
+- Funkcje w `guests.ts` z przedrostkiem `admin*` zwracają pełne dane
+  (całą listę gości, notatki pary) - wolno je wołać wyłącznie z tras
+  zabezpieczonych sesją pary.
+- Funkcje z przedrostkiem `guest*` zawsze biorą `guestId` z sesji gościa,
+  nigdy z danych przesłanych przez formularz - więc nawet znając cudze id,
+  nie da się przez nie nic zobaczyć ani zmienić.
+- Nigdzie w kodzie nie ma endpointu, który zwracałby listę wszystkich gości
+  komukolwiek poza kontem pary.
 
-## Deploy on Vercel
+## Logowanie Google (kolejny krok, jeszcze nie podłączone)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Zależności pod to nie są jeszcze zainstalowane. Żeby to dodać:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Załóż projekt w Google Cloud Console, w sekcji "OAuth consent screen"
+   i "Credentials" stwórz "OAuth client ID" typu "Web application".
+2. Dodaj `GOOGLE_CLIENT_ID` i `GOOGLE_CLIENT_SECRET` do `.env`.
+3. Zaimplementować dowiązanie konta Google do już istniejącego rekordu
+   gościa (nie do nowego, ogólnego konta) - żeby logowanie Google było
+   tylko wygodniejszym wejściem do tego samego prywatnego zaproszenia,
+   a nie osobnym systemem tożsamości.
+
+To samo dotyczy logowania przez Facebooka.
+
+## Struktura
+
+```
+src/
+  app/
+    admin/            panel pary (rejestracja, logowanie, lista gości, czat)
+    w/[slug]/          publiczna strona wesela + /moje-zaproszenie dla gościa
+    z/[token]/         wejście gościa przez unikalny link -> sesja
+  lib/
+    db/                warstwa danych (node:sqlite + repozytoria)
+    auth/              sesje pary i gościa, hasła
+  components/          drobne komponenty współdzielone
+scripts/
+  smoke.mjs            test end-to-end (patrz wyżej)
+```

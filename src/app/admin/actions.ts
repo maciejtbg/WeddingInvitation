@@ -1,0 +1,155 @@
+"use server";
+
+// Server Actions panelu pary. Każda z nich sama weryfikuje sesję/uprawnienia
+// zamiast polegać wyłącznie na tym, że UI nie pokazuje danego przycisku -
+// bo formularz z action da się wywołać bezpośrednim POST-em z pominięciem UI.
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { createCoupleSession, clearCoupleSession, getCoupleSession } from "@/lib/auth/couple";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { createCouple, findCoupleByEmail } from "@/lib/db/couples";
+import {
+  createWedding,
+  findWeddingById,
+  findWeddingsByCouple,
+  updateWeddingDetails,
+  publishWedding,
+} from "@/lib/db/weddings";
+import { adminCreateGuest, adminDeleteGuest, adminFindGuestById } from "@/lib/db/guests";
+import { sendMessage } from "@/lib/db/chat";
+
+function readString(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+export async function registerCoupleAction(formData: FormData): Promise<void> {
+  const email = readString(formData, "email").toLowerCase();
+  const password = readString(formData, "password");
+  const partner1Name = readString(formData, "partner1Name");
+  const partner2Name = readString(formData, "partner2Name");
+
+  if (!email || !password || !partner1Name || !partner2Name) {
+    redirect("/admin/register?error=missing");
+  }
+  if (password.length < 8) {
+    redirect("/admin/register?error=weak-password");
+  }
+  if (findCoupleByEmail(email)) {
+    redirect("/admin/register?error=exists");
+  }
+
+  const passwordHash = await hashPassword(password);
+  const couple = createCouple(email, passwordHash);
+  const wedding = createWedding({ coupleId: couple.id, partner1Name, partner2Name });
+
+  await createCoupleSession(couple.id);
+  redirect(`/admin?welcome=${wedding.slug}`);
+}
+
+export async function loginCoupleAction(formData: FormData): Promise<void> {
+  const email = readString(formData, "email").toLowerCase();
+  const password = readString(formData, "password");
+
+  const couple = findCoupleByEmail(email);
+  const ok = couple ? await verifyPassword(password, couple.passwordHash) : false;
+  if (!couple || !ok) {
+    redirect("/admin/login?error=invalid");
+  }
+
+  await createCoupleSession(couple.id);
+  redirect("/admin");
+}
+
+export async function logoutCoupleAction(): Promise<void> {
+  await clearCoupleSession();
+  redirect("/");
+}
+
+async function requireOwnedWedding(weddingId: string) {
+  const session = await getCoupleSession();
+  if (!session) redirect("/admin/login");
+  const wedding = findWeddingById(weddingId);
+  if (!wedding || wedding.coupleId !== session.coupleId) {
+    // Gość/inna para nie ma prawa dotknąć cudzego wesela.
+    redirect("/admin");
+  }
+  return wedding;
+}
+
+export async function updateWeddingAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  updateWeddingDetails(wedding.id, {
+    partner1Name: readString(formData, "partner1Name") || undefined,
+    partner2Name: readString(formData, "partner2Name") || undefined,
+    weddingDate: readString(formData, "weddingDate") || undefined,
+    venueName: readString(formData, "venueName") || undefined,
+    venueAddress: readString(formData, "venueAddress") || undefined,
+    story: readString(formData, "story") || undefined,
+  });
+
+  revalidatePath("/admin");
+  revalidatePath(`/w/${wedding.slug}`);
+  redirect("/admin?saved=1");
+}
+
+export async function publishWeddingAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const wedding = await requireOwnedWedding(weddingId);
+  publishWedding(wedding.id);
+  revalidatePath(`/w/${wedding.slug}`);
+  redirect("/admin?published=1");
+}
+
+export async function addGuestAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  const firstName = readString(formData, "firstName");
+  if (!firstName) redirect(`/admin/guests?weddingId=${weddingId}&error=missing`);
+
+  adminCreateGuest({
+    weddingId: wedding.id,
+    firstName,
+    lastName: readString(formData, "lastName") || null,
+    groupLabel: readString(formData, "groupLabel") || null,
+    allowPlusOne: formData.get("allowPlusOne") === "on",
+  });
+
+  revalidatePath("/admin/guests");
+  redirect(`/admin/guests?weddingId=${weddingId}`);
+}
+
+export async function deleteGuestAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const guestId = readString(formData, "guestId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  adminDeleteGuest(wedding.id, guestId);
+  revalidatePath("/admin/guests");
+  redirect(`/admin/guests?weddingId=${weddingId}`);
+}
+
+export async function sendCoupleMessageAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const guestId = readString(formData, "guestId");
+  const body = readString(formData, "body");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  // Upewniamy się, że ten gość naprawdę należy do wesela tej pary -
+  // inaczej para mogłaby (teoretycznie, znając id) pisać do cudzych gości.
+  const guest = adminFindGuestById(wedding.id, guestId);
+  if (!guest) redirect(`/admin/guests?weddingId=${weddingId}`);
+  if (!body) redirect(`/admin/guests/${guestId}?weddingId=${weddingId}`);
+
+  sendMessage({ weddingId: wedding.id, guestId, sender: "COUPLE", body });
+  revalidatePath(`/admin/guests/${guestId}`);
+  redirect(`/admin/guests/${guestId}?weddingId=${weddingId}`);
+}
+
+export async function myWeddings(coupleId: string) {
+  return findWeddingsByCouple(coupleId);
+}

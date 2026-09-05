@@ -1,0 +1,139 @@
+// Warstwa dostępu do bazy danych.
+//
+// Na etapie developmentu używamy wbudowanego w Node.js modułu node:sqlite
+// (dostępny od Node 22, na razie oznaczony jako eksperymentalny w samym Node,
+// ale wystarczająco stabilny do budowy i testowania tej aplikacji).
+// Powód: Prisma i podobne ORM-y pobierają przy pierwszym użyciu natywną
+// binarkę silnika z zewnętrznego serwera, a to nie zawsze jest dostępne
+// w każdym środowisku (np. w piaskownicy, w której to pisaliśmy).
+// node:sqlite nic nie pobiera, działa od razu.
+//
+// Do produkcji: zamienić provider na Postgres (patrz README, sekcja "Baza
+// danych"). Cała reszta aplikacji odwołuje się wyłącznie do funkcji
+// w src/lib/db/*.ts (repozytoria), więc migracja polega na przepisaniu
+// tego pliku i repozytoriów pod nowy sterownik, bez ruszania logiki biznesowej.
+
+import { DatabaseSync } from "node:sqlite";
+import path from "node:path";
+import fs from "node:fs";
+
+const DB_PATH = process.env.DATABASE_FILE || path.join(process.cwd(), "data", "dev.db");
+
+// W trybie dev Next.js potrafi przeładowywać moduły (hot reload), więc
+// trzymamy jedną instancję połączenia w globalThis, żeby nie otwierać
+// pliku bazy wielokrotnie w tym samym procesie.
+const globalForDb = globalThis as unknown as { __weddingDb?: DatabaseSync };
+
+function createConnection(): DatabaseSync {
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  const database = new DatabaseSync(DB_PATH);
+  database.exec("PRAGMA journal_mode = WAL;");
+  database.exec("PRAGMA foreign_keys = ON;");
+  return database;
+}
+
+export const db = globalForDb.__weddingDb ?? createConnection();
+if (!globalForDb.__weddingDb) {
+  globalForDb.__weddingDb = db;
+}
+
+// Prosty generator identyfikatorów - wystarczający dla tej skali projektu.
+export function newId(prefix: string): string {
+  return `${prefix}_${crypto.randomUUID().replace(/-/g, "")}`;
+}
+
+// Generuje długi, losowy, niemożliwy do odgadnięcia token zaproszenia gościa.
+// To jedyny "klucz" gościa do jego własnych danych - patrz src/lib/auth/guest.ts.
+export function newGuestToken(): string {
+  return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+}
+
+let migrated = false;
+
+export function runMigrations() {
+  if (migrated) return;
+  migrated = true;
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS couples (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS weddings (
+      id TEXT PRIMARY KEY,
+      couple_id TEXT NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+      slug TEXT UNIQUE NOT NULL,
+      partner1_name TEXT NOT NULL,
+      partner2_name TEXT NOT NULL,
+      wedding_date TEXT,
+      venue_name TEXT,
+      venue_address TEXT,
+      story TEXT,
+      published_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_weddings_couple ON weddings(couple_id);
+
+    -- Gość / gospodarstwo domowe. "token" to jedyny klucz dostępu gościa
+    -- do własnych danych (RSVP, miejsce przy stole, czat) - patrz auth/guest.ts.
+    CREATE TABLE IF NOT EXISTS guests (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      token TEXT UNIQUE NOT NULL,
+      first_name TEXT NOT NULL,
+      last_name TEXT,
+      group_label TEXT,
+      allow_plus_one INTEGER NOT NULL DEFAULT 0,
+      plus_one_name TEXT,
+      rsvp_status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING | YES | NO
+      rsvp_responded_at TEXT,
+      dietary_notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_guests_wedding ON guests(wedding_id);
+
+    -- Szkielet pod planer stołów (budowany w kolejnym etapie prac).
+    CREATE TABLE IF NOT EXISTS tables_ (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      room_name TEXT NOT NULL,
+      label TEXT NOT NULL,
+      shape TEXT NOT NULL DEFAULT 'ROUND', -- ROUND | RECT
+      x REAL NOT NULL DEFAULT 0,
+      y REAL NOT NULL DEFAULT 0,
+      rotation REAL NOT NULL DEFAULT 0,
+      seats_count INTEGER NOT NULL DEFAULT 8
+    );
+    CREATE INDEX IF NOT EXISTS idx_tables_wedding ON tables_(wedding_id);
+
+    CREATE TABLE IF NOT EXISTS seat_assignments (
+      id TEXT PRIMARY KEY,
+      table_id TEXT NOT NULL REFERENCES tables_(id) ON DELETE CASCADE,
+      guest_id TEXT UNIQUE NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+      seat_index INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_seats_table ON seat_assignments(table_id);
+
+    -- Czat gość <-> para. Każda wiadomość widoczna wyłącznie temu jednemu
+    -- gościowi i kontu pary (izolacja po guest_id, patrz repozytorium chat.ts).
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+      sender TEXT NOT NULL, -- GUEST | COUPLE
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_chat_wedding_guest ON chat_messages(wedding_id, guest_id);
+  `);
+}
+
+runMigrations();
