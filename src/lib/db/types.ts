@@ -3,6 +3,10 @@
 
 export type RsvpStatus = "PENDING" | "YES" | "NO";
 
+// Identyfikatory gotowych motywów graficznych strony wesela - patrz
+// src/lib/themes.ts (tam pełna definicja kolorów i grafik każdego z nich).
+export type ThemeId = "cream-gold" | "blush-black" | "burgundy-gold";
+
 // Wiersz zwrócony przez node:sqlite ma typ unknown per-kolumna - repozytoria
 // rzutują pojedyncze pola na konkretne typy, znając strukturę tabeli.
 export type SqliteRow = Record<string, unknown>;
@@ -24,6 +28,7 @@ export interface Wedding {
   venueName: string | null;
   venueAddress: string | null;
   story: string | null;
+  theme: ThemeId;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;

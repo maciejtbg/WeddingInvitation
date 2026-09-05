@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { findWeddingBySlug } from "@/lib/db/weddings";
 import { getGuestSession } from "@/lib/auth/guest";
+import { getTheme, themeStyleVars } from "@/lib/themes";
+import { ThemeOrnament } from "@/components/theme-ornaments";
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -27,29 +29,38 @@ export default async function WeddingPublicPage({
 
   const guestSession = await getGuestSession();
   const isThisGuest = guestSession?.weddingId === wedding.id;
+  const theme = getTheme(wedding.theme);
 
   return (
-    <div className="flex flex-1 flex-col items-center bg-rose-50 px-6 py-20">
+    <div
+      className="flex flex-1 flex-col items-center px-6 py-20"
+      style={{ ...themeStyleVars(theme), background: theme.colors.background }}
+    >
       <div className="w-full max-w-xl text-center">
         {!wedding.publishedAt && (
           <p className="mb-6 inline-block rounded-full bg-amber-100 px-4 py-1 text-xs font-medium text-amber-800">
             Wersja robocza - strona jeszcze nieopublikowana
           </p>
         )}
-        <h1 className="mb-4 text-4xl font-semibold text-zinc-900">
+        <ThemeOrnament
+          theme={theme.id}
+          className="mx-auto mb-6 h-8 w-40"
+          style={{ color: theme.colors.accent }}
+        />
+        <h1 className="mb-4 font-serif text-4xl font-semibold text-[var(--wd-text)]">
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
         {wedding.weddingDate && (
-          <p className="mb-2 text-lg text-zinc-700">{formatDate(wedding.weddingDate)}</p>
+          <p className="mb-2 text-lg text-[var(--wd-text)]">{formatDate(wedding.weddingDate)}</p>
         )}
         {wedding.venueName && (
-          <p className="mb-6 text-zinc-600">
+          <p className="mb-6 text-[var(--wd-muted)]">
             {wedding.venueName}
             {wedding.venueAddress ? `, ${wedding.venueAddress}` : ""}
           </p>
         )}
         {wedding.story && (
-          <p className="mx-auto mb-8 max-w-md whitespace-pre-line text-zinc-700">
+          <p className="mx-auto mb-8 max-w-md whitespace-pre-line text-[var(--wd-text)]">
             {wedding.story}
           </p>
         )}
@@ -57,16 +68,21 @@ export default async function WeddingPublicPage({
         {isThisGuest ? (
           <Link
             href={`/w/${wedding.slug}/moje-zaproszenie`}
-            className="inline-block rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-700"
+            className="inline-block rounded-full bg-[var(--wd-accent)] px-6 py-3 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
           >
             Przejdź do mojego zaproszenia
           </Link>
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-[var(--wd-muted)]">
             Dostaliście od nas link z osobistym zaproszeniem? Otwórzcie go, żeby
             potwierdzić przybycie.
           </p>
         )}
+        <ThemeOrnament
+          theme={theme.id}
+          className="mx-auto mt-10 h-8 w-40 rotate-180"
+          style={{ color: theme.colors.accent }}
+        />
       </div>
     </div>
   );

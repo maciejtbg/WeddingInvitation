@@ -18,6 +18,7 @@ import {
 } from "@/lib/db/weddings";
 import { adminCreateGuest, adminDeleteGuest, adminFindGuestById } from "@/lib/db/guests";
 import { sendMessage } from "@/lib/db/chat";
+import { isThemeId } from "@/lib/themes";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -82,6 +83,8 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
   const weddingId = readString(formData, "weddingId");
   const wedding = await requireOwnedWedding(weddingId);
 
+  const themeInput = readString(formData, "theme");
+
   updateWeddingDetails(wedding.id, {
     partner1Name: readString(formData, "partner1Name") || undefined,
     partner2Name: readString(formData, "partner2Name") || undefined,
@@ -89,6 +92,9 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
     venueName: readString(formData, "venueName") || undefined,
     venueAddress: readString(formData, "venueAddress") || undefined,
     story: readString(formData, "story") || undefined,
+    // Nieznana/pusta wartość jest ignorowana zamiast zapisana wprost do bazy -
+    // formularz mógłby zostać wywołany bezpośrednim POST-em z dowolnym stringiem.
+    theme: isThemeId(themeInput) ? themeInput : undefined,
   });
 
   revalidatePath("/admin");

@@ -1,7 +1,9 @@
 import { db, newId } from "./client";
 import type { Wedding, SqliteRow } from "./types";
+import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
 
 function rowToWedding(row: SqliteRow): Wedding {
+  const rawTheme = row.theme as string | null;
   return {
     id: row.id as string,
     coupleId: row.couple_id as string,
@@ -12,6 +14,9 @@ function rowToWedding(row: SqliteRow): Wedding {
     venueName: row.venue_name as string | null,
     venueAddress: row.venue_address as string | null,
     story: row.story as string | null,
+    // Obrona na wypadek starszego wiersza / nieznanej wartości w bazie -
+    // zawsze wracamy z poprawnym ThemeId, nigdy z dowolnym stringiem.
+    theme: isThemeId(rawTheme) ? rawTheme : DEFAULT_THEME,
     publishedAt: row.published_at as string | null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -77,7 +82,13 @@ export function updateWeddingDetails(
   fields: Partial<
     Pick<
       Wedding,
-      "partner1Name" | "partner2Name" | "weddingDate" | "venueName" | "venueAddress" | "story"
+      | "partner1Name"
+      | "partner2Name"
+      | "weddingDate"
+      | "venueName"
+      | "venueAddress"
+      | "story"
+      | "theme"
     >
   >
 ): void {
@@ -88,6 +99,7 @@ export function updateWeddingDetails(
     venueName: "venue_name",
     venueAddress: "venue_address",
     story: "story",
+    theme: "theme",
   };
   const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return;

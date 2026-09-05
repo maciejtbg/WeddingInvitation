@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingsByCouple } from "@/lib/db/weddings";
+import { THEME_LIST } from "@/lib/themes";
+import { ThemeOrnament } from "@/components/theme-ornaments";
 import { updateWeddingAction, publishWeddingAction, logoutCoupleAction } from "./actions";
 
 export default async function AdminDashboardPage({
@@ -143,6 +145,50 @@ export default async function AdminDashboardPage({
               className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
           </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-zinc-700">
+              Styl graficzny strony
+            </label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {THEME_LIST.map((theme) => (
+                <label
+                  key={theme.id}
+                  className="cursor-pointer rounded-lg border border-zinc-300 p-3 has-[:checked]:border-zinc-900 has-[:checked]:ring-1 has-[:checked]:ring-zinc-900"
+                >
+                  <input
+                    type="radio"
+                    name="theme"
+                    value={theme.id}
+                    defaultChecked={wedding.theme === theme.id}
+                    className="sr-only"
+                  />
+                  <div
+                    className="mb-2 flex h-10 items-center justify-center rounded-md"
+                    style={{ background: theme.colors.background }}
+                  >
+                    <ThemeOrnament
+                      theme={theme.id}
+                      className="h-4 w-24"
+                      style={{ color: theme.colors.accent }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {theme.swatches.map((color, i) => (
+                      <span
+                        key={i}
+                        className="h-3 w-3 rounded-full border border-black/10"
+                        style={{ background: color }}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-1.5 text-xs font-medium text-zinc-900">{theme.label}</p>
+                  <p className="text-[11px] leading-tight text-zinc-500">{theme.description}</p>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <button
             type="submit"
             className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-700"

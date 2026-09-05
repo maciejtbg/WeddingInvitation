@@ -75,6 +75,7 @@ export function runMigrations() {
       venue_name TEXT,
       venue_address TEXT,
       story TEXT,
+      theme TEXT NOT NULL DEFAULT 'cream-gold',
       published_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -134,6 +135,17 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_chat_wedding_guest ON chat_messages(wedding_id, guest_id);
   `);
+
+  // CREATE TABLE IF NOT EXISTS nie dokłada kolumn do już istniejącej tabeli,
+  // więc bazy założone przed dodaniem motywów graficznych potrzebują ręcznego
+  // ALTER TABLE. SQLite nie ma "ADD COLUMN IF NOT EXISTS", stąd try/catch -
+  // błąd "duplicate column" oznacza po prostu, że kolumna już tam jest.
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN theme TEXT NOT NULL DEFAULT 'cream-gold';");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
 }
 
 runMigrations();
