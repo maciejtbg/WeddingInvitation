@@ -7,14 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:tables": "node scripts/smoke-tables.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.12",
+    "konva": "^10.3.3",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-konva": "^19.2.6",
     "zod": "^4.5.4"
   },
   "devDependencies": {

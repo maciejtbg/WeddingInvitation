@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getGuestSession } from "@/lib/auth/guest";
 import { findWeddingBySlug } from "@/lib/db/weddings";
 import { guestGetSelf } from "@/lib/db/guests";
+import { guestFindMySeat } from "@/lib/db/tables";
 import { listMessagesForGuest } from "@/lib/db/chat";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
@@ -32,6 +33,9 @@ export default async function MyInvitePage({
 
   const messages = listMessagesForGuest(guest.id);
   const theme = getTheme(wedding.theme);
+  // Gość widzi WYŁĄCZNIE nazwę własnego stołu i sali - nigdy plan całej sali
+  // ani listę innych gości przy stole (patrz src/lib/db/tables.ts).
+  const mySeat = guestFindMySeat(guest.id);
 
   return (
     <div
@@ -55,6 +59,14 @@ export default async function MyInvitePage({
           <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
             Dziękujemy za odpowiedź!
           </p>
+        )}
+
+        {mySeat && (
+          <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 text-center">
+            <h2 className="mb-1 text-lg font-medium text-[var(--wd-text)]">Twój stolik</h2>
+            <p className="text-sm text-[var(--wd-muted)]">{mySeat.roomName}</p>
+            <p className="font-serif text-2xl text-[var(--wd-text)]">{mySeat.tableLabel}</p>
+          </div>
         )}
 
         <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">

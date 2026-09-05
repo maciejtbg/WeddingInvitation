@@ -77,6 +77,12 @@ export default async function AdminDashboardPage({
         >
           Zarządzaj gośćmi
         </Link>
+        <Link
+          href="/admin/tables"
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Planer stołów
+        </Link>
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6">

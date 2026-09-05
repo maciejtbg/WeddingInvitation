@@ -8,16 +8,38 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 ## Status
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
-(patrz `npm run smoke` niżej), ale brakuje jeszcze m.in.:
+(patrz `npm run smoke` i `npm run smoke:tables` niżej), ale brakuje jeszcze m.in.:
 
-- planera stołów (schemat bazy już jest - tabele `tables_` i `seat_assignments`,
-  patrz `prisma/`... a właściwie `src/lib/db/client.ts`, bo nie ma tu Prisma,
-  patrz sekcja "Dlaczego nie Prisma" niżej),
 - logowania Google/Facebook dla gości (wymaga założenia aplikacji OAuth
   u dostawcy - patrz sekcja "Logowanie Google" niżej),
-- galerii zdjęć od gości,
+- galerii zdjęć od gości (Cloudflare R2),
 - panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
-  wejście z listy gości, jeden na jednego).
+  wejście z listy gości, jeden na jednego),
+- wdrożenia na docelowy VPS (mikr.us) razem z przejściem na Postgres.
+
+## Planer stołów
+
+Kanwa (`react-konva`) pod `/admin/tables`: wiele sal (sala to po prostu
+wartość `roomName` na stole, nie osobna tabela - patrz `src/lib/db/tables.ts`),
+przeciąganie stołów, obrót, zmiana kształtu okrągły/prostokątny, oraz panel
+boczny do przypisywania gości do konkretnych miejsc.
+
+- Autosave: każda zmiana pozycji trafia natychmiast do IndexedDB w przeglądarce
+  (`src/lib/tablePlannerLocalStore.ts`) i z ~600ms debounce na serwer - jeśli
+  połączenie się urwie w trakcie przeciągania, ostatni stan wraca po
+  odświeżeniu strony z IndexedDB, nie tylko z ostatniego udanego zapisu.
+- Gość widzi WYŁĄCZNIE nazwę własnego stołu i sali (sekcja "Twój stolik" na
+  `/moje-zaproszenie`) - nigdy planu całej sali ani listy współbiesiadników,
+  zgodnie z tym samym modelem prywatności co reszta danych gościa
+  (`guestFindMySeat` w `src/lib/db/tables.ts`).
+- Komponent kanwy jest ładowany wyłącznie po stronie klienta
+  (`next/dynamic({ssr:false})` w `src/components/TablePlannerLoader.tsx`) -
+  Konva potrzebuje `window` już przy imporcie modułu.
+- Test end-to-end: `npm run smoke:tables`. Uwaga dla testów w CI/headless:
+  **nie dodawać** flagi `--disable-gpu` do uruchomienia przeglądarki
+  testowej - w połączeniu z Konva i headless Chromium bez GPU powoduje to
+  zawieszenie strony na 100% CPU bez żadnego błędu w konsoli (opisane
+  dokładnie w komentarzu na górze `scripts/smoke-tables.mjs`).
 
 ## Stack
 
@@ -80,6 +102,7 @@ npm run build
 npm run start &          # osobny terminal albo w tle
 npx playwright install chromium   # tylko raz, pobiera przeglądarkę testową
 npm run smoke
+npm run smoke:tables     # osobny test end-to-end planera stołów
 ```
 
 ## Model prywatności gości (ważne, żeby to rozumieć zanim się coś zmieni)
@@ -120,12 +143,16 @@ To samo dotyczy logowania przez Facebooka.
 src/
   app/
     admin/            panel pary (rejestracja, logowanie, lista gości, czat)
+    admin/tables/      planer stołów (patrz sekcja wyżej)
     w/[slug]/          publiczna strona wesela + /moje-zaproszenie dla gościa
     z/[token]/         wejście gościa przez unikalny link -> sesja
   lib/
     db/                warstwa danych (node:sqlite + repozytoria)
     auth/              sesje pary i gościa, hasła
-  components/          drobne komponenty współdzielone
+    themes.ts          rejestr motywów graficznych strony wesela
+    tablePlannerLocalStore.ts   autosave planera stołów w IndexedDB
+  components/          drobne komponenty współdzielone (w tym TablePlanner)
 scripts/
-  smoke.mjs            test end-to-end (patrz wyżej)
+  smoke.mjs            test end-to-end szkieletu (patrz wyżej)
+  smoke-tables.mjs     test end-to-end planera stołów (patrz wyżej)
 ```

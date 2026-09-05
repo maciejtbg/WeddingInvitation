@@ -70,3 +70,33 @@ export interface ChatMessage {
   body: string;
   createdAt: string;
 }
+
+// Planer stołów - patrz src/lib/db/tables.ts. Sala NIE jest osobną tabelą,
+// tylko wartością `roomName` na konkretnych stołach.
+export type TableShape = "ROUND" | "RECT";
+
+export interface WeddingTable {
+  id: string;
+  weddingId: string;
+  roomName: string;
+  label: string;
+  shape: TableShape;
+  x: number;
+  y: number;
+  rotation: number;
+  seatsCount: number;
+}
+
+export interface SeatAssignment {
+  id: string;
+  tableId: string;
+  guestId: string;
+  seatIndex: number;
+}
+
+// Przypisanie miejsca razem z imieniem/nazwiskiem gościa - wygodne do
+// wyświetlenia w panelu bocznym planera bez osobnego zapytania o gościa.
+export interface SeatWithGuestName extends SeatAssignment {
+  guestFirstName: string;
+  guestLastName: string | null;
+}

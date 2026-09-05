@@ -40,5 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# lokalna baza SQLite (dev)
+# lokalna baza SQLite (dev) - łącznie z plikami trybu WAL
 /data/*.db
+/data/*.db-shm
+/data/*.db-wal
