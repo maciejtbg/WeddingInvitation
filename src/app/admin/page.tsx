@@ -135,6 +135,12 @@ export default async function AdminDashboardPage({
             </span>
           )}
         </Link>
+        <Link
+          href="/admin/privacy"
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          RODO i prywatność
+        </Link>
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6">
@@ -215,6 +221,28 @@ export default async function AdminDashboardPage({
               defaultValue={wedding.giftNote ?? ""}
               className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Retencja danych gości (dni po ślubie)
+            </label>
+            <input
+              type="number"
+              name="dataRetentionDays"
+              min={1}
+              max={3650}
+              defaultValue={wedding.dataRetentionDays}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-zinc-400">
+              Po tylu dniach od daty ślubu dane osobowe gości mogą zostać automatycznie
+              usunięte (RODO) - szczegóły w sekcji{" "}
+              <Link href="/admin/privacy" className="underline">
+                RODO i prywatność
+              </Link>
+              .
+            </p>
           </div>
 
           <div>

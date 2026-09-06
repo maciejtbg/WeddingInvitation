@@ -38,6 +38,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.fill('input[name="partner2Name"]', "Kacper");
   await couple.fill('input[name="email"]', email);
   await couple.fill('input[name="password"]', "supertajnehaslo");
+  await couple.check('input[name="privacyConsent"]');
   await couple.click('button[type="submit"]');
   await couple.waitForURL(/\/admin\?welcome=/);
   assert(true, "rejestracja pary przekierowała do /admin?welcome=...");
@@ -86,8 +87,16 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   const guest = await guestCtx.newPage();
 
   await guest.goto(inviteUrl);
-  await guest.waitForURL(/\/moje-zaproszenie/);
-  assert(true, "link zaproszenia przekierował do /moje-zaproszenie");
+  await guest.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (guest.url().includes("/zgoda")) {
+    // RODO - pierwsze wejście gościa wymaga potwierdzenia zgody na
+    // przetwarzanie danych, zanim zobaczy /moje-zaproszenie - patrz
+    // src/app/w/[slug]/zgoda.
+    await guest.check('input[name="consent"]');
+    await guest.click('button[type="submit"]');
+    await guest.waitForURL(/\/moje-zaproszenie/);
+  }
+  assert(true, "link zaproszenia przekierował do /moje-zaproszenie (po zgodzie RODO)");
 
   const guestHtml = await guest.content();
   // Nie wymagamy już, żeby "Marek" był dokładnie w osobnym węźle tekstowym

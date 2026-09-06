@@ -31,3 +31,12 @@ export function createCouple(email: string, passwordHash: string): Couple {
   if (!couple) throw new Error("Nie udało się utworzyć konta");
   return couple;
 }
+
+/** RODO - prawo do usunięcia (art. 17). Kasuje konto pary - kaskadowo
+ * (ON DELETE CASCADE) usuwa WSZYSTKIE ich wesela i wszystko pod nimi
+ * (goście, stoły, wiadomości, zdjęcia-metadane, harmonogram, FAQ...).
+ * Wywołujący musi WCZEŚNIEJ usunąć pliki zdjęć z dysku (kaskada bazy tego
+ * nie robi) - patrz deleteCoupleAccountAction w src/app/admin/privacy/actions.ts. */
+export function deleteCouple(coupleId: string): void {
+  db.prepare("DELETE FROM couples WHERE id = ?").run(coupleId);
+}

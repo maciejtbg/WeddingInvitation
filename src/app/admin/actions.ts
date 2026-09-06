@@ -8,7 +8,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createCoupleSession, clearCoupleSession, getCoupleSession } from "@/lib/auth/couple";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { isRateLimited, recordFailedAttempt, clearAttempts } from "@/lib/auth/rateLimit";
 import { createCouple, findCoupleByEmail } from "@/lib/db/couples";
+import { recordConsent } from "@/lib/db/consents";
 import {
   createWedding,
   findWeddingById,
@@ -37,11 +39,16 @@ export async function registerCoupleAction(formData: FormData): Promise<void> {
   const partner1Name = readString(formData, "partner1Name");
   const partner2Name = readString(formData, "partner2Name");
 
+  const consentGiven = formData.get("privacyConsent") === "on";
+
   if (!email || !password || !partner1Name || !partner2Name) {
     redirect("/admin/register?error=missing");
   }
   if (password.length < 8) {
     redirect("/admin/register?error=weak-password");
+  }
+  if (!consentGiven) {
+    redirect("/admin/register?error=consent");
   }
   if (findCoupleByEmail(email)) {
     redirect("/admin/register?error=exists");
@@ -49,6 +56,9 @@ export async function registerCoupleAction(formData: FormData): Promise<void> {
 
   const passwordHash = await hashPassword(password);
   const couple = createCouple(email, passwordHash);
+  // RODO - rozliczalność (art. 5 ust. 2): zapis KTO/KIEDY/na jaką WERSJĘ
+  // polityki wyraził zgodę, nie tylko sam fakt zaznaczenia checkboxa w UI.
+  recordConsent("COUPLE", couple.id);
   const wedding = createWedding({ coupleId: couple.id, partner1Name, partner2Name });
 
   await createCoupleSession(couple.id);
@@ -58,13 +68,20 @@ export async function registerCoupleAction(formData: FormData): Promise<void> {
 export async function loginCoupleAction(formData: FormData): Promise<void> {
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
+  const rateLimitKey = `login:${email}`;
+
+  if (!email || isRateLimited(rateLimitKey)) {
+    redirect("/admin/login?error=invalid");
+  }
 
   const couple = findCoupleByEmail(email);
   const ok = couple ? await verifyPassword(password, couple.passwordHash) : false;
   if (!couple || !ok) {
+    recordFailedAttempt(rateLimitKey);
     redirect("/admin/login?error=invalid");
   }
 
+  clearAttempts(rateLimitKey);
   await createCoupleSession(couple.id);
   redirect("/admin");
 }
@@ -92,6 +109,8 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
   const themeInput = readString(formData, "theme");
   const seatingModeInput = readString(formData, "seatingMode");
   const giftNote = readString(formData, "giftNote");
+  const retentionInput = readString(formData, "dataRetentionDays");
+  const retentionDays = Number.parseInt(retentionInput, 10);
 
   updateWeddingDetails(wedding.id, {
     partner1Name: readString(formData, "partner1Name") || undefined,
@@ -105,6 +124,13 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
     theme: isThemeId(themeInput) ? themeInput : undefined,
     seatingMode: isSeatingMode(seatingModeInput) ? seatingModeInput : undefined,
     giftNote: giftNote || null,
+    // Rozsądne granice (1-3650 dni) - formularz mógłby zostać wywołany
+    // bezpośrednim POST-em z dowolną wartością, ujemna/zerowa liczba dni
+    // nie ma tu sensu.
+    dataRetentionDays:
+      Number.isFinite(retentionDays) && retentionDays >= 1 && retentionDays <= 3650
+        ? retentionDays
+        : undefined,
   });
 
   revalidatePath("/admin");

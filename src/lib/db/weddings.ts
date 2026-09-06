@@ -21,6 +21,8 @@ function rowToWedding(row: SqliteRow): Wedding {
     theme: isThemeId(rawTheme) ? rawTheme : DEFAULT_THEME,
     seatingMode: isSeatingMode(rawSeatingMode) ? rawSeatingMode : DEFAULT_SEATING_MODE,
     giftNote: row.gift_note as string | null,
+    dataRetentionDays: row.data_retention_days as number,
+    purgedAt: row.purged_at as string | null,
     publishedAt: row.published_at as string | null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -95,6 +97,7 @@ export function updateWeddingDetails(
       | "theme"
       | "seatingMode"
       | "giftNote"
+      | "dataRetentionDays"
     >
   >
 ): void {
@@ -108,6 +111,7 @@ export function updateWeddingDetails(
     theme: "theme",
     seatingMode: "seating_mode",
     giftNote: "gift_note",
+    dataRetentionDays: "data_retention_days",
   };
   const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return;
@@ -116,6 +120,14 @@ export function updateWeddingDetails(
   db.prepare(
     `UPDATE weddings SET ${setClause}, updated_at = datetime('now') WHERE id = ?`
   ).run(...values, id);
+}
+
+/** RODO - "ograniczenie przechowywania" (art. 5 ust. 1 lit. e). Znacznik,
+ * że dane gości tego wesela zostały już wyczyszczone przez retencję (patrz
+ * src/lib/dataRetention.ts) - żeby nie próbować drugi raz i żeby panel pary
+ * mógł to pokazać. */
+export function markWeddingPurged(id: string): void {
+  db.prepare("UPDATE weddings SET purged_at = datetime('now') WHERE id = ?").run(id);
 }
 
 export function publishWedding(id: string): void {

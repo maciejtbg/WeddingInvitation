@@ -31,6 +31,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.fill('input[name="partner2Name"]', "Filip");
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', "supertajnehaslo");
+  await page.check('input[name="privacyConsent"]');
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/admin\?welcome=/);
 

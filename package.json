@@ -15,7 +15,9 @@
     "smoke:i18n": "node scripts/smoke-i18n.mjs",
     "smoke:gallery": "node scripts/smoke-gallery.mjs",
     "smoke:extras": "node scripts/smoke-extras.mjs",
-    "smoke:music": "node scripts/smoke-music.mjs"
+    "smoke:music": "node scripts/smoke-music.mjs",
+    "smoke:gdpr": "node scripts/smoke-gdpr.mjs",
+    "purge-expired-data": "node scripts/purge-expired-data.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

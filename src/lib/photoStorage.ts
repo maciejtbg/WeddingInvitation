@@ -32,7 +32,13 @@ import sharp from "sharp";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { newId } from "./db/client";
-import { countPhotos, createPhotoRecord, deletePhoto as deletePhotoRecord } from "./db/photos";
+import {
+  countPhotos,
+  createPhotoRecord,
+  deletePhoto as deletePhotoRecord,
+  listPhotos,
+  listPhotosByGuest,
+} from "./db/photos";
 import type { WeddingPhoto } from "./db/types";
 
 export const MAX_PHOTOS_PER_WEDDING = 10;
@@ -132,5 +138,34 @@ export async function removePhoto(weddingId: string, photoId: string): Promise<v
     // Plik już nie istnieje / nie da się usunąć - rekord w bazie już zniknął,
     // nie ma powodu wywalać błędu na tym etapie (sierota na dysku to
     // najwyżej kilkaset KB, nie problem wart przerywania operacji).
+  });
+}
+
+/** RODO - prawo do usunięcia wywoływane przez samego gościa (patrz
+ * guestDeleteSelf w src/lib/db/guests.ts). Kasuje z dysku i z bazy TYLKO
+ * zdjęcia wgrane przez tego gościa - reszta galerii zostaje nietknięta.
+ * Musi być wywołane PRZED guestDeleteSelf (żeby jeszcze dało się odpytać
+ * "czyje są te zdjęcia"). */
+export async function removePhotosByGuest(weddingId: string, guestId: string): Promise<void> {
+  const photos = listPhotosByGuest(weddingId, guestId);
+  for (const photo of photos) {
+    await removePhoto(weddingId, photo.id);
+  }
+}
+
+/** RODO - prawo do usunięcia konta pary (patrz deleteCouple w
+ * src/lib/db/couples.ts) i automatyczna retencja (patrz
+ * src/lib/dataRetention.ts). Kasuje WSZYSTKIE zdjęcia danego wesela z dysku
+ * i z bazy, na koniec usuwa też sam (już pusty) katalog wesela - kaskada
+ * bazy sama nie dotyka systemu plików, więc to trzeba zrobić jawnie
+ * PRZED skasowaniem wiersza wesela/pary. */
+export async function removeAllPhotosForWedding(weddingId: string): Promise<void> {
+  const photos = listPhotos(weddingId);
+  for (const photo of photos) {
+    await removePhoto(weddingId, photo.id);
+  }
+  await fs.rmdir(uploadsDir(weddingId)).catch(() => {
+    // Katalog już nie istnieje albo nie jest pusty (nie powinno się zdarzyć,
+    // ale to sprzątanie best-effort, nie krytyczna część usuwania danych).
   });
 }

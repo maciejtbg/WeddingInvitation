@@ -5,6 +5,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   missing: "Uzupełnijcie wszystkie pola.",
   "weak-password": "Hasło musi mieć co najmniej 8 znaków.",
   exists: "Konto z tym adresem email już istnieje.",
+  consent: "Musicie zaakceptować politykę prywatności, żeby założyć konto.",
 };
 
 export default async function RegisterPage({
@@ -73,6 +74,16 @@ export default async function RegisterPage({
             />
             <p className="mt-1 text-xs text-zinc-400">Minimum 8 znaków.</p>
           </div>
+          <label className="flex cursor-pointer gap-2 text-xs text-zinc-600">
+            <input type="checkbox" name="privacyConsent" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              Jako administrator danych osobowych Waszych gości akceptuję{" "}
+              <Link href="/polityka-prywatnosci" target="_blank" className="underline">
+                politykę prywatności
+              </Link>{" "}
+              i zobowiązuję się przetwarzać dane gości zgodnie z RODO.
+            </span>
+          </label>
           <button
             type="submit"
             className="w-full rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700"

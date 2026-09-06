@@ -30,6 +30,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.fill('input[name="partner2Name"]', "Kamil");
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', "supertajnehaslo");
+  await page.check('input[name="privacyConsent"]');
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/admin\?welcome=/);
 
@@ -55,7 +56,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   // --- Gość szuka utworu (bez potwierdzonego RSVP - to celowo działa
   //     zawsze, "nawet w trakcie ślubu") ---
   await page.goto(inviteUrl);
-  await page.waitForURL(/\/moje-zaproszenie/);
+  await page.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (page.url().includes("/zgoda")) {
+    await page.check('input[name="consent"]');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/moje-zaproszenie/);
+  }
   await page.click("text=Poproś o piosenkę");
   await page.waitForURL(/\/muzyka/);
 

@@ -154,6 +154,17 @@ export function guestGetWeddingId(guestId: string): string | null {
   return row?.wedding_id ?? null;
 }
 
+/** RODO - prawo do usunięcia (art. 17), wywoływane przez samego gościa
+ * (nie parę) - stąd `guest*`, nie `admin*`, mimo że fizycznie to ta sama
+ * operacja co adminDeleteGuest. Kaskada bazy (ON DELETE CASCADE) usuwa przy
+ * okazji wiadomości czatu, przypisanie miejsca i prośby o zmianę miejsca -
+ * zdjęcia w galerii trzeba skasować OSOBNO przed wywołaniem tej funkcji
+ * (kaskada dla wedding_photos.uploaded_by_guest_id to celowo SET NULL, nie
+ * CASCADE - patrz src/lib/db/photos.ts), patrz deleteMyDataAction. */
+export function guestDeleteSelf(guestId: string): void {
+  db.prepare("DELETE FROM guests WHERE id = ?").run(guestId);
+}
+
 export function guestSubmitRsvp(
   guestId: string,
   params: { rsvpStatus: RsvpStatus; dietaryNotes?: string | null; plusOneName?: string | null }

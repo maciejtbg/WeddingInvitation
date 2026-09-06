@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getGuestSession } from "@/lib/auth/guest";
 import { findWeddingBySlug } from "@/lib/db/weddings";
 import { guestGetSelf } from "@/lib/db/guests";
+import { hasCurrentConsent } from "@/lib/db/consents";
 import { guestFindMySeat } from "@/lib/db/tables";
 import { listMessagesForGuest } from "@/lib/db/chat";
 import { listPhotos } from "@/lib/db/photos";
@@ -42,6 +43,13 @@ export default async function MyInvitePage({
   // strony (czy tym bardziej danych) innej pary pod innym slugiem.
   if (!session || session.weddingId !== wedding.id) {
     redirect(`/w/${wedding.slug}`);
+  }
+  // RODO - strona z formularzami/danymi gościa jest dostępna wyłącznie PO
+  // zgodzie, nie tylko z ważną sesją - sama sesja powstaje wcześniej, w
+  // route handlerze /z/[token] (patrz komentarz tam), więc bez tego
+  // sprawdzenia dałoby się ominąć bramę /zgoda, wpisując ten adres ręcznie.
+  if (!hasCurrentConsent("GUEST", session.guestId)) {
+    redirect(`/w/${wedding.slug}/zgoda`);
   }
 
   const guest = guestGetSelf(session.guestId);
@@ -242,6 +250,16 @@ export default async function MyInvitePage({
             </form>
           )}
         </div>
+
+        <p className="mt-8 text-center text-xs text-[var(--wd-muted)]">
+          <Link href="/polityka-prywatnosci" className="underline">
+            {dict.privacyPolicyLinkLabel}
+          </Link>
+          {" · "}
+          <Link href={`/w/${wedding.slug}/usun-dane`} className="underline">
+            {dict.deleteMyDataLink}
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -45,6 +45,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.fill('input[name="partner2Name"]', "Tomek");
   await couple.fill('input[name="email"]', email);
   await couple.fill('input[name="password"]', "supertajnehaslo");
+  await couple.check('input[name="privacyConsent"]');
   await couple.click('button[type="submit"]');
   await couple.waitForURL(/\/admin\?welcome=/);
   assert(true, "rejestracja pary przekierowała do /admin?welcome=...");
@@ -91,7 +92,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   const guestCtx = await browser.newContext();
   const guest = await guestCtx.newPage();
   await guest.goto(inviteUrl);
-  await guest.waitForURL(/\/moje-zaproszenie/);
+  await guest.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (guest.url().includes("/zgoda")) {
+    await guest.check('input[name="consent"]');
+    await guest.click('button[type="submit"]');
+    await guest.waitForURL(/\/moje-zaproszenie/);
+  }
 
   const guestHtml = await guest.content();
   assert(guestHtml.includes("Twój stolik"), "gość widzi sekcję 'Twój stolik'");

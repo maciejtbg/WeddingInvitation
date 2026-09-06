@@ -42,6 +42,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.fill('input[name="partner2Name"]', "Damian");
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', "supertajnehaslo");
+  await page.check('input[name="privacyConsent"]');
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/admin\?welcome=/);
   const slug = new URL(page.url()).searchParams.get("welcome");
@@ -93,7 +94,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   const inviteUrl = await page.evaluate(() => window.__copied);
 
   await page.goto(inviteUrl);
-  await page.waitForURL(/\/moje-zaproszenie/);
+  await page.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (page.url().includes("/zgoda")) {
+    await page.check('input[name="consent"]');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/moje-zaproszenie/);
+  }
   await page.setInputFiles('input[name="photo"]', SAMPLE_PHOTO);
   await page.click('button:has-text("Dodaj zdjęcie")');
   await page.waitForURL(/photoSaved=1/);

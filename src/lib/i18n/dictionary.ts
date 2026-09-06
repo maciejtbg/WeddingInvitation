@@ -83,6 +83,21 @@ export interface Dictionary {
   // Przełącznik języka
   languageLabel: string;
   moreLanguages: string;
+
+  // RODO - zgoda przy pierwszym wejściu i usunięcie danych (patrz
+  // src/app/w/[slug]/zgoda i src/app/w/[slug]/usun-dane)
+  privacyPolicyLinkLabel: string;
+  consentTitle: string;
+  consentIntro: string;
+  consentAgree: string;
+  consentAgreeButton: string;
+  consentRequiredError: string;
+  deleteMyDataLink: string;
+  deleteMyDataTitle: string;
+  deleteMyDataWarning: string;
+  deleteMyDataConfirmButton: string;
+  deleteMyDataCancel: string;
+  deleteMyDataDone: string;
 }
 
 /** Podstawia {klucz} w szablonie wartościami z `vars`. Nieznany klucz

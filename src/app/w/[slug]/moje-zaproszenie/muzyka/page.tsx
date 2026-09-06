@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getGuestSession } from "@/lib/auth/guest";
 import { findWeddingBySlug } from "@/lib/db/weddings";
+import { hasCurrentConsent } from "@/lib/db/consents";
 import { listSongRequests } from "@/lib/db/songRequests";
 import { searchSongs } from "@/lib/musicSearch";
 import { getTheme, themeStyleVars } from "@/lib/themes";
@@ -25,6 +26,9 @@ export default async function MusicPage({
   const session = await getGuestSession();
   if (!session || session.weddingId !== wedding.id) {
     redirect(`/w/${wedding.slug}`);
+  }
+  if (!hasCurrentConsent("GUEST", session.guestId)) {
+    redirect(`/w/${wedding.slug}/zgoda`);
   }
 
   const theme = getTheme(wedding.theme);

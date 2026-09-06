@@ -68,4 +68,19 @@ export const de: Dictionary = {
 
   languageLabel: "Sprache",
   moreLanguages: "Weitere Sprachen...",
+
+  privacyPolicyLinkLabel: "Datenschutzerklärung",
+  consentTitle: "Bevor es weitergeht",
+  consentIntro:
+    "Um eure Teilnahme zu bestätigen und diese Seite zu nutzen, brauchen wir eure Einwilligung zur Verarbeitung der Daten, die ihr uns gebt - Name, RSVP-Antwort, Ernährungshinweise, euer Sitzplatz, Nachrichten an das Brautpaar sowie Fotos und Musikwünsche, falls ihr welche hinzufügt. Details in der Datenschutzerklärung.",
+  consentAgree: "Ich habe die Datenschutzerklärung gelesen und stimme der Verarbeitung meiner Daten wie beschrieben zu.",
+  consentAgreeButton: "Ich stimme zu, weiter",
+  consentRequiredError: "Für den nächsten Schritt ist eure Zustimmung erforderlich.",
+  deleteMyDataLink: "Meine Daten löschen",
+  deleteMyDataTitle: "Eure Daten löschen",
+  deleteMyDataWarning:
+    "Gelöscht werden: eure persönlichen Daten, euer Sitzplatz, gesendete Nachrichten, Platzwechsel-Anfragen und Fotos, die ihr zur Galerie hinzugefügt habt. Das kann nicht rückgängig gemacht werden.",
+  deleteMyDataConfirmButton: "Ja, meine Daten löschen",
+  deleteMyDataCancel: "Abbrechen",
+  deleteMyDataDone: "Eure Daten wurden gelöscht. Danke, dass ihr dabei wart.",
 };

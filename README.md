@@ -10,8 +10,8 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
 (patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating`,
 `npm run smoke:invite-card`, `npm run smoke:locations`, `npm run smoke:i18n`,
-`npm run smoke:gallery`, `npm run smoke:extras` i `npm run smoke:music`
-niżej), ale brakuje jeszcze m.in.:
+`npm run smoke:gallery`, `npm run smoke:extras`, `npm run smoke:music` i
+`npm run smoke:gdpr` niżej), ale brakuje jeszcze m.in.:
 
 - logowania Google/Facebook/telefonem dla gości (OAuth wymaga założenia
   aplikacji u dostawcy, logowanie telefonem - płatnej bramki SMS typu
@@ -214,6 +214,125 @@ patrz komentarz w `src/lib/db/types.ts`.
 
 Test end-to-end wszystkich czterech trybów: `npm run smoke:seating`.
 
+**Domyślny tryb to `GROUP_CONSTRAINED`, nie `COUPLE_ONLY`** - najbardziej
+typowy przypadek to para wyznaczająca obszary/stoły poszczególnym grupom
+gości (rodzina, praca, przyjaciele), a członkowie grupy sami dogadują się,
+kto siedzi gdzie w obrębie przydzielonych stołów. Grupa bez żadnego
+ograniczonego stołu ma dostęp do wszystkich, więc ten tryb jest neutralny,
+dopóki para faktycznie nie ograniczy żadnej grupy - stąd bezpieczny jako
+domyślny.
+
+## RODO i ochrona danych osobowych
+
+Strona **gromadzi dane osobowe gości** (imię i nazwisko, RSVP, uwagi
+dietetyczne, miejsce przy stole, treść wiadomości, zdjęcia, prośby
+muzyczne), więc podlega RODO (Rozporządzeniu 2016/679).
+
+### Które przepisy mają zastosowanie i dlaczego
+
+Zbadane przed implementacją - w skrócie:
+
+- **To NIE jest kwestia narodowości twórcy ani lokalizacji serwera.**
+  Terytorialny zakres RODO (art. 3) obejmuje: (a) każdego administratora
+  danych **mającego siedzibę/prowadzącego działalność w UE**, niezależnie od
+  tego, gdzie fizycznie stoi serwer (art. 3 ust. 1), oraz (b) administratorów
+  spoza UE, jeśli **oferują usługi osobom w UE** (art. 3 ust. 2). Hosting na
+  serwerze poza UE (np. tani VPS gdziekolwiek) NIE zwalnia z RODO, jeśli
+  administrator (para/prowadzący instancję) działa/mieszka w UE albo strona
+  jest skierowana do gości w UE.
+- **Wyjątek "działalności czysto osobistej/domowej" (art. 2 ust. 2 lit. c)
+  prawdopodobnie NIE chroni tej aplikacji** - strony `/w/[slug]` są
+  publicznie dostępne pod adresem URL (nie są prywatnym, zamkniętym
+  systemem), co w świetle orzecznictwa (np. sprawa Bodil Lindqvist, C-101/01)
+  zwykle wyłącza ten wyjątek. Dlatego zaimplementowano pełną zgodność,
+  zamiast polegać na wyjątku.
+- Kto jest **administratorem danych** gości: para młoda, która założyła
+  konto i zaprasza gości - to ona decyduje o celach i sposobach
+  przetwarzania (patrz `/polityka-prywatnosci`). Jeśli hostujesz tę
+  aplikację dla wielu par (nie tylko dla siebie), rozważ konsultację
+  prawną - w takim układzie Ty (operator instancji) możesz pełnić rolę
+  procesora/współadministratora wobec danych ich gości.
+
+**To nie jest porada prawna** - to podsumowanie researchu zrobionego przy
+implementacji tej funkcji. Jeśli masz wątpliwości (szczególnie przy
+hostowaniu dla wielu par), skonsultuj się z prawnikiem.
+
+### Co zostało zaimplementowane
+
+- **Zgoda i jej ewidencja** (art. 6, 7 i zasada rozliczalności z art. 5 ust. 2)
+  - Rejestracja pary wymaga zaznaczenia zgody na politykę prywatności
+    (`src/app/admin/register/`, `registerCoupleAction`) - bez tego rejestracja
+    jest odrzucana.
+  - Pierwsze wejście gościa (przez `/z/<token>` albo `/kod`) prowadzi na
+    bramę zgody `/w/[slug]/zgoda`, zanim zobaczy jakikolwiek formularz z
+    danymi - zwracający gość z ważną zgodą przechodzi od razu dalej.
+  - Każda zgoda jest zapisana w tabeli `consents` (kto, kiedy, na jaką
+    **wersję** polityki) - patrz `src/lib/db/consents.ts`. Sama checkbox w
+    UI, bez śladu w bazie, nie wystarcza do wykazania zgody przy kontroli.
+  - **Zgoda jest wymuszana na dwóch poziomach**, nie tylko na renderze
+    strony: każda Server Action zapisująca dane gościa (RSVP, wiadomość,
+    wybór miejsca, zdjęcie, prośba muzyczna - `src/app/w/[slug]/moje-zaproszenie/actions.ts`)
+    sama sprawdza zgodę (`requireGuestConsent`), bo POST do Server Action
+    to osobny punkt wejścia, niezależny od tego, czy gość w ogóle zobaczył
+    formularz - sam render strony to za mało.
+- **Polityka prywatności** (art. 13-14) - `/polityka-prywatnosci`, publiczna,
+  bez sesji. Treść w `src/lib/privacyPolicyContent.ts` (źródło: polski),
+  tłumaczona na żądanie tym samym mechanizmem co reszta i18n (patrz sekcja
+  "Wielojęzyczność" wyżej) i buforowana w tabeli `policy_translation_cache`.
+- **Prawo do usunięcia / "bycia zapomnianym"** (art. 17)
+  - **Gość**: przycisk "Usuń moje dane" na `/moje-zaproszenie` ->
+    `/w/[slug]/usun-dane` (osobna strona potwierdzenia - nieodwracalna
+    operacja). Kasuje zdjęcia gościa z dysku (`removePhotosByGuest`),
+    potem wiersz gościa (`guestDeleteSelf`) - kaskada bazy (`ON DELETE
+    CASCADE`) sama usuwa przy okazji wiadomości czatu, przypisanie miejsca
+    i prośby o zmianę miejsca.
+  - **Para**: "Usuń konto i wszystkie dane" na `/admin/privacy`
+    (dwustopniowe potwierdzenie, bez JS - link z `?confirmDelete=1`, nie
+    modal). Kasuje WSZYSTKIE zdjęcia wszystkich wesel tej pary z dysku
+    (kaskada bazy nie dotyka systemu plików), potem konto - kaskada usuwa
+    resztę (wesela, gości, stoły, wiadomości, harmonogram, FAQ, listę
+    muzyczną).
+- **Ograniczenie przechowywania / retencja** (art. 5 ust. 1 lit. e) - patrz
+  `src/lib/dataRetention.ts`. Każde wesele ma `dataRetentionDays`
+  (domyślnie 90, edytowalne w ustawieniach strony w `/admin`) - po tylu
+  dniach od `weddingDate` dane osobowe GOŚCI (nie sama strona/motyw/
+  harmonogram - to zostaje, to własne dane pary) są czyszczone: wszystkie
+  zdjęcia z dysku i bazy, wszyscy goście (kaskada usuwa resztę). Wesele
+  dostaje znacznik `purgedAt`, żeby nie próbować drugi raz.
+  - **Aplikacja Next.js nie ma własnego procesu w tle**, więc automatyczne
+    czyszczenie trzeba zaplanować z zewnątrz: trasa `POST
+    /api/purge-expired-data`, zabezpieczona sekretem `RETENTION_PURGE_SECRET`
+    (bez niego trasa jest wyłączona, zwraca 503), wywoływana przez cron na
+    hostingu (patrz `scripts/purge-expired-data.mjs` - `npm run
+    purge-expired-data`, przykładowy wpis do crontaba w komentarzu tego
+    pliku).
+  - Dla par bez skonfigurowanego crona: przycisk "Wyczyść teraz dane
+    wszystkich gości" na `/admin/privacy` robi to samo ręcznie, w dowolnym
+    momencie (np. zaraz po weselu, zamiast czekać 90 dni).
+- **Bezpieczeństwo przetwarzania** (art. 32)
+  - Nagłówki HTTP (`next.config.ts`): CSP, `X-Frame-Options: DENY`,
+    `X-Content-Type-Options: nosniff`, `Referrer-Policy`,
+    `Permissions-Policy`, HSTS. CSP dopuszcza `'unsafe-inline'` dla
+    script-src/style-src - świadomy kompromis (Next.js sam wstrzykuje
+    inline skrypty hydratujące, a masa komponentów używa inline
+    `style={{...}}` do zmiennych CSS motywu), nie przeoczenie - nadal
+    blokuje ładowanie skryptów/stylów z OBCYCH domen, czyli najczęstszy
+    wektor XSS. Ambitniejsza wersja wymagałaby nonce z middleware.
+  - Podstawowy rate-limiting logowania pary (`src/lib/auth/rateLimit.ts`) -
+    10 nieudanych prób na email w oknie 15 minut, licznik w pamięci procesu
+    (wystarczające dla jednego procesu Node na hosting, patrz ten sam
+    wzorzec przy `PRAGMA busy_timeout` w `src/lib/db/client.ts`).
+  - Hasła hashowane (`bcryptjs`), nigdy jawnym tekstem.
+  - Zdjęcia tracą metadane (w tym GPS) przy kompresji (`sharp` domyślnie nie
+    przepisuje EXIF) - patrz sekcja "Galeria zdjęć" wyżej.
+  - Model izolacji danych gościa (`admin*`/`guest*`) - patrz sekcja "Model
+    prywatności gości" niżej, to jest ta sama ochrona z innej strony.
+
+Test end-to-end całej ścieżki RODO (rejestracja bez zgody odrzucona, brama
+zgody dla nowego gościa, próba ominięcia bramy bezpośrednim wejściem na
+`/moje-zaproszenie`, samodzielne usunięcie danych przez gościa, ręczne
+czyszczenie retencyjne, usunięcie całego konta pary): `npm run smoke:gdpr`.
+
 ## Stack
 
 - Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind CSS 4.
@@ -283,6 +402,7 @@ npm run smoke:i18n         # przełącznik języka + tłumaczenie na żądanie
 npm run smoke:gallery      # galeria zdjęć (limit, kompresja, serwowanie)
 npm run smoke:extras       # odliczanie, kalendarz .ics, harmonogram, FAQ
 npm run smoke:music        # wyszukiwanie i lista życzeń muzycznych
+npm run smoke:gdpr         # zgoda, prawo do usunięcia, retencja (RODO)
 ```
 
 ## Model prywatności gości (ważne, żeby to rozumieć zanim się coś zmieni)

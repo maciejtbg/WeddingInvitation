@@ -43,6 +43,7 @@ async function setSeatingMode(couplePage, mode) {
   await couple.fill('input[name="partner2Name"]', "Bartek");
   await couple.fill('input[name="email"]', email);
   await couple.fill('input[name="password"]', "supertajnehaslo");
+  await couple.check('input[name="privacyConsent"]');
   await couple.click('button[type="submit"]');
   await couple.waitForURL(/\/admin\?welcome=/);
   const weddingIdMatch = await couple
@@ -80,7 +81,15 @@ async function setSeatingMode(couplePage, mode) {
   const guestCtx = await browser.newContext();
   const guest = await guestCtx.newPage();
   await guest.goto(inviteUrl);
-  await guest.waitForURL(/\/moje-zaproszenie/);
+  await guest.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (guest.url().includes("/zgoda")) {
+    // RODO - tylko pierwsze wejście gościa wymaga potwierdzenia zgody,
+    // kolejne odwiedziny inviteUrl w tym pliku lecą prosto do
+    // /moje-zaproszenie (patrz src/app/w/[slug]/zgoda).
+    await guest.check('input[name="consent"]');
+    await guest.click('button[type="submit"]');
+    await guest.waitForURL(/\/moje-zaproszenie/);
+  }
   assert(
     (await guest.content()).includes("Potwierdź obecność"),
     "przed RSVP gość widzi prośbę o potwierdzenie zamiast wyboru miejsc"

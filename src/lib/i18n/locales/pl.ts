@@ -73,4 +73,19 @@ export const pl: Dictionary = {
 
   languageLabel: "Język",
   moreLanguages: "Więcej języków...",
+
+  privacyPolicyLinkLabel: "Polityka prywatności",
+  consentTitle: "Zanim przejdziesz dalej",
+  consentIntro:
+    "Żeby potwierdzić przybycie i korzystać z tej strony, potrzebujemy Twojej zgody na przetwarzanie danych, które nam podasz - imienia i nazwiska, odpowiedzi RSVP, ewentualnych uwag dietetycznych, miejsca przy stole, wiadomości do pary oraz zdjęć i próśb muzycznych, jeśli je dodasz. Szczegóły w polityce prywatności.",
+  consentAgree: "Przeczytałem/am politykę prywatności i wyrażam zgodę na przetwarzanie moich danych w opisanym zakresie.",
+  consentAgreeButton: "Zgadzam się, przejdź dalej",
+  consentRequiredError: "Zgoda jest wymagana, żeby przejść dalej.",
+  deleteMyDataLink: "Usuń moje dane",
+  deleteMyDataTitle: "Usunięcie Twoich danych",
+  deleteMyDataWarning:
+    "Usunięte zostaną: Twoje dane osobowe, przypisane miejsce przy stole, wysłane wiadomości, prośby o zmianę miejsca oraz zdjęcia, które dodałeś/aś do galerii. Tej operacji nie da się cofnąć.",
+  deleteMyDataConfirmButton: "Tak, usuń moje dane",
+  deleteMyDataCancel: "Anuluj",
+  deleteMyDataDone: "Twoje dane zostały usunięte. Dziękujemy, że byłeś/aś z nami.",
 };

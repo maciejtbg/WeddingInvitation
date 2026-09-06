@@ -39,6 +39,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.fill('input[name="partner2Name"]', "Igor");
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', "supertajnehaslo");
+  await page.check('input[name="privacyConsent"]');
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/admin\?welcome=/);
   const slug = new URL(page.url()).searchParams.get("welcome");
@@ -102,7 +103,14 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   const inviteUrl = await page.evaluate(() => window.__copied);
 
   await page.goto(inviteUrl);
-  await page.waitForURL(/\/moje-zaproszenie/);
+  await page.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (page.url().includes("/zgoda")) {
+    // Formularz zgody renderuje się w ostatnio wybranym języku (amharski),
+    // ale nazwa pola i type="submit" nie zależą od tłumaczenia.
+    await page.check('input[name="consent"]');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/moje-zaproszenie/);
+  }
   const guestText = await page.locator("body").innerText();
   assert(
     !guestText.includes("Cześć, Nel!"),

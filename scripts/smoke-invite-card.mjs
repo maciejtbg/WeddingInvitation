@@ -31,6 +31,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.fill('input[name="partner2Name"]', "Adam");
   await couple.fill('input[name="email"]', email);
   await couple.fill('input[name="password"]', "supertajnehaslo");
+  await couple.check('input[name="privacyConsent"]');
   await couple.click('button[type="submit"]');
   await couple.waitForURL(/\/admin\?welcome=/);
 
@@ -66,7 +67,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await guest.goto(`${BASE}/kod`);
   await guest.fill('input[name="code"]', shortCode.toLowerCase().replace("-", " "));
   await guest.click('button:has-text("Otwórz moje zaproszenie")');
-  await guest.waitForURL(/\/moje-zaproszenie/);
+  await guest.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (guest.url().includes("/zgoda")) {
+    await guest.check('input[name="consent"]');
+    await guest.click('button[type="submit"]');
+    await guest.waitForURL(/\/moje-zaproszenie/);
+  }
   assert(
     (await guest.content()).includes("Cześć, Babcia"),
     "kod (małe litery, spacja) zalogował właściwego gościa mimo innego formatu"

@@ -29,6 +29,7 @@ await page.fill('input[name="email"]', `demo-${rand}@example.com`);
 await page.fill('input[name="password"]', "supersecret123");
 await page.fill('input[name="partner1Name"]', "Ala");
 await page.fill('input[name="partner2Name"]', "Kuba");
+await page.check('input[name="privacyConsent"]');
 // UWAGA: waitForURL musi dopasowywać dokładnie stan PO przekierowaniu
 // (?welcome=...), inaczej dopasuje się już do bieżącego /admin/register
 // (bo /\/admin/ pasuje też do niego) i wyścignie się z nawigacją.

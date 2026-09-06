@@ -6,20 +6,37 @@ import { getGuestSession } from "@/lib/auth/guest";
 import { guestSubmitRsvp, guestGetWeddingId, guestGetSelf } from "@/lib/db/guests";
 import { sendMessage } from "@/lib/db/chat";
 import { findWeddingById } from "@/lib/db/weddings";
+import type { Wedding } from "@/lib/db/types";
 import { guestSelfAssignSeat } from "@/lib/db/tables";
 import { guestCreateSeatChangeRequest, guestHasPendingRequest } from "@/lib/db/seatRequests";
 import { allowsGuestSelfSelect } from "@/lib/seatingModes";
 import { uploadPhoto } from "@/lib/photoStorage";
 import { createSongRequest } from "@/lib/db/songRequests";
+import { hasCurrentConsent } from "@/lib/db/consents";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
 }
 
+/** RODO - te akcje ZAPISUJĄ dane osobowe podane przez gościa (RSVP, dieta,
+ * wiadomość, miejsce, zdjęcie, prośba muzyczna) - sprawdzenie zgody
+ * WYŁĄCZNIE na poziomie renderu strony (patrz page.tsx) nie wystarcza, bo
+ * Server Action ma swój własny punkt wejścia (POST), niezależny od tego,
+ * czy gość w ogóle zobaczył formularz. Zwraca gotowy redirect() zamiast
+ * boola, żeby wywołujący mógł po prostu `await requireGuestConsent(...)`
+ * bez powtarzania logiki przekierowania w każdej akcji z osobna. */
+async function requireGuestConsent(guestId: string, wedding: Wedding | null): Promise<void> {
+  if (!wedding) redirect("/");
+  if (!hasCurrentConsent("GUEST", guestId)) {
+    redirect(`/w/${wedding.slug}/zgoda`);
+  }
+}
+
 export async function submitRsvpAction(formData: FormData): Promise<void> {
   const session = await getGuestSession();
   if (!session) redirect("/");
+  await requireGuestConsent(session.guestId, findWeddingById(session.weddingId));
 
   const rsvpStatusRaw = readString(formData, "rsvpStatus");
   const rsvpStatus = rsvpStatusRaw === "YES" || rsvpStatusRaw === "NO" ? rsvpStatusRaw : "PENDING";
@@ -40,6 +57,7 @@ export async function submitRsvpAction(formData: FormData): Promise<void> {
 export async function sendGuestMessageAction(formData: FormData): Promise<void> {
   const session = await getGuestSession();
   if (!session) redirect("/");
+  await requireGuestConsent(session.guestId, findWeddingById(session.weddingId));
 
   const body = readString(formData, "body");
   const wedding = findWeddingById(session.weddingId);
@@ -64,6 +82,7 @@ export async function guestSelfAssignSeatAction(formData: FormData): Promise<voi
   if (!session) redirect("/");
 
   const wedding = findWeddingById(session.weddingId);
+  await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
   const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
 
@@ -100,6 +119,7 @@ export async function guestRequestSeatChangeAction(formData: FormData): Promise<
   if (!session) redirect("/");
 
   const wedding = findWeddingById(session.weddingId);
+  await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
   const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
 
@@ -120,6 +140,7 @@ export async function guestUploadPhotoAction(formData: FormData): Promise<void> 
   if (!session) redirect("/");
 
   const wedding = findWeddingById(session.weddingId);
+  await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
   const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
 
@@ -153,6 +174,7 @@ export async function addSongRequestAction(formData: FormData): Promise<void> {
   if (!session) redirect("/");
 
   const wedding = findWeddingById(session.weddingId);
+  await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
   const musicUrl = `/w/${wedding.slug}/moje-zaproszenie/muzyka`;
 

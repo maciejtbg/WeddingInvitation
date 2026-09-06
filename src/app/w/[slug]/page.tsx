@@ -44,10 +44,13 @@ function daysUntil(iso: string | null): number | null {
 
 export default async function WeddingPublicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ deleted?: string }>;
 }) {
   const { slug } = await params;
+  const { deleted } = await searchParams;
   const wedding = findWeddingBySlug(slug);
   if (!wedding) notFound();
 
@@ -69,6 +72,11 @@ export default async function WeddingPublicPage({
     >
       <div className="w-full max-w-xl text-center">
         <LanguageSwitcher currentLocale={locale} returnTo={`/w/${wedding.slug}`} dict={dict} />
+        {deleted === "1" && (
+          <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
+            {dict.deleteMyDataDone}
+          </p>
+        )}
         {!wedding.publishedAt && (
           <p className="mb-6 inline-block rounded-full bg-amber-100 px-4 py-1 text-xs font-medium text-amber-800">
             {dict.draftBadge}

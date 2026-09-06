@@ -37,7 +37,13 @@ export const SEATING_MODES: Record<SeatingMode, SeatingModeDefinition> = {
   },
 };
 
-export const DEFAULT_SEATING_MODE: SeatingMode = "COUPLE_ONLY";
+// GROUP_CONSTRAINED jest domyślny (nie COUPLE_ONLY) - typowy przypadek to
+// para wyznaczająca obszary/stoły dla poszczególnych grup (rodzina, praca,
+// przyjaciele), a członkowie grupy sami dogadują się, kto siedzi gdzie
+// wewnątrz przydzielonych stołów. Grupa bez żadnego ograniczonego stołu ma
+// i tak dostęp do wszystkich (patrz src/lib/db/groups.ts), więc ten tryb
+// zachowuje się neutralnie, dopóki para faktycznie nie ograniczy żadnej grupy.
+export const DEFAULT_SEATING_MODE: SeatingMode = "GROUP_CONSTRAINED";
 
 export const SEATING_MODE_LIST: SeatingModeDefinition[] = Object.values(SEATING_MODES);
 

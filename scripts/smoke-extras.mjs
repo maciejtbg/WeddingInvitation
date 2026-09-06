@@ -38,6 +38,7 @@ function isoDatePlusDays(days) {
   await page.fill('input[name="partner2Name"]', "Rafał");
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', "supertajnehaslo");
+  await page.check('input[name="privacyConsent"]');
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/admin\?welcome=/);
   const slug = new URL(page.url()).searchParams.get("welcome");

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { findGuestByShortCodeForLogin } from "@/lib/db/guests";
 import { findWeddingById } from "@/lib/db/weddings";
 import { createGuestSession } from "@/lib/auth/guest";
+import { hasCurrentConsent } from "@/lib/db/consents";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -26,5 +27,10 @@ export async function loginByShortCodeAction(formData: FormData): Promise<void> 
   }
 
   await createGuestSession(guest.id, guest.weddingId);
-  redirect(`/w/${wedding.slug}/moje-zaproszenie`);
+  // RODO - patrz analogiczny komentarz w src/app/z/[token]/route.ts.
+  redirect(
+    hasCurrentConsent("GUEST", guest.id)
+      ? `/w/${wedding.slug}/moje-zaproszenie`
+      : `/w/${wedding.slug}/zgoda`
+  );
 }

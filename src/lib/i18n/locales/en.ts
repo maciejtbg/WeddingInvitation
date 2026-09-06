@@ -68,4 +68,19 @@ export const en: Dictionary = {
 
   languageLabel: "Language",
   moreLanguages: "More languages...",
+
+  privacyPolicyLinkLabel: "Privacy policy",
+  consentTitle: "Before you continue",
+  consentIntro:
+    "To confirm your attendance and use this site, we need your consent to process the data you give us - your name, RSVP answer, any dietary notes, your table seat, messages to the couple, and any photos or song requests you add. See the privacy policy for details.",
+  consentAgree: "I've read the privacy policy and I consent to my data being processed as described.",
+  consentAgreeButton: "I agree, continue",
+  consentRequiredError: "Consent is required to continue.",
+  deleteMyDataLink: "Delete my data",
+  deleteMyDataTitle: "Delete your data",
+  deleteMyDataWarning:
+    "This will delete: your personal data, your table seat, sent messages, seat change requests, and any photos you added to the gallery. This cannot be undone.",
+  deleteMyDataConfirmButton: "Yes, delete my data",
+  deleteMyDataCancel: "Cancel",
+  deleteMyDataDone: "Your data has been deleted. Thank you for being with us.",
 };

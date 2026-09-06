@@ -38,6 +38,11 @@ export interface Wedding {
   theme: ThemeId;
   seatingMode: SeatingMode;
   giftNote: string | null;
+  // RODO - liczba dni po dacie ślubu, po której dane osobowe gości są
+  // automatycznie usuwane (patrz src/lib/dataRetention.ts). purgedAt to
+  // znacznik "już wyczyszczone", null dopóki nie nastąpiło.
+  dataRetentionDays: number;
+  purgedAt: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -202,4 +207,16 @@ export interface SongRequest {
   previewUrl: string | null;
   externalUrl: string | null;
   createdAt: string;
+}
+
+// Ewidencja zgód RODO - patrz src/lib/db/consents.ts.
+export type ConsentSubjectType = "COUPLE" | "GUEST";
+
+export interface Consent {
+  id: string;
+  subjectType: ConsentSubjectType;
+  subjectId: string;
+  consentType: string;
+  policyVersion: string;
+  grantedAt: string;
 }

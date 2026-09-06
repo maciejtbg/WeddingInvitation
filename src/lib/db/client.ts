@@ -284,6 +284,30 @@ export function runMigrations() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_chat_wedding_guest ON chat_messages(wedding_id, guest_id);
+
+    -- Ewidencja zgód RODO/GDPR (patrz src/lib/db/consents.ts) - zasada
+    -- rozliczalności (art. 5 ust. 2 RODO) wymaga, żeby administrator umiał
+    -- wykazać, KTO, KIEDY i na jaką WERSJĘ polityki prywatności wyraził
+    -- zgodę - nie wystarczy sama checkbox w UI bez śladu w bazie.
+    CREATE TABLE IF NOT EXISTS consents (
+      id TEXT PRIMARY KEY,
+      subject_type TEXT NOT NULL, -- COUPLE | GUEST
+      subject_id TEXT NOT NULL,
+      consent_type TEXT NOT NULL, -- na razie tylko PRIVACY_POLICY
+      policy_version TEXT NOT NULL,
+      granted_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_consents_subject ON consents(subject_type, subject_id);
+
+    -- Cache przetłumaczonej polityki prywatności dla języków spoza polskiego
+    -- (patrz src/lib/i18n/translatePolicyContent.ts) - ten sam wzorzec co
+    -- translation_cache powyżej, osobna tabela bo to inny kształt treści
+    -- (sekcje z nagłówkiem i akapitami, nie płaski słownik klucz-wartość).
+    CREATE TABLE IF NOT EXISTS policy_translation_cache (
+      locale TEXT PRIMARY KEY,
+      sections_json TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   // CREATE TABLE IF NOT EXISTS nie dokłada kolumn do już istniejącej tabeli,
@@ -298,7 +322,7 @@ export function runMigrations() {
   }
   try {
     db.exec(
-      "ALTER TABLE weddings ADD COLUMN seating_mode TEXT NOT NULL DEFAULT 'COUPLE_ONLY';"
+      "ALTER TABLE weddings ADD COLUMN seating_mode TEXT NOT NULL DEFAULT 'GROUP_CONSTRAINED';"
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -328,6 +352,25 @@ export function runMigrations() {
     db.exec(
       "CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_short_code ON guests(short_code);"
     );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  // Retencja danych (RODO, art. 5 ust. 1 lit. e - "ograniczenie
+  // przechowywania") - patrz src/lib/dataRetention.ts. 90 dni po dacie
+  // ślubu jako rozsądny domyślny okres (starcza na rozliczenie się
+  // z dostawcami, reklamacje itp.), para może go zmienić w ustawieniach.
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN data_retention_days INTEGER NOT NULL DEFAULT 90;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  // Znacznik "dane gości już wyczyszczone" - żeby czyszczenie retencyjne
+  // (purgeExpiredWeddingData) nie próbowało czyścić tego samego wesela
+  // wielokrotnie i żeby panel pary mógł pokazać, że to się już wydarzyło.
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN purged_at TEXT;");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;

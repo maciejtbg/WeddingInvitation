@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { findGuestByTokenForLogin } from "@/lib/db/guests";
 import { findWeddingById } from "@/lib/db/weddings";
 import { createGuestSession } from "@/lib/auth/guest";
+import { hasCurrentConsent } from "@/lib/db/consents";
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +27,12 @@ export async function GET(
 
   await createGuestSession(guest.id, guest.weddingId);
 
-  return NextResponse.redirect(
-    new URL(`/w/${wedding.slug}/moje-zaproszenie`, request.url)
-  );
+  // RODO - gość bez jeszcze zapisanej zgody musi ją najpierw potwierdzić
+  // (patrz src/app/w/[slug]/zgoda) - zwracający gość z ważną zgodą leci
+  // dalej bez dodatkowego kroku, jak dotychczas.
+  const nextPath = hasCurrentConsent("GUEST", guest.id)
+    ? `/w/${wedding.slug}/moje-zaproszenie`
+    : `/w/${wedding.slug}/zgoda`;
+
+  return NextResponse.redirect(new URL(nextPath, request.url));
 }

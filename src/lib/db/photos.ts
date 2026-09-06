@@ -32,6 +32,21 @@ export function countPhotos(weddingId: string): number {
   return row.n;
 }
 
+/** RODO - potrzebne do prawa do usunięcia wywoływanego przez samego gościa
+ * (patrz guestDeleteSelf w src/lib/db/guests.ts) - trzeba wiedzieć, KTÓRE
+ * zdjęcia na dysku są jego, żeby skasować je OSOBNO przed skasowaniem
+ * wiersza gościa (kaskada bazy dla uploaded_by_guest_id to SET NULL, nie
+ * CASCADE - inaczej zdjęcie zostałoby "osierocone" w galerii bez wiersza
+ * na dysku do skasowania). */
+export function listPhotosByGuest(weddingId: string, guestId: string): WeddingPhoto[] {
+  const rows = db
+    .prepare(
+      "SELECT * FROM wedding_photos WHERE wedding_id = ? AND uploaded_by_guest_id = ? ORDER BY created_at ASC"
+    )
+    .all(weddingId, guestId);
+  return rows.map(rowToPhoto);
+}
+
 export function findPhotoById(weddingId: string, photoId: string): WeddingPhoto | null {
   const row = db
     .prepare("SELECT * FROM wedding_photos WHERE id = ? AND wedding_id = ?")
