@@ -51,6 +51,23 @@ export function newGuestToken(): string {
   return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 }
 
+// Krótki, ręcznie wpisywalny kod dostępu (alternatywa dla linku/QR - patrz
+// src/app/kod/actions.ts) - dla gości bez telefonu ze skanerem albo bez
+// dostępu do wiadomości z linkiem (np. zaproszenie wręczone na papierze).
+// Bez znaków łatwych do pomylenia (0/O, 1/I/L) - ma być czytelny odręcznie.
+const SHORT_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+export function newGuestShortCode(): string {
+  function group(len: number): string {
+    let out = "";
+    for (let i = 0; i < len; i++) {
+      out += SHORT_CODE_ALPHABET[Math.floor(Math.random() * SHORT_CODE_ALPHABET.length)];
+    }
+    return out;
+  }
+  return `${group(4)}-${group(4)}`;
+}
+
 let migrated = false;
 
 export function runMigrations() {
@@ -201,6 +218,20 @@ export function runMigrations() {
   try {
     db.exec(
       "ALTER TABLE guests ADD COLUMN group_id TEXT REFERENCES guest_groups(id) ON DELETE SET NULL;"
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN short_code TEXT;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_short_code ON guests(short_code);"
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

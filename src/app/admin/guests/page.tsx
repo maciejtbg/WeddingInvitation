@@ -115,6 +115,12 @@ export default async function GuestsPage({
               <p className="text-xs text-zinc-500">
                 {guest.groupLabel ?? "bez grupy"}
                 {guest.allowPlusOne ? " · z osobą towarzyszącą" : ""}
+                {guest.shortCode && (
+                  <>
+                    {" · kod: "}
+                    <span className="font-mono">{guest.shortCode}</span>
+                  </>
+                )}
               </p>
               {groups.length > 0 && (
                 <form action={assignGuestGroupAction} className="mt-1 flex items-center gap-1">
@@ -143,6 +149,15 @@ export default async function GuestsPage({
                 {RSVP_LABELS[guest.rsvpStatus]}
               </span>
               <CopyLinkButton path={`/z/${guest.token}`} />
+              {guest.shortCode && (
+                <a
+                  href={`/admin/guests/${guest.id}/invite-card?weddingId=${wedding.id}`}
+                  className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
+                  title={`Kod ręczny: ${guest.shortCode}`}
+                >
+                  Pobierz zaproszenie (QR)
+                </a>
+              )}
               <Link
                 href={`/admin/guests/${guest.id}?weddingId=${wedding.id}`}
                 className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"

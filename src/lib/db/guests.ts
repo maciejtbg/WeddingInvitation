@@ -14,7 +14,7 @@
 // Innymi słowy: to nie jest kwestia "ukrycia" czegoś w interfejsie, tylko
 // fizycznego braku zapytania, które zwróciłoby więcej niż powinno.
 
-import { db, newId, newGuestToken } from "./client";
+import { db, newId, newGuestToken, newGuestShortCode } from "./client";
 import type { Guest, GuestSelfView, RsvpStatus, SqliteRow } from "./types";
 
 function rowToGuest(row: SqliteRow): Guest {
@@ -22,6 +22,7 @@ function rowToGuest(row: SqliteRow): Guest {
     id: row.id as string,
     weddingId: row.wedding_id as string,
     token: row.token as string,
+    shortCode: row.short_code as string | null,
     firstName: row.first_name as string,
     lastName: row.last_name as string | null,
     groupLabel: row.group_label as string | null,
@@ -73,13 +74,24 @@ export function adminCreateGuest(params: {
 }): Guest {
   const id = newId("guest");
   const token = newGuestToken();
+
+  // Kolizja kodu (32-znakowy alfabet, 8 znaków) jest astronomicznie mało
+  // prawdopodobna, ale pętla ze sprawdzeniem kosztuje nic, a UNIQUE index
+  // na short_code i tak by odrzucił duplikat - lepiej wygenerować od nowa
+  // niż wywrócić dodawanie gościa błędem bazy.
+  let shortCode = newGuestShortCode();
+  while (db.prepare("SELECT 1 FROM guests WHERE short_code = ?").get(shortCode)) {
+    shortCode = newGuestShortCode();
+  }
+
   db.prepare(
-    `INSERT INTO guests (id, wedding_id, token, first_name, last_name, group_label, allow_plus_one)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO guests (id, wedding_id, token, short_code, first_name, last_name, group_label, allow_plus_one)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
     params.weddingId,
     token,
+    shortCode,
     params.firstName,
     params.lastName ?? null,
     params.groupLabel ?? null,
@@ -115,6 +127,18 @@ export function adminSetGuestGroup(
  * zamienić token z URL na sesję. Nigdzie indziej nie wolno wyszukiwać po token. */
 export function findGuestByTokenForLogin(token: string): Guest | null {
   const row = db.prepare("SELECT * FROM guests WHERE token = ?").get(token);
+  return row ? rowToGuest(row) : null;
+}
+
+/** Jak findGuestByTokenForLogin, ale przez krótki, ręcznie wpisywalny kod
+ * (patrz /kod) - dla gości bez skanera QR albo bez cyfrowego dostępu do
+ * wiadomości z linkiem. Normalizacja (upper-case, bez spacji/myślników)
+ * pozwala wpisać kod bez przejmowania się wielkością liter czy formatem. */
+export function findGuestByShortCodeForLogin(rawCode: string): Guest | null {
+  const normalized = rawCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (normalized.length !== 8) return null;
+  const formatted = `${normalized.slice(0, 4)}-${normalized.slice(4)}`;
+  const row = db.prepare("SELECT * FROM guests WHERE short_code = ?").get(formatted);
   return row ? rowToGuest(row) : null;
 }
 

@@ -47,6 +47,10 @@ export interface Guest {
   id: string;
   weddingId: string;
   token: string;
+  // Krótki, ręcznie wpisywalny kod dostępu - alternatywa dla linku/QR dla
+  // gości bez skanera albo bez cyfrowego dostępu do wiadomości z linkiem.
+  // Może być null dla gości utworzonych przed dodaniem tej funkcji.
+  shortCode: string | null;
   firstName: string;
   lastName: string | null;
   groupLabel: string | null;

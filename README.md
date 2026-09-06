@@ -8,15 +8,37 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 ## Status
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
-(patrz `npm run smoke`, `npm run smoke:tables` i `npm run smoke:seating`
-niżej), ale brakuje jeszcze m.in.:
+(patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating` i
+`npm run smoke:invite-card` niżej), ale brakuje jeszcze m.in.:
 
-- logowania Google/Facebook dla gości (wymaga założenia aplikacji OAuth
-  u dostawcy - patrz sekcja "Logowanie Google" niżej),
+- logowania Google/Facebook/telefonem dla gości (OAuth wymaga założenia
+  aplikacji u dostawcy, logowanie telefonem - płatnej bramki SMS typu
+  Twilio - patrz sekcja "Logowanie Google" niżej),
 - galerii zdjęć od gości (Cloudflare R2),
 - panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
   wejście z listy gości, jeden na jednego),
+- mapy OpenStreetMap z lokalizacją ślubu/wesela/poprawin,
+- wielojęzyczności strony gościa (tłumaczenie w locie),
 - wdrożenia na docelowy VPS (mikr.us) razem z przejściem na Postgres.
+
+## Zaproszenie: QR + kod ręczny
+
+Obok linku (`/z/<token>`) każdy gość ma teraz dwa dodatkowe, "analogowe"
+sposoby dostępu - dla gości bez Gmaila, bez telefonu ze skanerem, albo
+z zaproszeniem wręczonym osobiście na papierze:
+
+- **Karta z kodem QR** - `Pobierz zaproszenie (QR)` na liście gości pobiera
+  obrazek PNG (ornament motywu + imiona pary + kod QR prowadzący do
+  `/z/<token>` + krótki kod tekstowy) do wysłania jako obrazek (WhatsApp,
+  Messenger) albo wydrukowania. Generowanie: `src/lib/inviteCard.ts`
+  (SVG + `qrcode`, złożone przez `sharp`), endpoint:
+  `src/app/admin/guests/[guestId]/invite-card/route.ts`.
+- **Krótki kod ręczny** (`src/lib/db/client.ts`, `newGuestShortCode`) -
+  8 znaków bez liter/cyfr łatwych do pomylenia (0/O, 1/I/L), do wpisania na
+  stronie `/kod` bez skanowania i bez klikania linku - dla starszych gości
+  albo kogoś, kto dostał zaproszenie od kogoś innego ustnie.
+
+Test end-to-end: `npm run smoke:invite-card`.
 
 ## Planer stołów
 
