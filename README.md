@@ -8,7 +8,8 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 ## Status
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
-(patrz `npm run smoke` i `npm run smoke:tables` niżej), ale brakuje jeszcze m.in.:
+(patrz `npm run smoke`, `npm run smoke:tables` i `npm run smoke:seating`
+niżej), ale brakuje jeszcze m.in.:
 
 - logowania Google/Facebook dla gości (wymaga założenia aplikacji OAuth
   u dostawcy - patrz sekcja "Logowanie Google" niżej),
@@ -40,6 +41,33 @@ boczny do przypisywania gości do konkretnych miejsc.
   testowej - w połączeniu z Konva i headless Chromium bez GPU powoduje to
   zawieszenie strony na 100% CPU bez żadnego błędu w konsoli (opisane
   dokładnie w komentarzu na górze `scripts/smoke-tables.mjs`).
+
+## Tryby rozmieszczania gości
+
+Para wybiera tryb w ustawieniach wesela (`src/lib/seatingModes.ts`):
+
+- **COUPLE_ONLY** - para przypisuje ręcznie w planerze (domyślny, jedyny
+  tryb sprzed tej funkcji).
+- **GUEST_SELF_SELECT** - potwierdzony gość (`rsvpStatus === "YES"`) widzi
+  wolne miejsca przy wszystkich stołach i wybiera/zmienia sam
+  (`GuestSeatSection.tsx`) - w odróżnieniu od `adminAssignSeat` używanego
+  przez parę, samoobsługowy wybór (`guestSelfAssignSeat` w
+  `src/lib/db/tables.ts`) NIGDY nie "podbija" kogoś, kto już tam siedzi -
+  zajęte miejsce jest po prostu niewybieralne.
+- **GUEST_REQUEST** - gość nie przenosi się sam, tylko wysyła prośbę
+  tekstem; para akceptuje/odrzuca na `/admin/seat-requests` i przenosi go
+  ręcznie w planerze.
+- **GROUP_CONSTRAINED** - jak `GUEST_SELF_SELECT`, ale wybór ograniczony do
+  stołów dozwolonych grupie gościa. Grupy (rodzina/praca/przyjaciele) i ich
+  zezwolenia na stoły ustawia się na `/admin/groups` - grupa bez żadnego
+  zaznaczonego stołu ma dostęp do wszystkich (nie trzeba konfigurować
+  ograniczeń dla grup, którym para ufa bez zastrzeżeń).
+
+`groupLabel` na gościu (wolny tekst, prywatna notatka pary) i `groupId`
+(strukturalna grupa do uprawnień rozmieszczania) to dwa niezależne pola -
+patrz komentarz w `src/lib/db/types.ts`.
+
+Test end-to-end wszystkich czterech trybów: `npm run smoke:seating`.
 
 ## Stack
 
