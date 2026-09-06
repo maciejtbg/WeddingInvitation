@@ -30,6 +30,12 @@ const CSP = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // Minimalny, samodzielny bundle produkcyjny (.next/standalone) - kopiuje
+  // wyłącznie faktycznie użyte zależności zamiast całego node_modules.
+  // Ważne na małych VPS-ach (patrz deploy/DEPLOY.md) - kontenerowe plany
+  // typu mikr.us bywają bez możliwości dodania swapu (brak uprawnień do
+  // swapon w LXC), więc mniejszy footprint runtime realnie się liczy.
+  output: "standalone",
   async headers() {
     return [
       {
