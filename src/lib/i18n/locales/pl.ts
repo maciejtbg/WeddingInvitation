@@ -45,6 +45,11 @@ export const pl: Dictionary = {
   seatIsYouSuffix: " · Ty",
   saveSelectedSeat: "Zapisz wybrane miejsce",
 
+  galleryTitle: "Galeria zdjęć",
+  galleryFull: "Galeria jest pełna",
+  addPhoto: "Dodaj zdjęcie",
+  photoUploaded: "Zdjęcie dodane!",
+
   languageLabel: "Język",
   moreLanguages: "Więcej języków...",
 };

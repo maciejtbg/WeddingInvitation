@@ -44,3 +44,8 @@ next-env.d.ts
 /data/*.db
 /data/*.db-shm
 /data/*.db-wal
+
+# galeria zdjęć wgrywanych w runtime (placeholder do R2, patrz
+# src/lib/photoStorage.ts) - to dane użytkowników, nie kod. Świadomie NIE
+# w public/ - next start nie widzi tam plików dopisanych po starcie serwera.
+/data/uploads/

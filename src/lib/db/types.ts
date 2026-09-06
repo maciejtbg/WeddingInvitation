@@ -156,3 +156,14 @@ export interface WeddingLocation {
   lng: number;
   createdAt: string;
 }
+
+// Galeria zdjęć - placeholder do czasu podłączenia Cloudflare R2, patrz
+// src/lib/db/photos.ts i src/lib/photoStorage.ts (limity, kompresja).
+export interface WeddingPhoto {
+  id: string;
+  weddingId: string;
+  uploadedByGuestId: string | null;
+  fileName: string;
+  byteSize: number;
+  createdAt: string;
+}

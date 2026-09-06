@@ -40,6 +40,11 @@ export const de: Dictionary = {
   seatIsYouSuffix: " · ihr",
   saveSelectedSeat: "Ausgewählten Platz speichern",
 
+  galleryTitle: "Fotogalerie",
+  galleryFull: "Die Galerie ist voll",
+  addPhoto: "Foto hinzufügen",
+  photoUploaded: "Foto hinzugefügt!",
+
   languageLabel: "Sprache",
   moreLanguages: "Weitere Sprachen...",
 };

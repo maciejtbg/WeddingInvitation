@@ -12,7 +12,8 @@
     "smoke:seating": "node scripts/smoke-seating-modes.mjs",
     "smoke:invite-card": "node scripts/smoke-invite-card.mjs",
     "smoke:locations": "node scripts/smoke-locations.mjs",
-    "smoke:i18n": "node scripts/smoke-i18n.mjs"
+    "smoke:i18n": "node scripts/smoke-i18n.mjs",
+    "smoke:gallery": "node scripts/smoke-gallery.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

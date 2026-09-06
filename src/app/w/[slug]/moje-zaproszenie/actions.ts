@@ -9,6 +9,7 @@ import { findWeddingById } from "@/lib/db/weddings";
 import { guestSelfAssignSeat } from "@/lib/db/tables";
 import { guestCreateSeatChangeRequest, guestHasPendingRequest } from "@/lib/db/seatRequests";
 import { allowsGuestSelfSelect } from "@/lib/seatingModes";
+import { uploadPhoto } from "@/lib/photoStorage";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -108,4 +109,36 @@ export async function guestRequestSeatChangeAction(formData: FormData): Promise<
 
   revalidatePath(inviteUrl);
   redirect(`${inviteUrl}?requestSent=1`);
+}
+
+/** Galeria - placeholder do R2 (patrz src/lib/photoStorage.ts, limity i
+ * kompresja). Gość może dorzucić zdjęcie do wspólnej galerii wesela, dopóki
+ * nie osiągnie ona twardego limitu. */
+export async function guestUploadPhotoAction(formData: FormData): Promise<void> {
+  const session = await getGuestSession();
+  if (!session) redirect("/");
+
+  const wedding = findWeddingById(session.weddingId);
+  if (!wedding) redirect("/");
+  const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
+
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) redirect(inviteUrl);
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await uploadPhoto({
+      weddingId: wedding.id,
+      uploadedByGuestId: session.guestId,
+      originalBuffer: buffer,
+      originalByteSize: file.size,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Nie udało się wgrać zdjęcia";
+    redirect(`${inviteUrl}?photoError=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath(inviteUrl);
+  revalidatePath(`/w/${wedding.slug}`);
+  redirect(`${inviteUrl}?photoSaved=1`);
 }

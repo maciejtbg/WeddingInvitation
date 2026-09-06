@@ -8,6 +8,8 @@ import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PhotoGallery from "@/components/PhotoGallery";
+import { listPhotos } from "@/lib/db/photos";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 
@@ -37,6 +39,7 @@ export default async function WeddingPublicPage({
   const isThisGuest = guestSession?.weddingId === wedding.id;
   const theme = getTheme(wedding.theme);
   const locations = listLocations(wedding.id);
+  const photos = listPhotos(wedding.id);
   const locale = await getLocale();
   const dict = await getDictionary(locale);
 
@@ -105,6 +108,15 @@ export default async function WeddingPublicPage({
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {photos.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+              {dict.galleryTitle}
+            </h2>
+            <PhotoGallery weddingId={wedding.id} photos={photos} />
           </div>
         )}
 

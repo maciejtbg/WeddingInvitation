@@ -9,16 +9,52 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
 (patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating`,
-`npm run smoke:invite-card`, `npm run smoke:locations` i `npm run smoke:i18n`
-niżej), ale brakuje jeszcze m.in.:
+`npm run smoke:invite-card`, `npm run smoke:locations`, `npm run smoke:i18n`
+i `npm run smoke:gallery` niżej), ale brakuje jeszcze m.in.:
 
 - logowania Google/Facebook/telefonem dla gości (OAuth wymaga założenia
   aplikacji u dostawcy, logowanie telefonem - płatnej bramki SMS typu
-  Twilio - patrz sekcja "Logowanie Google" niżej),
-- galerii zdjęć od gości (Cloudflare R2),
+  Twilio/SMSAPI, albo własnego mostka SMS na starym telefonie z kartą SIM -
+  patrz sekcja "Logowanie Google" niżej),
+- prawdziwej galerii zdjęć na Cloudflare R2 (na razie jest lekki placeholder
+  na lokalnym dysku, patrz niżej - do podmiany, gdy będzie konto R2),
 - panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
   wejście z listy gości, jeden na jednego),
 - wdrożenia na docelowy VPS (mikr.us) razem z przejściem na Postgres.
+
+## Galeria zdjęć (placeholder do Cloudflare R2)
+
+Świadomie NIE R2 - żeby nie zwiększać kosztów hostingu, zanim będzie na to
+konto Cloudflare. Zamiast tego zwykły dysk serwera, z twardymi limitami:
+
+- **`MAX_PHOTOS_PER_WEDDING = 10`** zdjęć na wesele (`src/lib/photoStorage.ts`)
+  - to jedna wspólna galeria (para + goście razem), nie osobny limit na
+  każdego. Formularz dodawania znika, gdy limit jest osiągnięty.
+- Każde zdjęcie jest **zawsze** przeskalowane (maks. 1600 px dłuższego boku)
+  i przekompresowane do JPEG po stronie serwera (`sharp`), niezależnie od
+  tego, ile ważyło na wejściu (telefon potrafi wrzucić 10-15 MB) - kilka
+  prób jakości aż do ~350 KB. Przy okazji re-encode do JPEG ucina metadane
+  EXIF (w tym GPS), które telefony dopisują do zdjęć.
+- Para dodaje/usuwa z `/admin/gallery`, goście dodają (nie usuwają) z
+  `/moje-zaproszenie`. Widoczna dla wszystkich na stronie publicznej.
+
+**Pułapka warta zapamiętania** (opisana w komentarzu w
+`src/lib/photoStorage.ts`): pierwsza wersja zapisywała pliki prosto do
+`public/uploads/` - działało w `next dev`, ale w `next start` (tryb
+produkcyjny) pliki dopisane do `public/` PO starcie serwera dostawały 404 -
+lista statycznych plików jest ustalana wcześniej, nie odświeżana na żywo.
+Złapane przez test e2e, nie ręcznie - warto pamiętać przy każdej kolejnej
+funkcji zapisującej pliki w runtime. Rozwiązanie: pliki w `data/uploads/`
+(poza `public/`), serwowane przez własny route handler
+(`src/app/uploads/[weddingId]/[fileName]/route.ts`), który czyta je z
+dysku na żądanie - działa identycznie w dev i w produkcji.
+
+Do podmiany na R2 później: cała logika zapisu/odczytu jest w jednym pliku
+(`src/lib/photoStorage.ts`), reszta aplikacji odwołuje się tylko do jego
+funkcji (`uploadPhoto`, `removePhoto`, `photoUrl`) - ten sam wzorzec co
+migracja SQLite → Postgres.
+
+Test end-to-end: `npm run smoke:gallery`.
 
 ## Wielojęzyczność stron dla gości
 
@@ -212,6 +248,7 @@ npm run smoke:seating      # 4 tryby rozmieszczania gości + grupy
 npm run smoke:invite-card  # karta z kodem QR + logowanie krótkim kodem
 npm run smoke:locations    # miejsca na mapie OSM
 npm run smoke:i18n         # przełącznik języka + tłumaczenie na żądanie
+npm run smoke:gallery      # galeria zdjęć (limit, kompresja, serwowanie)
 ```
 
 ## Model prywatności gości (ważne, żeby to rozumieć zanim się coś zmieni)
@@ -245,6 +282,25 @@ Zależności pod to nie są jeszcze zainstalowane. Żeby to dodać:
    a nie osobnym systemem tożsamości.
 
 To samo dotyczy logowania przez Facebooka.
+
+**Które konto Google użyć:** bez znaczenia technicznego - zwykłe darmowe
+Gmail działa identycznie jak konto Google Workspace firmowe. Zakładanie
+projektu w Google Cloud jest darmowe (logowania to nie dotyczy, płaci się
+tylko za niektóre inne API). Dla ekranu zgody typu "External" z
+podstawowymi uprawnieniami (email/profil) Google pozwala działać w trybie
+testowym na do 100 kont bez weryfikacji - żeby wpuścić więcej gości, trzeba
+"opublikować" ekran zgody (dla tak podstawowych uprawnień zwykle szybkie).
+
+**Logowanie telefonem (SMS)** - sprawdzone opcje (stan na 2026):
+- Twilio: trial pozwala wysyłać tylko do 5 ręcznie zweryfikowanych numerów -
+  bezużyteczne bez przejścia na płatne konto.
+- SMSAPI.pl (polski dostawca): 50 darmowych SMS przy rejestracji, bez karty -
+  starczy na testy, nie na realne wesele.
+- Nie ma darmowej bramki SMS na produkcyjną skalę - wysyłka zawsze kosztuje
+  operatora.
+- Realna opcja przy tej skali (wesele, nie tysiące userów): stary telefon z
+  Androidem + aplikacja "SMS Gateway" (wystawia lokalne API HTTP) albo
+  moduł SIM800L + ESP32, jako własny, praktycznie darmowy mostek SMS.
 
 ## Struktura
 

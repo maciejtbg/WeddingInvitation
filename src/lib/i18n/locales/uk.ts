@@ -40,6 +40,11 @@ export const uk: Dictionary = {
   seatIsYouSuffix: " · це ви",
   saveSelectedSeat: "Зберегти обране місце",
 
+  galleryTitle: "Фотогалерея",
+  galleryFull: "Галерея заповнена",
+  addPhoto: "Додати фото",
+  photoUploaded: "Фото додано!",
+
   languageLabel: "Мова",
   moreLanguages: "Більше мов...",
 };

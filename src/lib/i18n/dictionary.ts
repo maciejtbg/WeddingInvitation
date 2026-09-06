@@ -49,6 +49,12 @@ export interface Dictionary {
   seatIsYouSuffix: string;
   saveSelectedSeat: string;
 
+  // Galeria zdjęć (placeholder do R2)
+  galleryTitle: string;
+  galleryFull: string;
+  addPhoto: string;
+  photoUploaded: string;
+
   // Przełącznik języka
   languageLabel: string;
   moreLanguages: string;

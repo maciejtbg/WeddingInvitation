@@ -194,6 +194,21 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_locations_wedding ON wedding_locations(wedding_id);
 
+    -- Galeria zdjęć - placeholder do czasu podłączenia Cloudflare R2 (patrz
+    -- README). Celowo NIE trzymamy zdjęć w tej bazie - pliki lądują w
+    -- public/uploads/<weddingId>/ (patrz src/lib/photoStorage.ts), tu tylko
+    -- metadane. Twardy limit MAX_PHOTOS_PER_WEDDING (patrz photoStorage.ts)
+    -- pilnuje, żeby to zostało małym dodatkiem do hostingu, nie studnią bez dna.
+    CREATE TABLE IF NOT EXISTS wedding_photos (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      uploaded_by_guest_id TEXT REFERENCES guests(id) ON DELETE SET NULL,
+      file_name TEXT NOT NULL,
+      byte_size INTEGER NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_photos_wedding ON wedding_photos(wedding_id);
+
     -- Cache przetłumaczonych słowników dla języków spoza ręcznie
     -- utrzymywanych (pl/en/uk/de) - patrz src/lib/i18n/getDictionary.ts.
     -- Tłumaczenie całego słownika kosztuje jedno zapytanie do darmowego,

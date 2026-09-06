@@ -4,24 +4,34 @@ import { findWeddingBySlug } from "@/lib/db/weddings";
 import { guestGetSelf } from "@/lib/db/guests";
 import { guestFindMySeat } from "@/lib/db/tables";
 import { listMessagesForGuest } from "@/lib/db/chat";
+import { listPhotos } from "@/lib/db/photos";
+import { MAX_PHOTOS_PER_WEDDING } from "@/lib/photoStorage";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
+import PhotoGallery from "@/components/PhotoGallery";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
-import { submitRsvpAction, sendGuestMessageAction } from "./actions";
+import { submitRsvpAction, sendGuestMessageAction, guestUploadPhotoAction } from "./actions";
 
 export default async function MyInvitePage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ saved?: string; seatSaved?: string; seatError?: string; requestSent?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    seatSaved?: string;
+    seatError?: string;
+    requestSent?: string;
+    photoSaved?: string;
+    photoError?: string;
+  }>;
 }) {
   const { slug } = await params;
-  const { saved, seatSaved, seatError, requestSent } = await searchParams;
+  const { saved, seatSaved, seatError, requestSent, photoSaved, photoError } = await searchParams;
   const wedding = findWeddingBySlug(slug);
   if (!wedding) notFound();
 
@@ -43,6 +53,8 @@ export default async function MyInvitePage({
   const mySeat = guestFindMySeat(guest.id);
   const locale = await getLocale();
   const dict = await getDictionary(locale);
+  const photos = listPhotos(wedding.id);
+  const galleryFull = photos.length >= MAX_PHOTOS_PER_WEDDING;
 
   return (
     <div
@@ -180,6 +192,46 @@ export default async function MyInvitePage({
               {dict.send}
             </button>
           </form>
+        </div>
+
+        <div className="mt-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
+          <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">{dict.galleryTitle}</h2>
+          {photoSaved && (
+            <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
+              {dict.photoUploaded}
+            </p>
+          )}
+          {photoError && (
+            <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{photoError}</p>
+          )}
+          {photos.length > 0 && (
+            <div className="mb-4">
+              <PhotoGallery weddingId={wedding.id} photos={photos} />
+            </div>
+          )}
+          {galleryFull ? (
+            <p className="text-sm text-[var(--wd-muted)]">{dict.galleryFull}</p>
+          ) : (
+            <form
+              action={guestUploadPhotoAction}
+              encType="multipart/form-data"
+              className="flex flex-wrap items-center gap-2"
+            >
+              <input
+                type="file"
+                name="photo"
+                accept="image/*"
+                required
+                className="text-sm text-[var(--wd-text)]"
+              />
+              <button
+                type="submit"
+                className="rounded-full bg-[var(--wd-accent)] px-4 py-1.5 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
+              >
+                {dict.addPhoto}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>
