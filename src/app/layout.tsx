@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+// Next.js App Router pozwala importować globalny CSS z node_modules
+// wyłącznie w głównym layoucie - stąd tutaj, mimo że dotyczy tylko mapy
+// (src/components/LocationMapPicker.tsx, LocationsMap.tsx).
+import "leaflet/dist/leaflet.css";
 
 // Uwaga: świadomie NIE używamy next/font/google (Geist itd.) - next/font
 // pobiera pliki fontów w trakcie builda z fonts.googleapis.com, a to nie

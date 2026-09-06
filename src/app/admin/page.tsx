@@ -95,6 +95,12 @@ export default async function AdminDashboardPage({
           Grupy gości
         </Link>
         <Link
+          href={`/admin/locations?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Miejsca
+        </Link>
+        <Link
           href={`/admin/seat-requests?weddingId=${wedding.id}`}
           className="relative rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
         >

@@ -141,3 +141,18 @@ export interface SeatWithGuestName extends SeatAssignment {
   guestFirstName: string;
   guestLastName: string | null;
 }
+
+// Miejsca pokazywane gościom na mapie (ceremonia/przyjęcie/poprawiny) -
+// patrz src/lib/db/locations.ts i src/lib/locationKinds.ts.
+export type LocationKind = "CEREMONY" | "RECEPTION" | "AFTERPARTY" | "OTHER";
+
+export interface WeddingLocation {
+  id: string;
+  weddingId: string;
+  kind: LocationKind;
+  label: string;
+  address: string | null;
+  lat: number;
+  lng: number;
+  createdAt: string;
+}

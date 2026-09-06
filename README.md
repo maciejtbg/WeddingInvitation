@@ -8,8 +8,9 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 ## Status
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
-(patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating` i
-`npm run smoke:invite-card` niżej), ale brakuje jeszcze m.in.:
+(patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating`,
+`npm run smoke:invite-card` i `npm run smoke:locations` niżej), ale brakuje
+jeszcze m.in.:
 
 - logowania Google/Facebook/telefonem dla gości (OAuth wymaga założenia
   aplikacji u dostawcy, logowanie telefonem - płatnej bramki SMS typu
@@ -17,9 +18,31 @@ To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
 - galerii zdjęć od gości (Cloudflare R2),
 - panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
   wejście z listy gości, jeden na jednego),
-- mapy OpenStreetMap z lokalizacją ślubu/wesela/poprawin,
 - wielojęzyczności strony gościa (tłumaczenie w locie),
 - wdrożenia na docelowy VPS (mikr.us) razem z przejściem na Postgres.
+
+## Miejsca na mapie (OpenStreetMap)
+
+Para dodaje na `/admin/locations` dowolną liczbę miejsc (ceremonia/przyjęcie/
+poprawiny/inne) klikając dokładny punkt na interaktywnej mapce
+(`src/components/LocationMapPicker.tsx`) albo wyszukując adres przez
+Nominatim (darmowe geokodowanie OSM, bez klucza API). Wszystkie miejsca
+pokazują się gościom na stronie publicznej w sekcji "Jak do nas trafić"
+(`src/components/LocationsMap.tsx`) - każda pinezka ma popup z linkiem do
+nawigacji w Google Maps i Apple Maps.
+
+**Pułapka warta zapamiętania** (opisana w komentarzu w `LocationsMap.tsx`):
+mapa Leaflet zamontowana przez `next/dynamic` bywa mierzona przez
+przeglądarkę z szerokością 0 w momencie pierwszego renderu - `fitBounds`
+policzony na takim rozmiarze daje zoom oddalony na cały świat zamiast
+okolicy. Ani `requestAnimationFrame`, ani `setTimeout` nie gwarantują, że
+w tym momencie rozmiar jest już prawdziwy (rAF dodatkowo w ogóle się nie
+odpala, gdy karta przeglądarki jest w tle/ukryta). Jedyne pewne rozwiązanie:
+`ResizeObserver` na kontenerze mapy - jego callback dostaje realny rozmiar
+przy pierwszym wywołaniu zaraz po `observe()`, więc dopiero wtedy wołamy
+`invalidateSize()` i `fitBounds`/`setView`.
+
+Test end-to-end: `npm run smoke:locations`.
 
 ## Zaproszenie: QR + kod ręczny
 

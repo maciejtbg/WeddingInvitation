@@ -178,6 +178,22 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_seat_requests_wedding ON seat_change_requests(wedding_id);
 
+    -- Miejsca (ceremonia/przyjęcie/poprawiny/inne) pokazywane gościom na
+    -- mapie OpenStreetMap - patrz src/lib/db/locations.ts. Nie ma tu
+    -- rozróżnienia admin*/guest* jak przy innych danych - to nie są dane
+    -- prywatne, mają być widoczne wszystkim gościom wesela.
+    CREATE TABLE IF NOT EXISTS wedding_locations (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL DEFAULT 'OTHER', -- CEREMONY | RECEPTION | AFTERPARTY | OTHER
+      label TEXT NOT NULL,
+      address TEXT,
+      lat REAL NOT NULL,
+      lng REAL NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_locations_wedding ON wedding_locations(wedding_id);
+
     -- Czat gość <-> para. Każda wiadomość widoczna wyłącznie temu jednemu
     -- gościowi i kontu pary (izolacja po guest_id, patrz repozytorium chat.ts).
     CREATE TABLE IF NOT EXISTS chat_messages (
