@@ -13,7 +13,9 @@
     "smoke:invite-card": "node scripts/smoke-invite-card.mjs",
     "smoke:locations": "node scripts/smoke-locations.mjs",
     "smoke:i18n": "node scripts/smoke-i18n.mjs",
-    "smoke:gallery": "node scripts/smoke-gallery.mjs"
+    "smoke:gallery": "node scripts/smoke-gallery.mjs",
+    "smoke:extras": "node scripts/smoke-extras.mjs",
+    "smoke:music": "node scripts/smoke-music.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

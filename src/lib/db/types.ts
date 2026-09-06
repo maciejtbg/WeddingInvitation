@@ -167,3 +167,39 @@ export interface WeddingPhoto {
   byteSize: number;
   createdAt: string;
 }
+
+// Harmonogram dnia/dni ślubu - patrz src/lib/db/schedule.ts.
+export interface ScheduleItem {
+  id: string;
+  weddingId: string;
+  dayLabel: string | null;
+  timeLabel: string;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  createdAt: string;
+}
+
+// FAQ - patrz src/lib/db/faq.ts.
+export interface FaqItem {
+  id: string;
+  weddingId: string;
+  question: string;
+  answer: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+// Lista życzeń muzycznych - patrz src/lib/db/songRequests.ts i
+// src/lib/musicSearch.ts.
+export interface SongRequest {
+  id: string;
+  weddingId: string;
+  guestId: string | null;
+  trackName: string;
+  artistName: string;
+  artworkUrl: string | null;
+  previewUrl: string | null;
+  externalUrl: string | null;
+  createdAt: string;
+}

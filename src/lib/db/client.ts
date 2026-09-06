@@ -32,6 +32,13 @@ function createConnection(): DatabaseSync {
   const database = new DatabaseSync(DB_PATH);
   database.exec("PRAGMA journal_mode = WAL;");
   database.exec("PRAGMA foreign_keys = ON;");
+  // Bez tego równoległy dostęp do świeżo utworzonej bazy (np. next build
+  // odpalający kilku workerów, z których każdy pierwszy raz importuje ten
+  // moduł i uruchamia runMigrations() poniżej) kończy się natychmiastowym
+  // "database is locked" zamiast poczekania na zwolnienie blokady - złapane
+  // empirycznie: świeży plik bazy + 3 workery next builda = częsty fail.
+  // 5s to i tak tylko górny limit oczekiwania, nie stały narzut.
+  database.exec("PRAGMA busy_timeout = 5000;");
   return database;
 }
 
@@ -208,6 +215,52 @@ export function runMigrations() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_photos_wedding ON wedding_photos(wedding_id);
+
+    -- Harmonogram dnia/dni ślubu - do decyzji pary, patrz
+    -- src/lib/db/schedule.ts. day_label opcjonalny wolny tekst (np.
+    -- "Sobota" / "Dzień 2") do grupowania na stronie publicznej przy
+    -- weselach rozciągniętych na więcej niż jeden dzień (wesele + poprawiny
+    -- następnego dnia to typowy polski przypadek).
+    CREATE TABLE IF NOT EXISTS wedding_schedule_items (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      day_label TEXT,
+      time_label TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_schedule_wedding ON wedding_schedule_items(wedding_id);
+
+    -- FAQ - do decyzji pary, patrz src/lib/db/faq.ts.
+    CREATE TABLE IF NOT EXISTS wedding_faq_items (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      question TEXT NOT NULL,
+      answer TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_faq_wedding ON wedding_faq_items(wedding_id);
+
+    -- Lista życzeń muzycznych - każdy gość (nawet w trakcie ślubu, ze
+    -- swojego telefonu) może dorzucić prośbę o piosenkę, wyszukaną przez
+    -- darmowe iTunes Search API (bez klucza) - patrz src/lib/musicSearch.ts.
+    -- Wspólna, widoczna dla wszystkich lista (jak wspólna playlista), para
+    -- moderuje z /admin/music.
+    CREATE TABLE IF NOT EXISTS song_requests (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      guest_id TEXT REFERENCES guests(id) ON DELETE SET NULL,
+      track_name TEXT NOT NULL,
+      artist_name TEXT NOT NULL,
+      artwork_url TEXT,
+      preview_url TEXT,
+      external_url TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_songs_wedding ON song_requests(wedding_id);
 
     -- Cache przetłumaczonych słowników dla języków spoza ręcznie
     -- utrzymywanych (pl/en/uk/de) - patrz src/lib/i18n/getDictionary.ts.

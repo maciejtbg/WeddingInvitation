@@ -1,4 +1,5 @@
 import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
 import { getGuestSession } from "@/lib/auth/guest";
 import { findWeddingBySlug } from "@/lib/db/weddings";
 import { guestGetSelf } from "@/lib/db/guests";
@@ -75,9 +76,17 @@ export default async function MyInvitePage({
         <p className="mb-1 text-center text-sm text-[var(--wd-muted)]">
           {t(dict.greeting, { name: guest.firstName })}
         </p>
-        <h1 className="mb-8 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
+        <h1 className="mb-2 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
+        <p className="mb-8 text-center text-sm">
+          <Link
+            href={`/w/${wedding.slug}/moje-zaproszenie/muzyka`}
+            className="text-[var(--wd-accent)] underline"
+          >
+            {dict.musicLinkLabel}
+          </Link>
+        </p>
 
         {saved && (
           <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">

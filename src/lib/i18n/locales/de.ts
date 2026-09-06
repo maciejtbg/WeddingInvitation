@@ -45,6 +45,27 @@ export const de: Dictionary = {
   addPhoto: "Foto hinzufügen",
   photoUploaded: "Foto hinzugefügt!",
 
+  musicTitle: "Musikwünsche",
+  musicLinkLabel: "🎵 Einen Song wünschen",
+  musicSearchPlaceholder: "Song oder Künstler suchen...",
+  musicSearchButton: "Suchen",
+  musicAdd: "Hinzufügen",
+  musicAdded: "Zur Liste hinzugefügt!",
+  musicNoResults: "Nichts gefunden - versucht es anders.",
+  musicCurrentList: "Gewünschte Songs",
+  musicEmpty: "Noch niemand hat etwas gewünscht - seid die Ersten!",
+  backToInvite: "← Zurück zur Einladung",
+
+  daysUntilWedding: "Noch {days} Tage bis zur Hochzeit!",
+  oneDayUntilWedding: "Morgen ist die Hochzeit!",
+  todayIsWedding: "Heute ist der große Tag! 🎉",
+
+  scheduleTitle: "Tagesablauf",
+  faqTitle: "Häufig gestellte Fragen",
+
+  addToCalendar: "Zu Google Calendar hinzufügen",
+  downloadIcs: "In den Kalender laden (.ics)",
+
   languageLabel: "Sprache",
   moreLanguages: "Weitere Sprachen...",
 };

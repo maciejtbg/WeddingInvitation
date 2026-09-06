@@ -45,6 +45,27 @@ export const uk: Dictionary = {
   addPhoto: "Додати фото",
   photoUploaded: "Фото додано!",
 
+  musicTitle: "Музичні побажання",
+  musicLinkLabel: "🎵 Замовити пісню",
+  musicSearchPlaceholder: "Шукайте пісню або виконавця...",
+  musicSearchButton: "Шукати",
+  musicAdd: "Додати",
+  musicAdded: "Додано до списку!",
+  musicNoResults: "Нічого не знайдено - спробуйте інакше.",
+  musicCurrentList: "Замовлені пісні",
+  musicEmpty: "Ніхто ще нічого не замовив - будьте першими!",
+  backToInvite: "← Повернутися до запрошення",
+
+  daysUntilWedding: "Залишилось {days} днів до весілля!",
+  oneDayUntilWedding: "Завтра весілля!",
+  todayIsWedding: "Сьогодні весілля! 🎉",
+
+  scheduleTitle: "Розклад дня",
+  faqTitle: "Часті запитання",
+
+  addToCalendar: "Додати до Google Calendar",
+  downloadIcs: "Завантажити у календар (.ics)",
+
   languageLabel: "Мова",
   moreLanguages: "Більше мов...",
 };

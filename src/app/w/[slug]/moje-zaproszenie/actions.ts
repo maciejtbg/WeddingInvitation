@@ -10,6 +10,7 @@ import { guestSelfAssignSeat } from "@/lib/db/tables";
 import { guestCreateSeatChangeRequest, guestHasPendingRequest } from "@/lib/db/seatRequests";
 import { allowsGuestSelfSelect } from "@/lib/seatingModes";
 import { uploadPhoto } from "@/lib/photoStorage";
+import { createSongRequest } from "@/lib/db/songRequests";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -141,4 +142,35 @@ export async function guestUploadPhotoAction(formData: FormData): Promise<void> 
   revalidatePath(inviteUrl);
   revalidatePath(`/w/${wedding.slug}`);
   redirect(`${inviteUrl}?photoSaved=1`);
+}
+
+/** Lista życzeń muzycznych - gość dodaje wynik wyszukiwania (patrz
+ * src/lib/musicSearch.ts) do wspólnej, widocznej dla wszystkich listy.
+ * Działa przez cały czas, także "w trakcie ślubu" - nie wymaga
+ * potwierdzonego RSVP, w przeciwieństwie do wyboru miejsca. */
+export async function addSongRequestAction(formData: FormData): Promise<void> {
+  const session = await getGuestSession();
+  if (!session) redirect("/");
+
+  const wedding = findWeddingById(session.weddingId);
+  if (!wedding) redirect("/");
+  const musicUrl = `/w/${wedding.slug}/moje-zaproszenie/muzyka`;
+
+  const trackName = readString(formData, "trackName");
+  const artistName = readString(formData, "artistName");
+  if (!trackName || !artistName) redirect(musicUrl);
+
+  createSongRequest({
+    weddingId: wedding.id,
+    guestId: session.guestId,
+    trackName,
+    artistName,
+    artworkUrl: readString(formData, "artworkUrl") || null,
+    previewUrl: readString(formData, "previewUrl") || null,
+    externalUrl: readString(formData, "externalUrl") || null,
+  });
+
+  revalidatePath(musicUrl);
+  const q = readString(formData, "q");
+  redirect(`${musicUrl}?added=1${q ? `&q=${encodeURIComponent(q)}` : ""}`);
 }

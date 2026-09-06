@@ -55,6 +55,31 @@ export interface Dictionary {
   addPhoto: string;
   photoUploaded: string;
 
+  // Lista życzeń muzycznych
+  musicTitle: string;
+  musicLinkLabel: string;
+  musicSearchPlaceholder: string;
+  musicSearchButton: string;
+  musicAdd: string;
+  musicAdded: string;
+  musicNoResults: string;
+  musicCurrentList: string;
+  musicEmpty: string;
+  backToInvite: string;
+
+  // Odliczanie do ślubu
+  daysUntilWedding: string;
+  oneDayUntilWedding: string;
+  todayIsWedding: string;
+
+  // Harmonogram i FAQ
+  scheduleTitle: string;
+  faqTitle: string;
+
+  // Kalendarz
+  addToCalendar: string;
+  downloadIcs: string;
+
   // Przełącznik języka
   languageLabel: string;
   moreLanguages: string;

@@ -10,8 +10,12 @@ import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PhotoGallery from "@/components/PhotoGallery";
 import { listPhotos } from "@/lib/db/photos";
+import { listScheduleItems } from "@/lib/db/schedule";
+import { listFaqItems } from "@/lib/db/faq";
+import { googleCalendarUrl } from "@/lib/calendarInvite";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
+import { t } from "@/lib/i18n/dictionary";
 
 function formatDate(iso: string | null, locale: string): string | null {
   if (!iso) return null;
@@ -24,6 +28,18 @@ function formatDate(iso: string | null, locale: string): string | null {
   } catch {
     return iso;
   }
+}
+
+/** Liczba pełnych dni do ślubu, licząc od dzisiejszej północy - null jeśli
+ * data już minęła (wtedy nie pokazujemy odliczania) albo jej brak. */
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const wedding = new Date(iso + "T00:00:00");
+  wedding.setHours(0, 0, 0, 0);
+  const days = Math.round((wedding.getTime() - today.getTime()) / 86400000);
+  return days >= 0 ? days : null;
 }
 
 export default async function WeddingPublicPage({
@@ -40,8 +56,11 @@ export default async function WeddingPublicPage({
   const theme = getTheme(wedding.theme);
   const locations = listLocations(wedding.id);
   const photos = listPhotos(wedding.id);
+  const scheduleItems = listScheduleItems(wedding.id);
+  const faqItems = listFaqItems(wedding.id);
   const locale = await getLocale();
   const dict = await getDictionary(locale);
+  const days = daysUntil(wedding.weddingDate);
 
   return (
     <div
@@ -64,9 +83,42 @@ export default async function WeddingPublicPage({
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
         {wedding.weddingDate && (
-          <p className="mb-2 text-lg text-[var(--wd-text)]">
-            {formatDate(wedding.weddingDate, locale)}
-          </p>
+          <>
+            <p className="mb-2 text-lg text-[var(--wd-text)]">
+              {formatDate(wedding.weddingDate, locale)}
+            </p>
+            {days !== null && (
+              <p className="mb-3 font-serif text-xl text-[var(--wd-accent)]">
+                {days === 0
+                  ? dict.todayIsWedding
+                  : days === 1
+                    ? dict.oneDayUntilWedding
+                    : t(dict.daysUntilWedding, { days: String(days) })}
+              </p>
+            )}
+            <div className="mb-6 flex items-center justify-center gap-3 text-xs">
+              <a
+                href={googleCalendarUrl({
+                  partner1Name: wedding.partner1Name,
+                  partner2Name: wedding.partner2Name,
+                  weddingDate: wedding.weddingDate,
+                  location: wedding.venueName,
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+              >
+                {dict.addToCalendar}
+              </a>
+              <span className="text-[var(--wd-border)]">·</span>
+              <a
+                href={`/w/${wedding.slug}/calendar`}
+                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+              >
+                {dict.downloadIcs}
+              </a>
+            </div>
+          </>
         )}
         {wedding.venueName && (
           <p className="mb-6 text-[var(--wd-muted)]">
@@ -117,6 +169,61 @@ export default async function WeddingPublicPage({
               {dict.galleryTitle}
             </h2>
             <PhotoGallery weddingId={wedding.id} photos={photos} />
+          </div>
+        )}
+
+        {scheduleItems.length > 0 && (
+          <div className="mb-8 text-left">
+            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+              {dict.scheduleTitle}
+            </h2>
+            <div className="space-y-3 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
+              {scheduleItems.map((item, index) => {
+                const prevDay = index > 0 ? scheduleItems[index - 1].dayLabel : undefined;
+                const showDayHeader = item.dayLabel && item.dayLabel !== prevDay;
+                return (
+                  <div key={item.id}>
+                    {showDayHeader && (
+                      <p className="mb-1 mt-2 text-xs font-semibold uppercase tracking-wide text-[var(--wd-accent)]">
+                        {item.dayLabel}
+                      </p>
+                    )}
+                    <div className="flex gap-3">
+                      <span className="w-16 shrink-0 text-sm font-medium text-[var(--wd-accent)]">
+                        {item.timeLabel}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-[var(--wd-text)]">{item.title}</p>
+                        {item.description && (
+                          <p className="text-xs text-[var(--wd-muted)]">{item.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {faqItems.length > 0 && (
+          <div className="mb-8 text-left">
+            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+              {dict.faqTitle}
+            </h2>
+            <div className="space-y-2">
+              {faqItems.map((item) => (
+                <details
+                  key={item.id}
+                  className="rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-3"
+                >
+                  <summary className="cursor-pointer text-sm font-medium text-[var(--wd-text)]">
+                    {item.question}
+                  </summary>
+                  <p className="mt-2 text-sm text-[var(--wd-muted)]">{item.answer}</p>
+                </details>
+              ))}
+            </div>
           </div>
         )}
 

@@ -45,6 +45,27 @@ export const en: Dictionary = {
   addPhoto: "Add a photo",
   photoUploaded: "Photo added!",
 
+  musicTitle: "Song requests",
+  musicLinkLabel: "🎵 Request a song",
+  musicSearchPlaceholder: "Search for a song or artist...",
+  musicSearchButton: "Search",
+  musicAdd: "Add",
+  musicAdded: "Added to the list!",
+  musicNoResults: "No results - try a different search.",
+  musicCurrentList: "Requested songs",
+  musicEmpty: "No one has requested anything yet - be the first!",
+  backToInvite: "← Back to invitation",
+
+  daysUntilWedding: "{days} days until the wedding!",
+  oneDayUntilWedding: "The wedding is tomorrow!",
+  todayIsWedding: "It's the wedding day! 🎉",
+
+  scheduleTitle: "Schedule",
+  faqTitle: "Frequently asked questions",
+
+  addToCalendar: "Add to Google Calendar",
+  downloadIcs: "Download to calendar (.ics)",
+
   languageLabel: "Language",
   moreLanguages: "More languages...",
 };

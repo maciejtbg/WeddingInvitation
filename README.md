@@ -9,8 +9,9 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
 (patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating`,
-`npm run smoke:invite-card`, `npm run smoke:locations`, `npm run smoke:i18n`
-i `npm run smoke:gallery` niżej), ale brakuje jeszcze m.in.:
+`npm run smoke:invite-card`, `npm run smoke:locations`, `npm run smoke:i18n`,
+`npm run smoke:gallery`, `npm run smoke:extras` i `npm run smoke:music`
+niżej), ale brakuje jeszcze m.in.:
 
 - logowania Google/Facebook/telefonem dla gości (OAuth wymaga założenia
   aplikacji u dostawcy, logowanie telefonem - płatnej bramki SMS typu
@@ -21,6 +22,37 @@ i `npm run smoke:gallery` niżej), ale brakuje jeszcze m.in.:
 - panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
   wejście z listy gości, jeden na jednego),
 - wdrożenia na docelowy VPS (mikr.us) razem z przejściem na Postgres.
+
+## Odliczanie, kalendarz, harmonogram, FAQ i lista muzyczna
+
+Cztery drobniejsze funkcje, wszystkie widoczne na stronie publicznej:
+
+- **Odliczanie do ślubu** - liczone samo z `weddings.wedding_date`, żadnej
+  konfiguracji. Zero JS po stronie klienta - liczba dni jest policzona przy
+  renderze strony na serwerze (`daysUntil()` w `src/app/w/[slug]/page.tsx`).
+- **Kalendarz** - `/w/[slug]/calendar` zwraca prawdziwy plik `.ics`
+  (`src/lib/calendarInvite.ts`, format RFC 5545, bez żadnej biblioteki) z
+  alarmem dzień wcześniej - to jest właściwy "system przypomnień": raz
+  dodane do kalendarza gościa wydarzenie przypomni samo, przez zwykły
+  mechanizm alarmów kalendarza w telefonie, bez SMS-a i bez żadnej
+  infrastruktury wysyłkowej po naszej stronie. Obok jest też bezpośredni
+  link "Dodaj do Google Calendar" (URL z gotowymi parametrami, bez OAuth).
+- **Harmonogram dnia** (`/admin/schedule`) i **FAQ** (`/admin/faq`) - do
+  decyzji pary, prosty CRUD z kolejnością sterowaną przyciskami ↑/↓
+  (prościej niż przeciąganie, tak samo skuteczne przy liście kilkunastu
+  punktów). FAQ na stronie publicznej to natywne `<details>/<summary>` -
+  rozwijana lista bez ani linijki JavaScriptu.
+- **Lista życzeń muzycznych** (`/moje-zaproszenie/muzyka`) - każdy gość może
+  wyszukać i zgłosić piosenkę w dowolnym momencie (także w trakcie samego
+  ślubu - nie wymaga potwierdzonego RSVP, w odróżnieniu od wyboru miejsca).
+  Wyszukiwanie przez **darmowe, nieoficjalne iTunes Search API** (bez
+  klucza, `src/lib/musicSearch.ts`) - zwraca okładkę albumu i 30-sekundowy
+  podgląd audio (odtwarzany przez natywny `<audio>`, bez żadnej biblioteki
+  audio). Wspólna, widoczna dla wszystkich gości lista (jak wspólna
+  playlista) - para moderuje (usuwa) z `/admin/music`.
+
+Testy end-to-end: `npm run smoke:extras` (odliczanie/kalendarz/harmonogram/
+FAQ) i `npm run smoke:music` (wyszukiwanie i lista muzyczna).
 
 ## Galeria zdjęć (placeholder do Cloudflare R2)
 
@@ -249,6 +281,8 @@ npm run smoke:invite-card  # karta z kodem QR + logowanie krótkim kodem
 npm run smoke:locations    # miejsca na mapie OSM
 npm run smoke:i18n         # przełącznik języka + tłumaczenie na żądanie
 npm run smoke:gallery      # galeria zdjęć (limit, kompresja, serwowanie)
+npm run smoke:extras       # odliczanie, kalendarz .ics, harmonogram, FAQ
+npm run smoke:music        # wyszukiwanie i lista życzeń muzycznych
 ```
 
 ## Model prywatności gości (ważne, żeby to rozumieć zanim się coś zmieni)

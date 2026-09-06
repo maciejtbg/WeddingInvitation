@@ -107,6 +107,24 @@ export default async function AdminDashboardPage({
           Galeria
         </Link>
         <Link
+          href={`/admin/schedule?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Harmonogram
+        </Link>
+        <Link
+          href={`/admin/faq?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          FAQ
+        </Link>
+        <Link
+          href={`/admin/music?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Lista muzyczna
+        </Link>
+        <Link
           href={`/admin/seat-requests?weddingId=${wedding.id}`}
           className="relative rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
         >
