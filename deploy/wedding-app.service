@@ -1,0 +1,43 @@
+# Jednostka systemd - trzyma aplikację uruchomioną w tle, restartuje ją po
+# awarii i po restarcie serwera. Skopiuj na serwer do
+# /etc/systemd/system/wedding-app.service (jako root), podmieniając ścieżki
+# i użytkownika na te faktycznie użyte - patrz deploy/DEPLOY.md.
+#
+# Instalacja:
+#   sudo cp deploy/wedding-app.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now wedding-app
+#
+# Podgląd logów: sudo journalctl -u wedding-app -f
+
+[Unit]
+Description=Wedding App (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+# Dedykowany, NIE-rootowy użytkownik - patrz "Użytkownik systemowy" w
+# deploy/DEPLOY.md. Aplikacja nie potrzebuje uprawnień roota do niczego.
+User=wedding
+Group=wedding
+WorkingDirectory=/srv/wedding-app
+EnvironmentFile=/srv/wedding-app/.env
+# -H 127.0.0.1 - Next.js słucha WYŁĄCZNIE na localhost, nie jest wystawiony
+# bezpośrednio do internetu (to robi nginx jako reverse proxy, patrz
+# deploy/nginx.conf) - dodatkowa warstwa, nie trzeba ufać samemu Next.js
+# w kwestii np. limitów requestów.
+ExecStart=/usr/bin/npm run start -- -p 3000 -H 127.0.0.1
+Restart=on-failure
+RestartSec=5
+
+# Utwardzenie procesu (RODO art. 32 - "bezpieczeństwo przetwarzania" to
+# też ograniczenie tego, co proces MOŻE zrobić, nie tylko szyfrowanie) -
+# katalog data/ (baza SQLite + zdjęcia gości) musi zostać zapisywalny,
+# reszta systemu plików jest dla tego procesu tylko do odczytu.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/srv/wedding-app/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

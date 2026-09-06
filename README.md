@@ -382,6 +382,14 @@ npm run dev
 
 Otwórz http://localhost:3000.
 
+## Wdrożenie testowe na VPS
+
+Krok po kroku (Node.js + systemd + nginx + HTTPS) w
+[`deploy/DEPLOY.md`](deploy/DEPLOY.md). Obecna architektura (SQLite +
+zdjęcia na lokalnym dysku) jest zaprojektowana pod zwykły VPS z jednym
+stale działającym procesem - nie trzeba czekać na migrację do
+Postgres/Cloudflare R2, żeby to przetestować na prawdziwym serwerze.
+
 ## Jak przetestować (end-to-end)
 
 Jest gotowy skrypt, który przechodzi całą ścieżkę: rejestracja pary, dodanie
