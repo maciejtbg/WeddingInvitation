@@ -194,6 +194,17 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_locations_wedding ON wedding_locations(wedding_id);
 
+    -- Cache przetłumaczonych słowników dla języków spoza ręcznie
+    -- utrzymywanych (pl/en/uk/de) - patrz src/lib/i18n/getDictionary.ts.
+    -- Tłumaczenie całego słownika kosztuje jedno zapytanie do darmowego,
+    -- nieoficjalnego API Google Translate - robimy to raz na język, nie
+    -- przy każdym wejściu gościa.
+    CREATE TABLE IF NOT EXISTS translation_cache (
+      locale TEXT PRIMARY KEY,
+      dictionary_json TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     -- Czat gość <-> para. Każda wiadomość widoczna wyłącznie temu jednemu
     -- gościowi i kontu pary (izolacja po guest_id, patrz repozytorium chat.ts).
     CREATE TABLE IF NOT EXISTS chat_messages (

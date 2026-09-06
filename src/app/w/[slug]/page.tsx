@@ -7,11 +7,14 @@ import { getLocationKind } from "@/lib/locationKinds";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import LocationsMap from "@/components/LocationsMapLoader";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { getLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
 
-function formatDate(iso: string | null): string | null {
+function formatDate(iso: string | null, locale: string): string | null {
   if (!iso) return null;
   try {
-    return new Date(iso).toLocaleDateString("pl-PL", {
+    return new Date(iso).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -34,6 +37,8 @@ export default async function WeddingPublicPage({
   const isThisGuest = guestSession?.weddingId === wedding.id;
   const theme = getTheme(wedding.theme);
   const locations = listLocations(wedding.id);
+  const locale = await getLocale();
+  const dict = await getDictionary(locale);
 
   return (
     <div
@@ -41,9 +46,10 @@ export default async function WeddingPublicPage({
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="w-full max-w-xl text-center">
+        <LanguageSwitcher currentLocale={locale} returnTo={`/w/${wedding.slug}`} dict={dict} />
         {!wedding.publishedAt && (
           <p className="mb-6 inline-block rounded-full bg-amber-100 px-4 py-1 text-xs font-medium text-amber-800">
-            Wersja robocza - strona jeszcze nieopublikowana
+            {dict.draftBadge}
           </p>
         )}
         <ThemeOrnament
@@ -55,7 +61,9 @@ export default async function WeddingPublicPage({
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
         {wedding.weddingDate && (
-          <p className="mb-2 text-lg text-[var(--wd-text)]">{formatDate(wedding.weddingDate)}</p>
+          <p className="mb-2 text-lg text-[var(--wd-text)]">
+            {formatDate(wedding.weddingDate, locale)}
+          </p>
         )}
         {wedding.venueName && (
           <p className="mb-6 text-[var(--wd-muted)]">
@@ -77,7 +85,7 @@ export default async function WeddingPublicPage({
         {locations.length > 0 && (
           <div className="mb-8 text-left">
             <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
-              Jak do nas trafić
+              {dict.howToFindUs}
             </h2>
             <LocationsMap locations={locations} />
             <div className="mt-3 space-y-1">
@@ -105,13 +113,10 @@ export default async function WeddingPublicPage({
             href={`/w/${wedding.slug}/moje-zaproszenie`}
             className="inline-block rounded-full bg-[var(--wd-accent)] px-6 py-3 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
           >
-            Przejdź do mojego zaproszenia
+            {dict.goToMyInvite}
           </Link>
         ) : (
-          <p className="text-sm text-[var(--wd-muted)]">
-            Dostaliście od nas link z osobistym zaproszeniem? Otwórzcie go, żeby
-            potwierdzić przybycie.
-          </p>
+          <p className="text-sm text-[var(--wd-muted)]">{dict.gotPersonalLink}</p>
         )}
         <ThemeOrnament
           theme={theme.id}

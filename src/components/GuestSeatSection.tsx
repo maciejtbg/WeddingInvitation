@@ -8,6 +8,8 @@ import type { GuestSeatView } from "@/lib/db/tables";
 import { guestListAvailableSeats } from "@/lib/db/tables";
 import { guestListMyRequests } from "@/lib/db/seatRequests";
 import { guestSelfAssignSeatAction, guestRequestSeatChangeAction } from "@/app/w/[slug]/moje-zaproszenie/actions";
+import type { Dictionary } from "@/lib/i18n/dictionary";
+import { t } from "@/lib/i18n/dictionary";
 
 interface Props {
   weddingId: string;
@@ -18,13 +20,8 @@ interface Props {
   seatError?: string;
   seatSaved?: boolean;
   requestSent?: boolean;
+  dict: Dictionary;
 }
-
-const REQUEST_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Wysłana, czekamy na odpowiedź pary",
-  APPROVED: "Zaakceptowana - para wkrótce Was przesadzi",
-  DECLINED: "Para zdecydowała zostawić obecne miejsce",
-};
 
 export default async function GuestSeatSection({
   weddingId,
@@ -35,10 +32,17 @@ export default async function GuestSeatSection({
   seatError,
   seatSaved,
   requestSent,
+  dict,
 }: Props) {
+  const requestStatusLabels: Record<string, string> = {
+    PENDING: dict.requestStatusPending,
+    APPROVED: dict.requestStatusApproved,
+    DECLINED: dict.requestStatusDeclined,
+  };
+
   const currentSeatBlock = mySeat && (
     <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 text-center">
-      <h2 className="mb-1 text-lg font-medium text-[var(--wd-text)]">Twój stolik</h2>
+      <h2 className="mb-1 text-lg font-medium text-[var(--wd-text)]">{dict.yourTable}</h2>
       <p className="text-sm text-[var(--wd-muted)]">{mySeat.roomName}</p>
       <p className="font-serif text-2xl text-[var(--wd-text)]">{mySeat.tableLabel}</p>
     </div>
@@ -56,36 +60,36 @@ export default async function GuestSeatSection({
         {currentSeatBlock}
         <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
           <h2 className="mb-2 text-lg font-medium text-[var(--wd-text)]">
-            Chcesz siedzieć gdzie indziej?
+            {dict.wantDifferentSeat}
           </h2>
           {requestSent && (
             <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-              Prośba wysłana do pary.
+              {dict.requestSentToCouple}
             </p>
           )}
           {latest && latest.status === "PENDING" ? (
             <p className="text-sm text-[var(--wd-muted)]">
-              Masz już wysłaną prośbę: {REQUEST_STATUS_LABELS[latest.status]}
-              {latest.message ? ` - „${latest.message}”` : ""}
+              {t(dict.alreadySentRequest, { status: requestStatusLabels[latest.status] })}
+              {latest.message ? t(dict.quotedMessage, { message: latest.message }) : ""}
             </p>
           ) : (
             <form action={guestRequestSeatChangeAction} className="space-y-3">
               {latest && (
                 <p className="text-xs text-[var(--wd-muted)]">
-                  Ostatnia prośba: {REQUEST_STATUS_LABELS[latest.status]}
+                  {t(dict.lastRequest, { status: requestStatusLabels[latest.status] })}
                 </p>
               )}
               <textarea
                 name="message"
                 rows={2}
-                placeholder="Napisz do pary, gdzie / z kim wolałbyś/wolałabyś usiąść (opcjonalnie)"
+                placeholder={dict.seatChangeMessagePlaceholder}
                 className="w-full rounded-md border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-sm text-[var(--wd-text)]"
               />
               <button
                 type="submit"
                 className="rounded-full bg-[var(--wd-accent)] px-4 py-2 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
               >
-                Poproś o zmianę miejsca
+                {dict.requestSeatChange}
               </button>
             </form>
           )}
@@ -100,37 +104,35 @@ export default async function GuestSeatSection({
       <>
         {currentSeatBlock}
         <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 text-center text-sm text-[var(--wd-muted)]">
-          Potwierdź obecność powyżej, żeby móc wybrać sobie miejsce przy stole.
+          {dict.confirmToChooseSeat}
         </div>
       </>
     );
   }
 
   const tables = await guestListAvailableSeats(weddingId, guestId);
-  const hasAnyFreeSeat = tables.some((t) => t.seats.some((s) => !s.occupiedByFirstName || s.isMe));
+  const hasAnyFreeSeat = tables.some((tbl) => tbl.seats.some((s) => !s.occupiedByFirstName || s.isMe));
 
   return (
     <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
-      <h2 className="mb-1 text-lg font-medium text-[var(--wd-text)]">Wybierz swoje miejsce</h2>
+      <h2 className="mb-1 text-lg font-medium text-[var(--wd-text)]">{dict.chooseYourSeat}</h2>
       {mySeat && (
         <p className="mb-3 text-sm text-[var(--wd-muted)]">
-          Obecnie: {mySeat.tableLabel} ({mySeat.roomName})
+          {t(dict.currentlyAt, { table: mySeat.tableLabel, room: mySeat.roomName })}
         </p>
       )}
       {seatSaved && (
         <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-          Miejsce zapisane!
+          {dict.seatSaved}
         </p>
       )}
       {seatError === "taken" && (
         <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          To miejsce zdążył zająć ktoś inny w międzyczasie - wybierz inne.
+          {dict.seatTakenError}
         </p>
       )}
       {!hasAnyFreeSeat ? (
-        <p className="text-sm text-[var(--wd-muted)]">
-          Wszystkie dostępne dla Ciebie miejsca są już zajęte - napisz do pary w czacie poniżej.
-        </p>
+        <p className="text-sm text-[var(--wd-muted)]">{dict.allSeatsTaken}</p>
       ) : (
         <form action={guestSelfAssignSeatAction} className="space-y-4">
           {tables.map((table) => (
@@ -160,7 +162,7 @@ export default async function GuestSeatSection({
                         className="sr-only"
                       />
                       #{seat.seatIndex + 1}
-                      {taken ? ` · zajęte` : seat.isMe ? " · Ty" : ""}
+                      {taken ? dict.seatTakenSuffix : seat.isMe ? dict.seatIsYouSuffix : ""}
                     </label>
                   );
                 })}
@@ -171,7 +173,7 @@ export default async function GuestSeatSection({
             type="submit"
             className="rounded-full bg-[var(--wd-accent)] px-4 py-2 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
           >
-            Zapisz wybrane miejsce
+            {dict.saveSelectedSeat}
           </button>
         </form>
       )}

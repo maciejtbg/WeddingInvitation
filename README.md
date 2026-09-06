@@ -9,8 +9,8 @@ opisany osobno, w rozmowie, w której powstał ten projekt.
 
 To jest szkielet, nie gotowy produkt. Działa i jest przetestowane end-to-end
 (patrz `npm run smoke`, `npm run smoke:tables`, `npm run smoke:seating`,
-`npm run smoke:invite-card` i `npm run smoke:locations` niżej), ale brakuje
-jeszcze m.in.:
+`npm run smoke:invite-card`, `npm run smoke:locations` i `npm run smoke:i18n`
+niżej), ale brakuje jeszcze m.in.:
 
 - logowania Google/Facebook/telefonem dla gości (OAuth wymaga założenia
   aplikacji u dostawcy, logowanie telefonem - płatnej bramki SMS typu
@@ -18,8 +18,40 @@ jeszcze m.in.:
 - galerii zdjęć od gości (Cloudflare R2),
 - panelu do zarządzania czatami ze wszystkimi gośćmi naraz (na razie jest
   wejście z listy gości, jeden na jednego),
-- wielojęzyczności strony gościa (tłumaczenie w locie),
 - wdrożenia na docelowy VPS (mikr.us) razem z przejściem na Postgres.
+
+## Wielojęzyczność stron dla gości
+
+Strona publiczna, `/moje-zaproszenie` i wybór miejsca przy stole (nie panel
+pary - ten zostaje po polsku) mają przełącznik języka (flagi u góry strony,
+`src/components/LanguageSwitcher.tsx`). Wybór zapisuje się w ciasteczku
+`guest_locale` na rok.
+
+- **pl/en/uk/de** - ręcznie tłumaczone słowniki (`src/lib/i18n/locales/`),
+  bo to najczęstsi goście polskich wesel.
+- **Każdy inny język** (włącznie z kilkoma afrykańskimi w rozwijanej liście -
+  suahili, amharski, hausa, joruba, zulu i inne, patrz
+  `src/lib/i18n/languages.ts`) - tłumaczony NA ŻĄDANIE przy pierwszym wejściu
+  gościa z tym językiem, przez darmowe, nieoficjalne API Google Translate
+  (`google-translate-api-x`, bez klucza) - patrz
+  `src/lib/i18n/translateDictionary.ts`. Wynik jest buforowany w tabeli
+  `translation_cache` (`src/lib/db/translations.ts`), więc tłumaczenie
+  dzieje się raz na język w historii aplikacji, nie przy każdym wejściu.
+  Cały słownik leci w jednym zapytaniu wsadowym (nie osobne na klucz), a gdy
+  nieoficjalne API akurat zawiedzie (limit/awaria), strona po cichu wraca do
+  polskiego zamiast wywalić błąd 500.
+
+**Pułapka warta zapamiętania** (opisana w komentarzu w
+`src/lib/i18n/actions.ts`): druga (i kolejna) zmiana języka na TEJ SAMEJ
+stronie w tej samej wizycie, bez przeładowania, potrafiła nie odświeżyć
+widoku - klient Next.js miał zbuforowany RSC payload tej ścieżki z
+poprzedniego wejścia, a `redirect()` do tego samego adresu z Server Action
+sam z siebie nie wie, że wynik renderu się zmienił (bo zależy od ciasteczka,
+nie od samego URL-a). Naprawa: `revalidatePath(returnTo)` przed
+`redirect()` w `setLocaleAction`.
+
+Test end-to-end: `npm run smoke:i18n` (w tym dokładnie ten scenariusz -
+dwie zmiany języka pod rząd bez przeładowania).
 
 ## Miejsca na mapie (OpenStreetMap)
 
@@ -174,8 +206,12 @@ admina, zgadnięty token nie działa).
 npm run build
 npm run start &          # osobny terminal albo w tle
 npx playwright install chromium   # tylko raz, pobiera przeglądarkę testową
-npm run smoke
-npm run smoke:tables     # osobny test end-to-end planera stołów
+npm run smoke              # szkielet: rejestracja, RSVP, czat, izolacja
+npm run smoke:tables       # planer stołów
+npm run smoke:seating      # 4 tryby rozmieszczania gości + grupy
+npm run smoke:invite-card  # karta z kodem QR + logowanie krótkim kodem
+npm run smoke:locations    # miejsca na mapie OSM
+npm run smoke:i18n         # przełącznik języka + tłumaczenie na żądanie
 ```
 
 ## Model prywatności gości (ważne, żeby to rozumieć zanim się coś zmieni)

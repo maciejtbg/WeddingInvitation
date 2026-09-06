@@ -90,7 +90,11 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   assert(true, "link zaproszenia przekierował do /moje-zaproszenie");
 
   const guestHtml = await guest.content();
-  assert(guestHtml.includes("Cześć") && guestHtml.includes(">Marek<"), "strona gościa wita go po imieniu");
+  // Nie wymagamy już, żeby "Marek" był dokładnie w osobnym węźle tekstowym
+  // (">Marek<") - odkąd powitanie przechodzi przez i18n (src/lib/i18n),
+  // {name} jest podstawiane w jeden połączony string przed renderem, więc
+  // w HTML-u sąsiaduje bezpośrednio z resztą zdania, nie z tagiem.
+  assert(guestHtml.includes("Cześć") && guestHtml.includes("Marek"), "strona gościa wita go po imieniu");
   assert(
     !guestHtml.includes("Rodzina Pana Młodego"),
     "PRYWATNOŚĆ: gość NIE widzi prywatnej notatki groupLabel pary"

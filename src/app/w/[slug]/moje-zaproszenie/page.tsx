@@ -7,6 +7,10 @@ import { listMessagesForGuest } from "@/lib/db/chat";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { getLocale } from "@/lib/i18n/locale";
+import { getDictionary } from "@/lib/i18n/getDictionary";
+import { t } from "@/lib/i18n/dictionary";
 import { submitRsvpAction, sendGuestMessageAction } from "./actions";
 
 export default async function MyInvitePage({
@@ -37,6 +41,8 @@ export default async function MyInvitePage({
   // Gość widzi WYŁĄCZNIE nazwę własnego stołu i sali - nigdy plan całej sali
   // ani listę innych gości przy stole (patrz src/lib/db/tables.ts).
   const mySeat = guestFindMySeat(guest.id);
+  const locale = await getLocale();
+  const dict = await getDictionary(locale);
 
   return (
     <div
@@ -44,13 +50,18 @@ export default async function MyInvitePage({
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="mx-auto w-full max-w-xl">
+        <LanguageSwitcher
+          currentLocale={locale}
+          returnTo={`/w/${wedding.slug}/moje-zaproszenie`}
+          dict={dict}
+        />
         <ThemeOrnament
           theme={theme.id}
           className="mx-auto mb-6 h-8 w-40"
           style={{ color: theme.colors.accent }}
         />
         <p className="mb-1 text-center text-sm text-[var(--wd-muted)]">
-          Cześć, {guest.firstName}!
+          {t(dict.greeting, { name: guest.firstName })}
         </p>
         <h1 className="mb-8 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
           {wedding.partner1Name} &amp; {wedding.partner2Name}
@@ -58,7 +69,7 @@ export default async function MyInvitePage({
 
         {saved && (
           <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
-            Dziękujemy za odpowiedź!
+            {dict.rsvpSavedThanks}
           </p>
         )}
 
@@ -71,12 +82,11 @@ export default async function MyInvitePage({
           seatError={seatError}
           seatSaved={seatSaved === "1"}
           requestSent={requestSent === "1"}
+          dict={dict}
         />
 
         <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
-          <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">
-            Czy będziesz z nami?
-          </h2>
+          <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">{dict.rsvpQuestion}</h2>
           <form action={submitRsvpAction} className="space-y-4">
             <div className="flex gap-3">
               <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--wd-border)] px-4 py-3 text-sm text-[var(--wd-text)] has-[:checked]:border-[var(--wd-accent)] has-[:checked]:bg-[var(--wd-accent)] has-[:checked]:text-[var(--wd-accent-text)]">
@@ -87,7 +97,7 @@ export default async function MyInvitePage({
                   defaultChecked={guest.rsvpStatus === "YES"}
                   className="sr-only"
                 />
-                Tak, będę!
+                {dict.rsvpYes}
               </label>
               <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--wd-border)] px-4 py-3 text-sm text-[var(--wd-text)] has-[:checked]:border-[var(--wd-accent)] has-[:checked]:bg-[var(--wd-accent)] has-[:checked]:text-[var(--wd-accent-text)]">
                 <input
@@ -97,14 +107,14 @@ export default async function MyInvitePage({
                   defaultChecked={guest.rsvpStatus === "NO"}
                   className="sr-only"
                 />
-                Niestety nie
+                {dict.rsvpNo}
               </label>
             </div>
 
             {guest.allowPlusOne && (
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--wd-text)]">
-                  Imię osoby towarzyszącej (jeśli przychodzisz z kimś)
+                  {dict.plusOneLabel}
                 </label>
                 <input
                   name="plusOneName"
@@ -116,7 +126,7 @@ export default async function MyInvitePage({
 
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--wd-text)]">
-                Alergie / preferencje żywieniowe
+                {dict.dietaryLabel}
               </label>
               <input
                 name="dietaryNotes"
@@ -129,20 +139,18 @@ export default async function MyInvitePage({
               type="submit"
               className="w-full rounded-full bg-[var(--wd-accent)] px-4 py-2.5 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
             >
-              Zapisz odpowiedź
+              {dict.saveRsvp}
             </button>
           </form>
         </div>
 
         <div className="rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
           <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">
-            Masz pytanie do pary młodej?
+            {dict.questionForCouple}
           </h2>
           <div className="mb-4 space-y-3">
             {messages.length === 0 && (
-              <p className="text-sm text-[var(--wd-muted)]">
-                Napisz do nas, jeśli masz jakieś pytanie.
-              </p>
+              <p className="text-sm text-[var(--wd-muted)]">{dict.noMessagesYet}</p>
             )}
             {messages.map((message) => (
               <div
@@ -162,14 +170,14 @@ export default async function MyInvitePage({
             <input
               name="body"
               required
-              placeholder="Napisz wiadomość..."
+              placeholder={dict.messagePlaceholder}
               className="flex-1 rounded-full border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 py-2 text-sm text-[var(--wd-text)]"
             />
             <button
               type="submit"
               className="rounded-full bg-[var(--wd-accent)] px-5 py-2 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
             >
-              Wyślij
+              {dict.send}
             </button>
           </form>
         </div>

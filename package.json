@@ -11,10 +11,12 @@
     "smoke:tables": "node scripts/smoke-tables.mjs",
     "smoke:seating": "node scripts/smoke-seating-modes.mjs",
     "smoke:invite-card": "node scripts/smoke-invite-card.mjs",
-    "smoke:locations": "node scripts/smoke-locations.mjs"
+    "smoke:locations": "node scripts/smoke-locations.mjs",
+    "smoke:i18n": "node scripts/smoke-i18n.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "google-translate-api-x": "^10.7.3",
     "jose": "^6.2.12",
     "konva": "^10.3.3",
     "leaflet": "^1.9.4",
