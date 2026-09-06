@@ -2,7 +2,9 @@ import Link from "next/link";
 import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingsByCouple } from "@/lib/db/weddings";
 import { THEME_LIST } from "@/lib/themes";
+import { SEATING_MODE_LIST } from "@/lib/seatingModes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
+import { adminListSeatChangeRequests } from "@/lib/db/seatRequests";
 import { updateWeddingAction, publishWeddingAction, logoutCoupleAction } from "./actions";
 
 export default async function AdminDashboardPage({
@@ -13,6 +15,9 @@ export default async function AdminDashboardPage({
   const session = await requireCoupleSessionOrRedirect();
   const { saved, published, welcome } = await searchParams;
   const wedding = findWeddingsByCouple(session.coupleId)[0];
+  const pendingSeatRequests = wedding
+    ? adminListSeatChangeRequests(wedding.id).filter((r) => r.status === "PENDING").length
+    : 0;
 
   if (!wedding) {
     // W praktyce nie powinno się zdarzyć (rejestracja tworzy wesele od razu),
@@ -83,6 +88,23 @@ export default async function AdminDashboardPage({
         >
           Planer stołów
         </Link>
+        <Link
+          href={`/admin/groups?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Grupy gości
+        </Link>
+        <Link
+          href={`/admin/seat-requests?weddingId=${wedding.id}`}
+          className="relative rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Prośby o zmianę miejsca
+          {pendingSeatRequests > 0 && (
+            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+              {pendingSeatRequests}
+            </span>
+          )}
+        </Link>
       </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6">
@@ -150,6 +172,47 @@ export default async function AdminDashboardPage({
               defaultValue={wedding.story ?? ""}
               className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Prezenty (opcjonalnie, dowolna forma - żartobliwie też można)
+            </label>
+            <textarea
+              name="giftNote"
+              rows={2}
+              placeholder="np. Zamiast kwiatów wolimy dobre wino 🍷, a najbardziej ucieszy nas koperta!"
+              defaultValue={wedding.giftNote ?? ""}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-zinc-700">
+              Rozmieszczanie gości przy stołach
+            </label>
+            <div className="space-y-2">
+              {SEATING_MODE_LIST.map((mode) => (
+                <label
+                  key={mode.id}
+                  className="flex cursor-pointer gap-3 rounded-lg border border-zinc-300 p-3 has-[:checked]:border-zinc-900 has-[:checked]:ring-1 has-[:checked]:ring-zinc-900"
+                >
+                  <input
+                    type="radio"
+                    name="seatingMode"
+                    value={mode.id}
+                    defaultChecked={wedding.seatingMode === mode.id}
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-zinc-900">{mode.label}</span>
+                    <span className="block text-xs leading-tight text-zinc-500">
+                      {mode.description}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>

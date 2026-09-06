@@ -16,9 +16,15 @@ import {
   updateWeddingDetails,
   publishWedding,
 } from "@/lib/db/weddings";
-import { adminCreateGuest, adminDeleteGuest, adminFindGuestById } from "@/lib/db/guests";
+import {
+  adminCreateGuest,
+  adminDeleteGuest,
+  adminFindGuestById,
+  adminSetGuestGroup,
+} from "@/lib/db/guests";
 import { sendMessage } from "@/lib/db/chat";
 import { isThemeId } from "@/lib/themes";
+import { isSeatingMode } from "@/lib/seatingModes";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -84,6 +90,8 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
   const wedding = await requireOwnedWedding(weddingId);
 
   const themeInput = readString(formData, "theme");
+  const seatingModeInput = readString(formData, "seatingMode");
+  const giftNote = readString(formData, "giftNote");
 
   updateWeddingDetails(wedding.id, {
     partner1Name: readString(formData, "partner1Name") || undefined,
@@ -95,6 +103,8 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
     // Nieznana/pusta wartość jest ignorowana zamiast zapisana wprost do bazy -
     // formularz mógłby zostać wywołany bezpośrednim POST-em z dowolnym stringiem.
     theme: isThemeId(themeInput) ? themeInput : undefined,
+    seatingMode: isSeatingMode(seatingModeInput) ? seatingModeInput : undefined,
+    giftNote: giftNote || null,
   });
 
   revalidatePath("/admin");
@@ -135,6 +145,21 @@ export async function deleteGuestAction(formData: FormData): Promise<void> {
   const wedding = await requireOwnedWedding(weddingId);
 
   adminDeleteGuest(wedding.id, guestId);
+  revalidatePath("/admin/guests");
+  redirect(`/admin/guests?weddingId=${weddingId}`);
+}
+
+export async function assignGuestGroupAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const guestId = readString(formData, "guestId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  const guest = adminFindGuestById(wedding.id, guestId);
+  if (!guest) redirect(`/admin/guests?weddingId=${weddingId}`);
+
+  const groupId = readString(formData, "groupId");
+  adminSetGuestGroup(wedding.id, guestId, groupId || null);
+
   revalidatePath("/admin/guests");
   redirect(`/admin/guests?weddingId=${weddingId}`);
 }

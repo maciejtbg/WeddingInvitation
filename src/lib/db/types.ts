@@ -7,6 +7,13 @@ export type RsvpStatus = "PENDING" | "YES" | "NO";
 // src/lib/themes.ts (tam pełna definicja kolorów i grafik każdego z nich).
 export type ThemeId = "cream-gold" | "blush-black" | "burgundy-gold";
 
+// Tryb rozmieszczania gości przy stołach - patrz src/lib/seatingModes.ts.
+export type SeatingMode =
+  | "COUPLE_ONLY"
+  | "GUEST_SELF_SELECT"
+  | "GUEST_REQUEST"
+  | "GROUP_CONSTRAINED";
+
 // Wiersz zwrócony przez node:sqlite ma typ unknown per-kolumna - repozytoria
 // rzutują pojedyncze pola na konkretne typy, znając strukturę tabeli.
 export type SqliteRow = Record<string, unknown>;
@@ -29,6 +36,8 @@ export interface Wedding {
   venueAddress: string | null;
   story: string | null;
   theme: ThemeId;
+  seatingMode: SeatingMode;
+  giftNote: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -41,6 +50,10 @@ export interface Guest {
   firstName: string;
   lastName: string | null;
   groupLabel: string | null;
+  // Strukturalna grupa (rodzina/praca/przyjaciele) używana do uprawnień
+  // rozmieszczania w trybie GROUP_CONSTRAINED - odrębna od groupLabel, który
+  // jest wolnym tekstem/notatką pary. Patrz src/lib/db/groups.ts.
+  groupId: string | null;
   allowPlusOne: boolean;
   plusOneName: string | null;
   rsvpStatus: RsvpStatus;
@@ -48,6 +61,30 @@ export interface Guest {
   dietaryNotes: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GuestGroup {
+  id: string;
+  weddingId: string;
+  name: string;
+  createdAt: string;
+}
+
+export type SeatChangeRequestStatus = "PENDING" | "APPROVED" | "DECLINED";
+
+export interface SeatChangeRequest {
+  id: string;
+  weddingId: string;
+  guestId: string;
+  message: string | null;
+  status: SeatChangeRequestStatus;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface SeatChangeRequestWithGuestName extends SeatChangeRequest {
+  guestFirstName: string;
+  guestLastName: string | null;
 }
 
 // Dane gościa okrojone do tego, co wolno zobaczyć samemu gościowi -

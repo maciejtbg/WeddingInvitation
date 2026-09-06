@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "smoke": "node scripts/smoke.mjs",
-    "smoke:tables": "node scripts/smoke-tables.mjs"
+    "smoke:tables": "node scripts/smoke-tables.mjs",
+    "smoke:seating": "node scripts/smoke-seating-modes.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

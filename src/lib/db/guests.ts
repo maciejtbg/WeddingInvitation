@@ -25,6 +25,7 @@ function rowToGuest(row: SqliteRow): Guest {
     firstName: row.first_name as string,
     lastName: row.last_name as string | null,
     groupLabel: row.group_label as string | null,
+    groupId: row.group_id as string | null,
     allowPlusOne: !!row.allow_plus_one,
     plusOneName: row.plus_one_name as string | null,
     rsvpStatus: row.rsvp_status as RsvpStatus,
@@ -91,6 +92,21 @@ export function adminCreateGuest(params: {
 
 export function adminDeleteGuest(weddingId: string, guestId: string): void {
   db.prepare("DELETE FROM guests WHERE id = ? AND wedding_id = ?").run(guestId, weddingId);
+}
+
+/** Przypisanie gościa do grupy (rodzina/praca/przyjaciele) używanej do
+ * uprawnień rozmieszczania w trybie GROUP_CONSTRAINED - patrz groups.ts.
+ * groupId=null usuwa przypisanie. */
+export function adminSetGuestGroup(
+  weddingId: string,
+  guestId: string,
+  groupId: string | null
+): void {
+  db.prepare("UPDATE guests SET group_id = ? WHERE id = ? AND wedding_id = ?").run(
+    groupId,
+    guestId,
+    weddingId
+  );
 }
 
 // --- Dostęp gościa (sesja ograniczona do jego własnego guestId) ---

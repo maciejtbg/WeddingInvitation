@@ -64,6 +64,11 @@ export default async function WeddingPublicPage({
             {wedding.story}
           </p>
         )}
+        {wedding.giftNote && (
+          <p className="mx-auto mb-8 max-w-md whitespace-pre-line rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3 text-sm text-[var(--wd-muted)]">
+            {wedding.giftNote}
+          </p>
+        )}
 
         {isThisGuest ? (
           <Link

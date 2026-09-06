@@ -3,9 +3,12 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getGuestSession } from "@/lib/auth/guest";
-import { guestSubmitRsvp, guestGetWeddingId } from "@/lib/db/guests";
+import { guestSubmitRsvp, guestGetWeddingId, guestGetSelf } from "@/lib/db/guests";
 import { sendMessage } from "@/lib/db/chat";
 import { findWeddingById } from "@/lib/db/weddings";
+import { guestSelfAssignSeat } from "@/lib/db/tables";
+import { guestCreateSeatChangeRequest, guestHasPendingRequest } from "@/lib/db/seatRequests";
+import { allowsGuestSelfSelect } from "@/lib/seatingModes";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -49,4 +52,60 @@ export async function sendGuestMessageAction(formData: FormData): Promise<void> 
   sendMessage({ weddingId: session.weddingId, guestId: session.guestId, sender: "GUEST", body });
   revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
   redirect(`/w/${wedding.slug}/moje-zaproszenie`);
+}
+
+/** Tryby GUEST_SELF_SELECT / GROUP_CONSTRAINED - gość wybiera/zmienia
+ * miejsce samodzielnie. Wymaga potwierdzonego RSVP, bo nie ma sensu
+ * rezerwować miejsca dla kogoś, kto jeszcze nie wie, czy przyjdzie. */
+export async function guestSelfAssignSeatAction(formData: FormData): Promise<void> {
+  const session = await getGuestSession();
+  if (!session) redirect("/");
+
+  const wedding = findWeddingById(session.weddingId);
+  if (!wedding) redirect("/");
+  const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
+
+  if (!allowsGuestSelfSelect(wedding.seatingMode)) redirect(inviteUrl);
+
+  const guest = guestGetSelf(session.guestId);
+  if (!guest || guest.rsvpStatus !== "YES") {
+    redirect(`${inviteUrl}?seatError=rsvp`);
+  }
+
+  // Jedno pole "tableId:seatIndex" zamiast dwóch osobnych - żeby jeden
+  // wspólny <input type="radio" name="seat"> mógł ogarnąć wybór spośród
+  // miejsc rozsianych po wielu stołach (gość wybiera dokładnie jedno).
+  const [tableId, seatIndexRaw] = readString(formData, "seat").split(":");
+  const seatIndex = Number.parseInt(seatIndexRaw ?? "", 10);
+  if (!tableId || Number.isNaN(seatIndex)) redirect(inviteUrl);
+
+  try {
+    guestSelfAssignSeat(wedding.id, session.guestId, tableId, seatIndex);
+  } catch {
+    // Ktoś inny zajął to miejsce chwilę wcześniej (np. dwie karty równocześnie
+    // otwarte) - nie wywalamy błędu 500, tylko wracamy z komunikatem.
+    redirect(`${inviteUrl}?seatError=taken`);
+  }
+
+  revalidatePath(inviteUrl);
+  redirect(`${inviteUrl}?seatSaved=1`);
+}
+
+/** Tryb GUEST_REQUEST - gość nie przenosi się sam, tylko zgłasza chęć zmiany;
+ * para akceptuje/odrzuca na /admin/seat-requests. */
+export async function guestRequestSeatChangeAction(formData: FormData): Promise<void> {
+  const session = await getGuestSession();
+  if (!session) redirect("/");
+
+  const wedding = findWeddingById(session.weddingId);
+  if (!wedding) redirect("/");
+  const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
+
+  if (!guestHasPendingRequest(session.guestId)) {
+    const message = readString(formData, "message");
+    guestCreateSeatChangeRequest(wedding.id, session.guestId, message || null);
+  }
+
+  revalidatePath(inviteUrl);
+  redirect(`${inviteUrl}?requestSent=1`);
 }

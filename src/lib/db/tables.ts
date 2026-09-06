@@ -204,3 +204,95 @@ export function guestFindMySeat(guestId: string): GuestSeatView | null {
     .get(guestId) as { table_label: string; room_name: string } | undefined;
   return row ? { tableLabel: row.table_label, roomName: row.room_name } : null;
 }
+
+// --- Dostęp gościa - tryby GUEST_SELF_SELECT / GROUP_CONSTRAINED ---
+//
+// W przeciwieństwie do adminAssignSeat, samodzielny wybór gościa NIGDY nie
+// "podbija" kogoś, kto już siedzi w danym miejscu - to byłoby niemiłe
+// zaskoczenie dla drugiego gościa. Zajęte miejsce po prostu nie jest
+// wybieralne (guestSelfAssignSeat zwraca błąd, jeśli mimo to spróbować).
+
+export interface AvailableSeat {
+  seatIndex: number;
+  occupiedByFirstName: string | null;
+  isMe: boolean;
+}
+
+export interface AvailableTable {
+  id: string;
+  roomName: string;
+  label: string;
+  shape: TableShape;
+  seats: AvailableSeat[];
+}
+
+/** Dozwolone dla grupy stoły - patrz src/lib/db/groups.ts: brak
+ * jakiegokolwiek wiersza w group_table_allowances dla danej grupy oznacza
+ * "wszystkie stoły dozwolone", nie "żaden". */
+function allowedTableIdsForGuest(weddingId: string, guestId: string): string[] | null {
+  const guestRow = db
+    .prepare("SELECT group_id FROM guests WHERE id = ? AND wedding_id = ?")
+    .get(guestId, weddingId) as { group_id: string | null } | undefined;
+  if (!guestRow?.group_id) return null;
+
+  const rows = db
+    .prepare("SELECT table_id FROM group_table_allowances WHERE group_id = ?")
+    .all(guestRow.group_id) as { table_id: string }[];
+  return rows.length > 0 ? rows.map((r) => r.table_id) : null;
+}
+
+export function guestListAvailableSeats(weddingId: string, guestId: string): AvailableTable[] {
+  const allowedTableIds = allowedTableIdsForGuest(weddingId, guestId);
+  const tables = adminListTables(weddingId).filter(
+    (t) => !allowedTableIds || allowedTableIds.includes(t.id)
+  );
+  const seatsByTable = new Map<string, SeatWithGuestName[]>();
+  for (const seat of adminListSeats(weddingId)) {
+    const list = seatsByTable.get(seat.tableId) ?? [];
+    list.push(seat);
+    seatsByTable.set(seat.tableId, list);
+  }
+
+  return tables.map((table) => {
+    const occupied = seatsByTable.get(table.id) ?? [];
+    const seats: AvailableSeat[] = Array.from({ length: table.seatsCount }).map((_, i) => {
+      const seat = occupied.find((s) => s.seatIndex === i);
+      return {
+        seatIndex: i,
+        occupiedByFirstName: seat ? seat.guestFirstName : null,
+        isMe: seat?.guestId === guestId,
+      };
+    });
+    return { id: table.id, roomName: table.roomName, label: table.label, shape: table.shape, seats };
+  });
+}
+
+export function guestSelfAssignSeat(
+  weddingId: string,
+  guestId: string,
+  tableId: string,
+  seatIndex: number
+): void {
+  const table = adminFindTableById(weddingId, tableId);
+  if (!table) throw new Error("Stół nie należy do tego wesela");
+  if (seatIndex < 0 || seatIndex >= table.seatsCount) {
+    throw new Error("Nieprawidłowy numer miejsca");
+  }
+
+  const allowedTableIds = allowedTableIdsForGuest(weddingId, guestId);
+  if (allowedTableIds && !allowedTableIds.includes(tableId)) {
+    throw new Error("Ten stół nie jest dostępny dla Twojej grupy gości");
+  }
+
+  const occupant = db
+    .prepare("SELECT guest_id FROM seat_assignments WHERE table_id = ? AND seat_index = ?")
+    .get(tableId, seatIndex) as { guest_id: string } | undefined;
+  if (occupant && occupant.guest_id !== guestId) {
+    throw new Error("To miejsce jest już zajęte - wybierz inne");
+  }
+
+  db.prepare("DELETE FROM seat_assignments WHERE guest_id = ?").run(guestId);
+  db.prepare(
+    "INSERT INTO seat_assignments (id, table_id, guest_id, seat_index) VALUES (?, ?, ?, ?)"
+  ).run(newId("seat"), tableId, guestId, seatIndex);
+}

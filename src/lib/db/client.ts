@@ -123,6 +123,44 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_seats_table ON seat_assignments(table_id);
 
+    -- Grupa gości (rodzina/praca/przyjaciele) - używana do trybu rozmieszczania
+    -- GROUP_CONSTRAINED (patrz weddings.seating_mode) i niezależna od
+    -- guests.group_label, który jest wolnym tekstem/notatką pary, nie
+    -- struktura z uprawnieniami. Patrz src/lib/db/groups.ts.
+    CREATE TABLE IF NOT EXISTS guest_groups (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_guest_groups_wedding ON guest_groups(wedding_id);
+
+    -- Które stoły wolno wybierać członkom danej grupy w trybie
+    -- GROUP_CONSTRAINED. Brak jakiegokolwiek wiersza dla danej grupy oznacza
+    -- "wszystkie stoły dozwolone" (patrz guestListAvailableSeats w tables.ts) -
+    -- para nie musi konfigurować tego dla grup bez ograniczeń.
+    CREATE TABLE IF NOT EXISTS group_table_allowances (
+      id TEXT PRIMARY KEY,
+      group_id TEXT NOT NULL REFERENCES guest_groups(id) ON DELETE CASCADE,
+      table_id TEXT NOT NULL REFERENCES tables_(id) ON DELETE CASCADE
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_group_table_unique
+      ON group_table_allowances(group_id, table_id);
+
+    -- Prośby gości o zmianę wcześniej przypisanego miejsca - używane w trybie
+    -- GUEST_REQUEST. Para przegląda i akceptuje/odrzuca, faktyczne
+    -- przeniesienie robi ręcznie w planerze (patrz src/app/admin/seat-requests).
+    CREATE TABLE IF NOT EXISTS seat_change_requests (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      guest_id TEXT NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+      message TEXT,
+      status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING | APPROVED | DECLINED
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      resolved_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_seat_requests_wedding ON seat_change_requests(wedding_id);
+
     -- Czat gość <-> para. Każda wiadomość widoczna wyłącznie temu jednemu
     -- gościowi i kontu pary (izolacja po guest_id, patrz repozytorium chat.ts).
     CREATE TABLE IF NOT EXISTS chat_messages (
@@ -142,6 +180,28 @@ export function runMigrations() {
   // błąd "duplicate column" oznacza po prostu, że kolumna już tam jest.
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN theme TEXT NOT NULL DEFAULT 'cream-gold';");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec(
+      "ALTER TABLE weddings ADD COLUMN seating_mode TEXT NOT NULL DEFAULT 'COUPLE_ONLY';"
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN gift_note TEXT;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec(
+      "ALTER TABLE guests ADD COLUMN group_id TEXT REFERENCES guest_groups(id) ON DELETE SET NULL;"
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;

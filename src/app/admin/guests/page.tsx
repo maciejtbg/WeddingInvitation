@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
-import { addGuestAction, deleteGuestAction } from "../actions";
+import { adminListGroups } from "@/lib/db/groups";
+import { addGuestAction, deleteGuestAction, assignGuestGroupAction } from "../actions";
 import CopyLinkButton from "@/components/CopyLinkButton";
 
 const RSVP_LABELS: Record<string, string> = {
@@ -26,14 +27,23 @@ export default async function GuestsPage({
   if (!wedding || wedding.coupleId !== session.coupleId) redirect("/admin");
 
   const guests = adminListGuests(wedding.id);
+  const groups = adminListGroups(wedding.id);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-zinc-900">Goście</h1>
-        <Link href="/admin" className="text-sm text-zinc-500 underline">
-          ← Wróć do panelu
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/admin/groups?weddingId=${wedding.id}`}
+            className="text-sm text-zinc-500 underline"
+          >
+            Grupy gości
+          </Link>
+          <Link href="/admin" className="text-sm text-zinc-500 underline">
+            ← Wróć do panelu
+          </Link>
+        </div>
       </div>
 
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
@@ -106,6 +116,27 @@ export default async function GuestsPage({
                 {guest.groupLabel ?? "bez grupy"}
                 {guest.allowPlusOne ? " · z osobą towarzyszącą" : ""}
               </p>
+              {groups.length > 0 && (
+                <form action={assignGuestGroupAction} className="mt-1 flex items-center gap-1">
+                  <input type="hidden" name="weddingId" value={wedding.id} />
+                  <input type="hidden" name="guestId" value={guest.id} />
+                  <select
+                    name="groupId"
+                    defaultValue={guest.groupId ?? ""}
+                    className="rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+                  >
+                    <option value="">bez grupy (rozmieszczanie)</option>
+                    {groups.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
+                    Zapisz
+                  </button>
+                </form>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">

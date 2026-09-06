@@ -6,6 +6,7 @@ import { guestFindMySeat } from "@/lib/db/tables";
 import { listMessagesForGuest } from "@/lib/db/chat";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
+import GuestSeatSection from "@/components/GuestSeatSection";
 import { submitRsvpAction, sendGuestMessageAction } from "./actions";
 
 export default async function MyInvitePage({
@@ -13,10 +14,10 @@ export default async function MyInvitePage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; seatSaved?: string; seatError?: string; requestSent?: string }>;
 }) {
   const { slug } = await params;
-  const { saved } = await searchParams;
+  const { saved, seatSaved, seatError, requestSent } = await searchParams;
   const wedding = findWeddingBySlug(slug);
   if (!wedding) notFound();
 
@@ -61,13 +62,16 @@ export default async function MyInvitePage({
           </p>
         )}
 
-        {mySeat && (
-          <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 text-center">
-            <h2 className="mb-1 text-lg font-medium text-[var(--wd-text)]">Twój stolik</h2>
-            <p className="text-sm text-[var(--wd-muted)]">{mySeat.roomName}</p>
-            <p className="font-serif text-2xl text-[var(--wd-text)]">{mySeat.tableLabel}</p>
-          </div>
-        )}
+        <GuestSeatSection
+          weddingId={wedding.id}
+          seatingMode={wedding.seatingMode}
+          guestId={guest.id}
+          rsvpStatus={guest.rsvpStatus}
+          mySeat={mySeat}
+          seatError={seatError}
+          seatSaved={seatSaved === "1"}
+          requestSent={requestSent === "1"}
+        />
 
         <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
           <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">
