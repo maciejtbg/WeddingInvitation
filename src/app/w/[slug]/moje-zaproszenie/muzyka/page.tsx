@@ -7,6 +7,7 @@ import { listSongRequests } from "@/lib/db/songRequests";
 import { searchSongs } from "@/lib/musicSearch";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
+import { LiveSearchInput } from "@/components/LiveSearchInput";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { addSongRequestAction } from "../actions";
@@ -68,21 +69,12 @@ export default async function MusicPage({
         </p>
 
         <div className="mb-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
-          <form method="get" className="mb-4 flex gap-2">
-            <input
-              type="text"
-              name="q"
-              defaultValue={query}
+          <div className="mb-4">
+            <LiveSearchInput
               placeholder={dict.musicSearchPlaceholder}
-              className="flex-1 rounded-full border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 py-2 text-sm text-[var(--wd-text)]"
+              className="w-full rounded-full border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 py-2 text-sm text-[var(--wd-text)]"
             />
-            <button
-              type="submit"
-              className="rounded-full bg-[var(--wd-accent)] px-5 py-2 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
-            >
-              {dict.musicSearchButton}
-            </button>
-          </form>
+          </div>
 
           {added === "1" && (
             <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">

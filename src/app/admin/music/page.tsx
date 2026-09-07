@@ -5,6 +5,7 @@ import { findWeddingById } from "@/lib/db/weddings";
 import { listSongRequests } from "@/lib/db/songRequests";
 import { searchSongs } from "@/lib/musicSearch";
 import { adminDeleteSongAction, adminAddSongAction } from "./actions";
+import { LiveSearchInput } from "@/components/LiveSearchInput";
 
 export default async function MusicAdminPage({
   searchParams,
@@ -54,22 +55,12 @@ export default async function MusicAdminPage({
 
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
         <h2 className="mb-3 text-sm font-medium text-zinc-700">Dodaj piosenkę</h2>
-        <form method="get" className="mb-4 flex gap-2">
-          <input type="hidden" name="weddingId" value={wedding.id} />
-          <input
-            type="text"
-            name="q"
-            defaultValue={query}
+        <div className="mb-4">
+          <LiveSearchInput
             placeholder="Szukaj piosenki lub wykonawcy..."
-            className="flex-1 rounded-full border border-zinc-300 px-4 py-2 text-sm"
+            className="w-full rounded-full border border-zinc-300 px-4 py-2 text-sm"
           />
-          <button
-            type="submit"
-            className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-          >
-            Szukaj
-          </button>
-        </form>
+        </div>
 
         {added === "1" && (
           <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">

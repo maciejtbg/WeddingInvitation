@@ -5,6 +5,7 @@ import { findWeddingById } from "@/lib/db/weddings";
 import { adminFindGuestById } from "@/lib/db/guests";
 import { listMessagesForGuest } from "@/lib/db/chat";
 import { sendCoupleMessageAction } from "../../actions";
+import { PollingRefresher } from "@/components/PollingRefresher";
 
 export default async function GuestChatPage({
   params,
@@ -28,6 +29,7 @@ export default async function GuestChatPage({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-10">
+      <PollingRefresher />
       <Link
         href={`/admin/guests?weddingId=${wedding.id}`}
         className="mb-4 text-sm text-zinc-500 underline"

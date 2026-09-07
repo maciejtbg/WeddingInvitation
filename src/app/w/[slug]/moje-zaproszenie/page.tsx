@@ -13,6 +13,7 @@ import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
 import PhotoGallery from "@/components/PhotoGallery";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { PollingRefresher } from "@/components/PollingRefresher";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
@@ -71,6 +72,7 @@ export default async function MyInvitePage({
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="mx-auto w-full max-w-xl">
+        <PollingRefresher />
         <LanguageSwitcher
           currentLocale={locale}
           returnTo={`/w/${wedding.slug}/moje-zaproszenie`}
