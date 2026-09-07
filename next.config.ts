@@ -30,12 +30,17 @@ const CSP = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  // Minimalny, samodzielny bundle produkcyjny (.next/standalone) - kopiuje
-  // wyłącznie faktycznie użyte zależności zamiast całego node_modules.
-  // Ważne na małych VPS-ach (patrz deploy/DEPLOY.md) - kontenerowe plany
-  // typu mikr.us bywają bez możliwości dodania swapu (brak uprawnień do
-  // swapon w LXC), więc mniejszy footprint runtime realnie się liczy.
-  output: "standalone",
+  // UWAGA: NIE włączaj tu `output: "standalone"`. Próbowaliśmy - przy
+  // wdrożeniu, gdzie build robi się na INNEJ maszynie niż ta produkcyjna
+  // (patrz deploy/DEPLOY.md, sekcja o buildzie lokalnym + transferze na
+  // małe VPS-y bez wystarczającego RAM-u), Turbopack w trybie standalone
+  // referencuje pakiety natywne (sharp) przez wygenerowany, specyficzny dla
+  // TEGO builda hash (np. "sharp-20c6a5da84e2135f") zamiast zwykłego
+  // `require("sharp")" - ten hash nie istnieje jako prawdziwy pakiet na
+  // serwerze docelowym, więc runtime wywala ERR_MODULE_NOT_FOUND przy
+  // pierwszym użyciu sharp (upload zdjęcia). Zwykły `next start` z pełnym
+  // node_modules na serwerze nie ma tego problemu - referencje zostają
+  // zwykłym `require`.
   async headers() {
     return [
       {
