@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# katalog roboczy deploy/build-linux-bundle.sh (kopia repo do zbudowania
+# w kontenerze Docker) - czyszczony automatycznie po każdym uruchomieniu,
+# ale na wszelki wypadek (np. przerwany build) nie powinien trafić do gita
+.deploy-scratch/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
