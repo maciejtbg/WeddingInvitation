@@ -32,6 +32,9 @@ function rowToGuest(row: SqliteRow): Guest {
     rsvpStatus: row.rsvp_status as RsvpStatus,
     rsvpRespondedAt: row.rsvp_responded_at as string | null,
     dietaryNotes: row.dietary_notes as string | null,
+    phone: row.phone as string | null,
+    email: row.email as string | null,
+    firstVisitedAt: row.first_visited_at as string | null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -71,6 +74,8 @@ export function adminCreateGuest(params: {
   lastName?: string | null;
   groupLabel?: string | null;
   allowPlusOne?: boolean;
+  phone?: string | null;
+  email?: string | null;
 }): Guest {
   const id = newId("guest");
   const token = newGuestToken();
@@ -85,8 +90,8 @@ export function adminCreateGuest(params: {
   }
 
   db.prepare(
-    `INSERT INTO guests (id, wedding_id, token, short_code, first_name, last_name, group_label, allow_plus_one)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO guests (id, wedding_id, token, short_code, first_name, last_name, group_label, allow_plus_one, phone, email)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
     params.weddingId,
@@ -95,7 +100,9 @@ export function adminCreateGuest(params: {
     params.firstName,
     params.lastName ?? null,
     params.groupLabel ?? null,
-    params.allowPlusOne ? 1 : 0
+    params.allowPlusOne ? 1 : 0,
+    params.phone ?? null,
+    params.email ?? null
   );
   const guest = adminFindGuestById(params.weddingId, id);
   if (!guest) throw new Error("Nie udało się dodać gościa");
@@ -104,6 +111,21 @@ export function adminCreateGuest(params: {
 
 export function adminDeleteGuest(weddingId: string, guestId: string): void {
   db.prepare("DELETE FROM guests WHERE id = ? AND wedding_id = ?").run(guestId, weddingId);
+}
+
+/** Edycja danych kontaktowych - osobno od tworzenia, żeby dało się
+ * dopisać telefon/e-mail gościom dodanym zanim te pola istniały. */
+export function adminSetGuestContact(
+  weddingId: string,
+  guestId: string,
+  params: { phone: string | null; email: string | null }
+): void {
+  db.prepare("UPDATE guests SET phone = ?, email = ? WHERE id = ? AND wedding_id = ?").run(
+    params.phone,
+    params.email,
+    guestId,
+    weddingId
+  );
 }
 
 /** Przypisanie gościa do grupy (rodzina/praca/przyjaciele) używanej do
@@ -140,6 +162,16 @@ export function findGuestByShortCodeForLogin(rawCode: string): Guest | null {
   const formatted = `${normalized.slice(0, 4)}-${normalized.slice(4)}`;
   const row = db.prepare("SELECT * FROM guests WHERE short_code = ?").get(formatted);
   return row ? rowToGuest(row) : null;
+}
+
+/** Znacznik "gość faktycznie otworzył swój link/kod" - wywoływane raz, przy
+ * pierwszym udanym zalogowaniu (patrz src/app/z/[token]/route.ts i
+ * src/app/kod/actions.ts). WHERE first_visited_at IS NULL - kolejne wejścia
+ * tego samego gościa nie nadpisują pierwszej, prawdziwej daty. */
+export function markGuestFirstVisited(guestId: string): void {
+  db.prepare(
+    "UPDATE guests SET first_visited_at = datetime('now') WHERE id = ? AND first_visited_at IS NULL"
+  ).run(guestId);
 }
 
 export function guestGetSelf(guestId: string): GuestSelfView | null {

@@ -18,6 +18,13 @@
 
 import { db, newId } from "./client";
 import type { SqliteRow, TableShape, WeddingTable, SeatWithGuestName } from "./types";
+import {
+  minRoundRadius,
+  minRectWidth,
+  MIN_ROUND_RADIUS,
+  MIN_RECT_WIDTH,
+  MIN_RECT_HEIGHT,
+} from "@/lib/tableGeometry";
 
 function rowToTable(row: SqliteRow): WeddingTable {
   return {
@@ -30,6 +37,9 @@ function rowToTable(row: SqliteRow): WeddingTable {
     y: row.y as number,
     rotation: row.rotation as number,
     seatsCount: row.seats_count as number,
+    radius: row.radius as number,
+    width: row.width as number,
+    height: row.height as number,
   };
 }
 
@@ -90,9 +100,13 @@ export function adminCreateTable(params: {
   seatsCount: number;
 }): WeddingTable {
   const id = newId("table");
+  const radius = params.shape === "ROUND" ? minRoundRadius(params.seatsCount) : MIN_ROUND_RADIUS;
+  const height = MIN_RECT_HEIGHT;
+  const width =
+    params.shape === "RECT" ? minRectWidth(params.seatsCount, height) : MIN_RECT_WIDTH;
   db.prepare(
-    `INSERT INTO tables_ (id, wedding_id, room_name, label, shape, x, y, rotation, seats_count)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`
+    `INSERT INTO tables_ (id, wedding_id, room_name, label, shape, x, y, rotation, seats_count, radius, width, height)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)`
   ).run(
     id,
     params.weddingId,
@@ -101,7 +115,10 @@ export function adminCreateTable(params: {
     params.shape,
     params.x,
     params.y,
-    params.seatsCount
+    params.seatsCount,
+    radius,
+    width,
+    height
   );
   const table = adminFindTableById(params.weddingId, id);
   if (!table) throw new Error("Nie udało się dodać stołu");
@@ -123,11 +140,30 @@ export function adminUpdateTableShape(
   tableId: string,
   shape: TableShape
 ): WeddingTable | null {
-  db.prepare("UPDATE tables_ SET shape = ? WHERE id = ? AND wedding_id = ?").run(
-    shape,
-    tableId,
-    weddingId
-  );
+  const existing = adminFindTableById(weddingId, tableId);
+  if (!existing) return null;
+
+  // Przy zmianie kształtu dociągamy docelowy wymiar do obecnej liczby
+  // miejsc - bez tego stół z 12 krzesłami zmieniony z okrągłego na
+  // prostokątny dostawałby domyślną (za małą) szerokość zamiast takiej,
+  // która faktycznie mieści te 12 krzeseł.
+  if (shape === "ROUND") {
+    const radius = Math.max(existing.radius, minRoundRadius(existing.seatsCount));
+    db.prepare("UPDATE tables_ SET shape = ?, radius = ? WHERE id = ? AND wedding_id = ?").run(
+      shape,
+      radius,
+      tableId,
+      weddingId
+    );
+  } else {
+    const width = Math.max(existing.width, minRectWidth(existing.seatsCount, existing.height));
+    db.prepare("UPDATE tables_ SET shape = ?, width = ? WHERE id = ? AND wedding_id = ?").run(
+      shape,
+      width,
+      tableId,
+      weddingId
+    );
+  }
   return adminFindTableById(weddingId, tableId);
 }
 
@@ -156,16 +192,66 @@ export function adminUpdateSeatsCount(
   tableId: string,
   seatsCount: number
 ): WeddingTable | null {
+  const existing = adminFindTableById(weddingId, tableId);
+  if (!existing) return null;
+
   db.prepare(
     `DELETE FROM seat_assignments
      WHERE table_id = ? AND seat_index >= ?
        AND table_id IN (SELECT id FROM tables_ WHERE id = ? AND wedding_id = ?)`
   ).run(tableId, seatsCount, tableId, weddingId);
-  db.prepare("UPDATE tables_ SET seats_count = ? WHERE id = ? AND wedding_id = ?").run(
-    seatsCount,
-    tableId,
-    weddingId
-  );
+
+  // Auto-powiększanie TYLKO w górę - im więcej krzeseł, tym większy stół
+  // musi być, żeby się nie nakładały (patrz src/lib/tableGeometry.ts).
+  // Zmniejszenie liczby miejsc świadomie NIE kurczy stołu z powrotem - para
+  // mogła go ręcznie powiększyć z innego powodu (np. duży blat), a
+  // "zgadywanie", że teraz jest za duży, byłoby nieproszoną niespodzianką.
+  if (existing.shape === "ROUND") {
+    const radius = Math.max(existing.radius, minRoundRadius(seatsCount));
+    db.prepare(
+      "UPDATE tables_ SET seats_count = ?, radius = ? WHERE id = ? AND wedding_id = ?"
+    ).run(seatsCount, radius, tableId, weddingId);
+  } else {
+    const width = Math.max(existing.width, minRectWidth(seatsCount, existing.height));
+    db.prepare(
+      "UPDATE tables_ SET seats_count = ?, width = ? WHERE id = ? AND wedding_id = ?"
+    ).run(seatsCount, width, tableId, weddingId);
+  }
+  return adminFindTableById(weddingId, tableId);
+}
+
+/** Ręczna zmiana rozmiaru z panelu bocznego (suwaki +/-) - niezależna od
+ * auto-powiększania w adminUpdateSeatsCount powyżej. Nie pozwala zejść
+ * poniżej rozmiaru potrzebnego na obecną liczbę miejsc, żeby nie dało się
+ * przypadkiem "zgnieść" stołu z powrotem do nakładających się krzeseł. */
+export function adminUpdateTableSize(
+  weddingId: string,
+  tableId: string,
+  params: { radius?: number; width?: number; height?: number }
+): WeddingTable | null {
+  const existing = adminFindTableById(weddingId, tableId);
+  if (!existing) return null;
+
+  if (existing.shape === "ROUND" && params.radius !== undefined) {
+    const radius = Math.max(minRoundRadius(existing.seatsCount), params.radius);
+    db.prepare("UPDATE tables_ SET radius = ? WHERE id = ? AND wedding_id = ?").run(
+      radius,
+      tableId,
+      weddingId
+    );
+  } else if (existing.shape === "RECT") {
+    const height = params.height ?? existing.height;
+    const width = Math.max(
+      minRectWidth(existing.seatsCount, height),
+      params.width ?? existing.width
+    );
+    db.prepare("UPDATE tables_ SET width = ?, height = ? WHERE id = ? AND wedding_id = ?").run(
+      width,
+      height,
+      tableId,
+      weddingId
+    );
+  }
   return adminFindTableById(weddingId, tableId);
 }
 

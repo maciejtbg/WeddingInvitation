@@ -4,7 +4,7 @@
 // linku/QR (patrz src/lib/db/guests.ts, findGuestByShortCodeForLogin).
 
 import { redirect } from "next/navigation";
-import { findGuestByShortCodeForLogin } from "@/lib/db/guests";
+import { findGuestByShortCodeForLogin, markGuestFirstVisited } from "@/lib/db/guests";
 import { findWeddingById } from "@/lib/db/weddings";
 import { createGuestSession } from "@/lib/auth/guest";
 import { hasCurrentConsent } from "@/lib/db/consents";
@@ -27,6 +27,7 @@ export async function loginByShortCodeAction(formData: FormData): Promise<void> 
   }
 
   await createGuestSession(guest.id, guest.weddingId);
+  markGuestFirstVisited(guest.id);
   // RODO - patrz analogiczny komentarz w src/app/z/[token]/route.ts.
   redirect(
     hasCurrentConsent("GUEST", guest.id)

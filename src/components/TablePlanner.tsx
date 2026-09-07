@@ -2,20 +2,23 @@
 
 // Główny komponent planera stołów: kanwa react-konva z przeciąganiem stołów,
 // panel boczny do przypisywania gości do konkretnych miejsc, obsługa wielu
-// sal (sala = wartość roomName na stole, nie osobna tabela - patrz
-// src/lib/db/tables.ts).
+// sal (sala = wartość roomName na stole/elemencie planu, nie osobna tabela -
+// patrz src/lib/db/tables.ts) oraz dodatkowych elementów planu sali:
+// znaczników (DJ, bufet...), ścian i brył reprezentujących obrys
+// pomieszczenia - patrz src/lib/db/layoutItems.ts.
 //
 // Renderowany wyłącznie po stronie klienta (patrz TablePlannerLoader.tsx) -
 // Konva potrzebuje `window` już przy imporcie modułu.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Circle, Group, Layer, Rect, Stage, Text } from "react-konva";
+import { Circle, Ellipse, Group, Layer, Rect, RegularPolygon, Stage, Text } from "react-konva";
 import type {
   Guest,
   SeatWithGuestName,
   TableShape,
   WeddingTable,
   LayoutItem,
+  LayoutItemShape,
 } from "@/lib/db/types";
 import {
   assignSeatAction,
@@ -24,15 +27,18 @@ import {
   unassignSeatAction,
   updateTablePositionAction,
   updateTableShapeAction,
+  updateTableSizeAction,
   renameTableAction,
   updateSeatsCountAction,
   createLayoutItemAction,
   updateLayoutItemPositionAction,
   renameLayoutItemAction,
+  setLayoutItemShapeAction,
   resizeLayoutItemAction,
   deleteLayoutItemAction,
 } from "@/app/admin/tables/actions";
 import { deleteTableLocal, loadTablesLocal, saveTableLocal } from "@/lib/tablePlannerLocalStore";
+import { SEAT_RADIUS, MAX_TABLE_DIMENSION } from "@/lib/tableGeometry";
 
 interface Props {
   weddingId: string;
@@ -43,17 +49,27 @@ interface Props {
    * src/lib/db/groups.ts, adminListGroupNamesByTable) - puste, jeśli stół
    * nie jest ograniczony do żadnej konkretnej grupy. */
   groupNamesByTable: Record<string, string[]>;
-  /** Znaczniki (DJ, bufet...) i ściany - patrz src/lib/db/layoutItems.ts. */
+  /** Znaczniki (DJ, bufet...), ściany i bryły planu sali - patrz
+   * src/lib/db/layoutItems.ts. */
   initialLayoutItems: LayoutItem[];
 }
 
-const SEAT_RADIUS = 9;
-const TABLE_RADIUS = 46;
-const RECT_W = 130;
-const RECT_H = 64;
-const MARKER_RADIUS = 14;
 const SAVE_DEBOUNCE_MS = 600;
 const DEFAULT_ROOM = "Sala główna";
+// "Plan uroczystości, plan poprawin, plan przyjęcia..." - max tyle
+// zakładek/sal na raz, żeby lista nie urosła w nieskończoność.
+const MAX_ROOMS = 4;
+// Promień odniesienia dla trójkąta/rombu (Konva RegularPolygon przyjmuje
+// jeden promień, nie osobno szerokość/wysokość) - właściwy rozmiar
+// dostajemy przez scaleX/scaleY liczone względem tej stałej.
+const BASE_POLYGON_RADIUS = 100;
+
+const SHAPE_LABELS: Record<LayoutItemShape, string> = {
+  RECT: "Prostokąt",
+  OVAL: "Owal/koło",
+  TRIANGLE: "Trójkąt",
+  RHOMBUS: "Romb",
+};
 
 export default function TablePlanner({
   weddingId,
@@ -67,7 +83,12 @@ export default function TablePlanner({
   const [seats, setSeats] = useState<SeatWithGuestName[]>(initialSeats);
   const [layoutItems, setLayoutItems] = useState<LayoutItem[]>(initialLayoutItems);
   const [rooms, setRooms] = useState<string[]>(() => {
-    const fromTables = Array.from(new Set(initialTables.map((t) => t.roomName)));
+    const fromTables = Array.from(
+      new Set([
+        ...initialTables.map((t) => t.roomName),
+        ...initialLayoutItems.map((i) => i.roomName),
+      ])
+    );
     return fromTables.length > 0 ? fromTables : [DEFAULT_ROOM];
   });
   const [activeRoom, setActiveRoom] = useState<string>(rooms[0]);
@@ -119,6 +140,18 @@ export default function TablePlanner({
     () => layoutItems.filter((i) => i.roomName === activeRoom),
     [layoutItems, activeRoom]
   );
+  const roomShapesInRoom = useMemo(
+    () => layoutItemsInRoom.filter((i) => i.kind === "ROOM_SHAPE"),
+    [layoutItemsInRoom]
+  );
+  const wallsInRoom = useMemo(
+    () => layoutItemsInRoom.filter((i) => i.kind === "WALL"),
+    [layoutItemsInRoom]
+  );
+  const markersInRoom = useMemo(
+    () => layoutItemsInRoom.filter((i) => i.kind === "MARKER"),
+    [layoutItemsInRoom]
+  );
 
   const seatsByTable = useMemo(() => {
     const map = new Map<string, SeatWithGuestName[]>();
@@ -135,7 +168,7 @@ export default function TablePlanner({
   const selectedTableSeats = selectedTable ? seatsByTable.get(selectedTable.id) ?? [] : [];
   const selectedLayoutItem = layoutItems.find((i) => i.id === selectedLayoutItemId) ?? null;
 
-  /** Tylko jedno zaznaczenie naraz - stół albo znacznik/ściana. */
+  /** Tylko jedno zaznaczenie naraz - stół albo znacznik/ściana/bryła sali. */
   function selectTable(id: string) {
     setSelectedLayoutItemId(null);
     setSelectedTableId(id);
@@ -189,7 +222,11 @@ export default function TablePlanner({
   }
 
   function handleAddRoom() {
-    const name = window.prompt("Nazwa nowej sali:");
+    if (rooms.length >= MAX_ROOMS) {
+      reportError(new Error(`Można mieć maksymalnie ${MAX_ROOMS} sale/plany naraz.`));
+      return;
+    }
+    const name = window.prompt("Nazwa nowej sali/planu (np. Ceremonia, Poprawiny):");
     const trimmed = name?.trim();
     if (!trimmed) return;
     setRooms((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
@@ -244,7 +281,9 @@ export default function TablePlanner({
    * przypadkiem czegoś spoza sensownego zakresu. Zmniejszenie poniżej
    * numeru zajętego miejsca zwalnia gościa z tego miejsca (patrz komentarz
    * przy adminUpdateSeatsCount w src/lib/db/tables.ts) - ostrzegamy o tym
-   * przed wysłaniem, żeby nie zaskoczyć pary. */
+   * przed wysłaniem, żeby nie zaskoczyć pary. Stół automatycznie rośnie na
+   * tyle, żeby nowe krzesła się nie nakładały (patrz src/lib/tableGeometry.ts) -
+   * niezależnie od tego, para może go jeszcze ręcznie powiększyć suwakami. */
   async function handleSeatsCountChange(table: WeddingTable, delta: number) {
     const nextCount = table.seatsCount + delta;
     if (nextCount < 1 || nextCount > 24) return;
@@ -275,6 +314,28 @@ export default function TablePlanner({
     }
   }
 
+  /** Ręczne dociąganie rozmiaru stołu suwakami - niezależne od
+   * auto-powiększania przy dokładaniu miejsc powyżej. Serwer i tak nie
+   * pozwoli zejść poniżej minimum potrzebnego na obecną liczbę miejsc
+   * (patrz adminUpdateTableSize w src/lib/db/tables.ts). */
+  async function handleResizeTable(
+    table: WeddingTable,
+    dimension: "radius" | "width" | "height",
+    delta: number
+  ) {
+    const next = { ...table, [dimension]: table[dimension] + delta };
+    if (next[dimension] < 20 || next[dimension] > MAX_TABLE_DIMENSION) return;
+    try {
+      const updated = await updateTableSizeAction(weddingId, table.id, {
+        [dimension]: next[dimension],
+      });
+      setTables((prev) => prev.map((t) => (t.id === table.id ? updated : t)));
+      saveTableLocal(updated).catch(() => {});
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
   async function handleAssign(table: WeddingTable, seatIndex: number, guestId: string) {
     try {
       const updatedSeats = await assignSeatAction(weddingId, table.id, guestId, seatIndex);
@@ -293,15 +354,18 @@ export default function TablePlanner({
     }
   }
 
-  // --- Znaczniki (DJ, bufet, fotobudka...) i ściany - patrz
-  // src/lib/db/layoutItems.ts. Świadomie WOLNY TEKST zamiast gotowego
-  // zestawu ikon dla znaczników - para najlepiej wie, jak nazwać to, co u
-  // niej stoi, a lista "typowych" miejsc na weselu jest w praktyce otwarta
-  // (fontanna czekoladowa? stół z tortem? namiot dla dzieci?).
+  // --- Znaczniki (DJ, bufet, fotobudka...), ściany i bryły planu sali -
+  // patrz src/lib/db/layoutItems.ts. Świadomie WOLNY TEKST zamiast
+  // gotowego zestawu ikon dla znaczników - para najlepiej wie, jak nazwać
+  // to, co u niej stoi, a lista "typowych" miejsc na weselu jest w
+  // praktyce otwarta (fontanna czekoladowa? stół z tortem? namiot dla
+  // dzieci?). Kształt (prostokąt/owal/trójkąt/romb) i rozmiar są za to
+  // regulowalne, więc znacznik może np. udawać podjazd dla wózków, schody
+  // czy strefę dla palących - bez potrzeby osobnej ikony na każdą okazję.
 
   async function handleAddMarker() {
     const label = window.prompt(
-      "Co oznaczyć? (np. DJ, Orkiestra, Bufet, Fotobudka, Stół pary młodej)"
+      "Co oznaczyć? (np. DJ, Orkiestra, Bufet, Winda, WC, Wejście, Fotobudka)"
     );
     const trimmed = label?.trim();
     if (!trimmed) return;
@@ -310,7 +374,7 @@ export default function TablePlanner({
         roomName: activeRoom,
         kind: "MARKER",
         label: trimmed,
-        x: 120 + (layoutItemsInRoom.length % 5) * 80,
+        x: 120 + (markersInRoom.length % 5) * 80,
         y: 320,
       });
       setLayoutItems((prev) => [...prev, item]);
@@ -326,9 +390,25 @@ export default function TablePlanner({
         roomName: activeRoom,
         kind: "WALL",
         x: 100,
-        y: 60 + (layoutItemsInRoom.length % 6) * 30,
-        width: 160,
-        height: 16,
+        y: 60 + (wallsInRoom.length % 6) * 30,
+      });
+      setLayoutItems((prev) => [...prev, item]);
+      selectLayoutItem(item.id);
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
+  /** Duży kształt do rozciągnięcia dookoła już postawionych stołów -
+   * zaznacza obrys/kontur sali. Renderowany zawsze pod wszystkim innym
+   * (patrz kolejność warstw w JSX niżej), więc nie przesłania stołów. */
+  async function handleAddRoomShape() {
+    try {
+      const item = await createLayoutItemAction(weddingId, {
+        roomName: activeRoom,
+        kind: "ROOM_SHAPE",
+        x: size.width / 2 || 300,
+        y: size.height / 2 || 250,
       });
       setLayoutItems((prev) => [...prev, item]);
       selectLayoutItem(item.id);
@@ -352,14 +432,17 @@ export default function TablePlanner({
     scheduleLayoutItemSave(updated);
   }
 
-  function handleRotateWall(item: LayoutItem) {
+  function handleRotateItem(item: LayoutItem) {
     const updated = { ...item, rotation: (item.rotation + 15) % 360 };
     setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
     scheduleLayoutItemSave(updated);
   }
 
-  function handleRenameMarker(item: LayoutItem) {
-    const name = window.prompt("Nowa nazwa znacznika:", item.label ?? "");
+  /** Zmiana nazwy - dla MARKER (etykieta typu "DJ") i ROOM_SHAPE (przydaje
+   * się przy kilku bryłach na raz, np. "Namiot" vs "Sala główna"). WALL
+   * nie ma nazwy - to tylko odcinek ściany, nic do podpisania. */
+  function handleRenameItem(item: LayoutItem) {
+    const name = window.prompt("Nowa nazwa:", item.label ?? "");
     const trimmed = name?.trim();
     if (!trimmed || trimmed === item.label) return;
     renameLayoutItemAction(weddingId, item.id, trimmed)
@@ -367,10 +450,16 @@ export default function TablePlanner({
       .catch((err) => reportError(err));
   }
 
-  /** dimension = "width" | "height", delta w pikselach - ściana zmienia
-   * rozmiar krokowo (podobnie jak liczba miejsc przy stole), bez
-   * przeciągania uchwytów na kanwie. */
-  async function handleResizeWall(item: LayoutItem, dimension: "width" | "height", delta: number) {
+  function handleSetShape(item: LayoutItem, shape: LayoutItemShape) {
+    setLayoutItemShapeAction(weddingId, item.id, shape)
+      .then((updated) => setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i))))
+      .catch((err) => reportError(err));
+  }
+
+  /** dimension = "width" | "height", delta w pikselach - rozmiar zmienia
+   * się krokowo, bez przeciągania uchwytów na kanwie (spójne z resztą
+   * planera - patrz handleSeatsCountChange). */
+  async function handleResizeItem(item: LayoutItem, dimension: "width" | "height", delta: number) {
     const nextWidth = dimension === "width" ? item.width + delta : item.width;
     const nextHeight = dimension === "height" ? item.height + delta : item.height;
     if (nextWidth < 20 || nextWidth > 1000 || nextHeight < 10 || nextHeight > 1000) return;
@@ -383,8 +472,13 @@ export default function TablePlanner({
   }
 
   async function handleDeleteLayoutItem(item: LayoutItem) {
-    const label = item.kind === "MARKER" ? `znacznik "${item.label}"` : "ścianę";
-    if (!window.confirm(`Usunąć ${label}?`)) return;
+    const opis =
+      item.kind === "MARKER"
+        ? `znacznik "${item.label}"`
+        : item.kind === "WALL"
+          ? "ścianę"
+          : "bryłę planu sali";
+    if (!window.confirm(`Usunąć ${opis}?`)) return;
     try {
       await deleteLayoutItemAction(weddingId, item.id);
       setLayoutItems((prev) => prev.filter((i) => i.id !== item.id));
@@ -415,13 +509,15 @@ export default function TablePlanner({
               {room}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={handleAddRoom}
-            className="rounded-full border border-dashed border-zinc-400 px-3 py-1 text-sm text-zinc-600 hover:border-zinc-600"
-          >
-            + Nowa sala
-          </button>
+          {rooms.length < MAX_ROOMS && (
+            <button
+              type="button"
+              onClick={handleAddRoom}
+              className="rounded-full border border-dashed border-zinc-400 px-3 py-1 text-sm text-zinc-600 hover:border-zinc-600"
+            >
+              + Nowa sala/plan
+            </button>
+          )}
           <div className="mx-2 h-5 w-px bg-zinc-200" />
           <button
             type="button"
@@ -452,6 +548,13 @@ export default function TablePlanner({
           >
             + Ściana
           </button>
+          <button
+            type="button"
+            onClick={handleAddRoomShape}
+            className="rounded-full border border-sky-400 bg-sky-50 px-3 py-1 text-sm text-sky-900 hover:border-sky-500"
+          >
+            + Kształt sali
+          </button>
           {errorMessage && (
             <span className="ml-auto rounded-md bg-red-50 px-3 py-1 text-xs text-red-700">
               {errorMessage}
@@ -468,36 +571,63 @@ export default function TablePlanner({
             }}
           >
             <Layer>
-              {/* Ściany pod spodem - to obrys/tło pomieszczenia, stoły i
-                  znaczniki mają być zawsze widoczne NAD nimi. */}
-              {layoutItemsInRoom
-                .filter((item) => item.kind === "WALL")
-                .map((item) => {
-                  const isSelected = item.id === selectedLayoutItemId;
-                  return (
-                    <Group
-                      key={item.id}
-                      x={item.x}
-                      y={item.y}
-                      rotation={item.rotation}
-                      draggable
-                      onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
-                      onClick={() => selectLayoutItem(item.id)}
-                      onTap={() => selectLayoutItem(item.id)}
-                    >
-                      <Rect
-                        width={item.width}
-                        height={item.height}
-                        fill={isSelected ? "#78716c" : "#57534e"}
-                        stroke={isSelected ? "#fde68a" : undefined}
-                        strokeWidth={isSelected ? 2 : 0}
-                      />
-                    </Group>
-                  );
-                })}
+              {/* Bryły planu sali NA SAMYM SPODZIE - to tło/obrys
+                  pomieszczenia, wszystko inne ma być nad nimi. */}
+              {roomShapesInRoom.map((item) => {
+                const isSelected = item.id === selectedLayoutItemId;
+                return (
+                  <Group
+                    key={item.id}
+                    x={item.x}
+                    y={item.y}
+                    rotation={item.rotation}
+                    draggable
+                    onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
+                    onClick={() => selectLayoutItem(item.id)}
+                    onTap={() => selectLayoutItem(item.id)}
+                  >
+                    <ShapeBody
+                      shape={item.shape}
+                      width={item.width}
+                      height={item.height}
+                      fill={isSelected ? "#bae6fd" : "#e0f2fe"}
+                      stroke={isSelected ? "#0284c7" : "#7dd3fc"}
+                      strokeWidth={2}
+                    />
+                  </Group>
+                );
+              })}
+              {/* Ściany nad bryłą sali, ale pod stołami/znacznikami. */}
+              {wallsInRoom.map((item) => {
+                const isSelected = item.id === selectedLayoutItemId;
+                return (
+                  <Group
+                    key={item.id}
+                    x={item.x}
+                    y={item.y}
+                    rotation={item.rotation}
+                    draggable
+                    onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
+                    onClick={() => selectLayoutItem(item.id)}
+                    onTap={() => selectLayoutItem(item.id)}
+                  >
+                    <Rect
+                      x={-item.width / 2}
+                      y={-item.height / 2}
+                      width={item.width}
+                      height={item.height}
+                      fill={isSelected ? "#78716c" : "#57534e"}
+                      stroke={isSelected ? "#fde68a" : undefined}
+                      strokeWidth={isSelected ? 2 : 0}
+                    />
+                  </Group>
+                );
+              })}
               {tablesInRoom.map((table) => {
                 const tableSeats = seatsByTable.get(table.id) ?? [];
                 const isSelected = table.id === selectedTableId;
+                const labelWidth = table.shape === "ROUND" ? table.radius * 2 : table.width;
+                const labelX = table.shape === "ROUND" ? -table.radius : -table.width / 2;
                 return (
                   <Group
                     key={table.id}
@@ -511,17 +641,17 @@ export default function TablePlanner({
                   >
                     {table.shape === "ROUND" ? (
                       <Circle
-                        radius={TABLE_RADIUS}
+                        radius={table.radius}
                         fill={isSelected ? "#fde68a" : "#e4e4e7"}
                         stroke="#a1a1aa"
                         strokeWidth={2}
                       />
                     ) : (
                       <Rect
-                        x={-RECT_W / 2}
-                        y={-RECT_H / 2}
-                        width={RECT_W}
-                        height={RECT_H}
+                        x={-table.width / 2}
+                        y={-table.height / 2}
+                        width={table.width}
+                        height={table.height}
                         cornerRadius={8}
                         fill={isSelected ? "#fde68a" : "#e4e4e7"}
                         stroke="#a1a1aa"
@@ -531,8 +661,8 @@ export default function TablePlanner({
                     <Text
                       text={table.label}
                       align="center"
-                      width={table.shape === "ROUND" ? TABLE_RADIUS * 2 : RECT_W}
-                      x={table.shape === "ROUND" ? -TABLE_RADIUS : -RECT_W / 2}
+                      width={labelWidth}
+                      x={labelX}
                       y={groupNamesByTable[table.id]?.length ? -14 : -7}
                       fontSize={13}
                       fontStyle="bold"
@@ -542,8 +672,8 @@ export default function TablePlanner({
                       <Text
                         text={groupNamesByTable[table.id].join(", ")}
                         align="center"
-                        width={table.shape === "ROUND" ? TABLE_RADIUS * 2 : RECT_W}
-                        x={table.shape === "ROUND" ? -TABLE_RADIUS : -RECT_W / 2}
+                        width={labelWidth}
+                        x={labelX}
                         y={4}
                         fontSize={10}
                         fill="#7c2d12"
@@ -567,40 +697,41 @@ export default function TablePlanner({
                 );
               })}
               {/* Znaczniki na wierzchu - mają być zawsze widoczne, nawet
-                  gdyby ktoś przesunął je blisko stołu/ściany. */}
-              {layoutItemsInRoom
-                .filter((item) => item.kind === "MARKER")
-                .map((item) => {
-                  const isSelected = item.id === selectedLayoutItemId;
-                  return (
-                    <Group
-                      key={item.id}
-                      x={item.x}
-                      y={item.y}
-                      draggable
-                      onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
-                      onClick={() => selectLayoutItem(item.id)}
-                      onTap={() => selectLayoutItem(item.id)}
-                    >
-                      <Circle
-                        radius={MARKER_RADIUS}
-                        fill={isSelected ? "#f59e0b" : "#fbbf24"}
-                        stroke="#92400e"
-                        strokeWidth={1.5}
-                      />
-                      <Text
-                        text={item.label ?? ""}
-                        align="center"
-                        width={120}
-                        x={-60}
-                        y={MARKER_RADIUS + 4}
-                        fontSize={11}
-                        fontStyle="bold"
-                        fill="#78350f"
-                      />
-                    </Group>
-                  );
-                })}
+                  gdyby ktoś przesunął je blisko stołu/ściany/bryły sali. */}
+              {markersInRoom.map((item) => {
+                const isSelected = item.id === selectedLayoutItemId;
+                return (
+                  <Group
+                    key={item.id}
+                    x={item.x}
+                    y={item.y}
+                    rotation={item.rotation}
+                    draggable
+                    onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
+                    onClick={() => selectLayoutItem(item.id)}
+                    onTap={() => selectLayoutItem(item.id)}
+                  >
+                    <ShapeBody
+                      shape={item.shape}
+                      width={item.width}
+                      height={item.height}
+                      fill={isSelected ? "#f59e0b" : "#fbbf24"}
+                      stroke="#92400e"
+                      strokeWidth={1.5}
+                    />
+                    <Text
+                      text={item.label ?? ""}
+                      align="center"
+                      width={120}
+                      x={-60}
+                      y={item.height / 2 + 6}
+                      fontSize={11}
+                      fontStyle="bold"
+                      fill="#78350f"
+                    />
+                  </Group>
+                );
+              })}
             </Layer>
           </Stage>
         </div>
@@ -653,6 +784,36 @@ export default function TablePlanner({
             >
               Usuń
             </button>
+          </div>
+
+          <div className="mb-4 space-y-2 rounded-md border border-zinc-200 p-2">
+            {selectedTable.shape === "ROUND" ? (
+              <SizeStepper
+                name="Rozmiar stołu"
+                label={`Rozmiar (${Math.round(selectedTable.radius)})`}
+                onDecrease={() => handleResizeTable(selectedTable, "radius", -10)}
+                onIncrease={() => handleResizeTable(selectedTable, "radius", 10)}
+              />
+            ) : (
+              <>
+                <SizeStepper
+                  name="Szerokość stołu"
+                  label={`Szerokość (${Math.round(selectedTable.width)})`}
+                  onDecrease={() => handleResizeTable(selectedTable, "width", -20)}
+                  onIncrease={() => handleResizeTable(selectedTable, "width", 20)}
+                />
+                <SizeStepper
+                  name="Głębokość stołu"
+                  label={`Głębokość (${Math.round(selectedTable.height)})`}
+                  onDecrease={() => handleResizeTable(selectedTable, "height", -10)}
+                  onIncrease={() => handleResizeTable(selectedTable, "height", 10)}
+                />
+              </>
+            )}
+            <p className="text-[11px] leading-tight text-zinc-400">
+              Stół rośnie automatycznie, gdy dokładacie miejsca poniżej - te suwaki są do
+              ręcznej korekty (np. szerszy blat, stół zsunięty z innym).
+            </p>
           </div>
 
           <div className="mb-2 flex items-center justify-between">
@@ -730,17 +891,18 @@ export default function TablePlanner({
       {selectedLayoutItem && (
         <div className="w-80 shrink-0 overflow-y-auto border-l border-zinc-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
-            {selectedLayoutItem.kind === "MARKER" ? (
+            {selectedLayoutItem.kind === "WALL" ? (
+              <h2 className="text-sm font-semibold text-zinc-900">Ściana</h2>
+            ) : (
               <button
                 type="button"
-                onClick={() => handleRenameMarker(selectedLayoutItem)}
+                onClick={() => handleRenameItem(selectedLayoutItem)}
                 className="text-sm font-semibold text-zinc-900 underline decoration-dotted underline-offset-2 hover:text-zinc-600"
                 title="Kliknij, żeby zmienić nazwę"
               >
-                {selectedLayoutItem.label}
+                {selectedLayoutItem.label ||
+                  (selectedLayoutItem.kind === "ROOM_SHAPE" ? "Bez nazwy (kliknij)" : "")}
               </button>
-            ) : (
-              <h2 className="text-sm font-semibold text-zinc-900">Ściana</h2>
             )}
             <button
               type="button"
@@ -751,65 +913,50 @@ export default function TablePlanner({
             </button>
           </div>
 
-          {selectedLayoutItem.kind === "WALL" && (
-            <>
-              <div className="mb-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-zinc-500">
-                    Długość ({Math.round(selectedLayoutItem.width)})
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleResizeWall(selectedLayoutItem, "width", -20)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
-                      title="Skróć ścianę"
-                    >
-                      −
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleResizeWall(selectedLayoutItem, "width", 20)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
-                      title="Wydłuż ścianę"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-zinc-500">
-                    Grubość ({Math.round(selectedLayoutItem.height)})
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleResizeWall(selectedLayoutItem, "height", -10)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
-                      title="Zmniejsz grubość ściany"
-                    >
-                      −
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleResizeWall(selectedLayoutItem, "height", 10)}
-                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
-                      title="Zwiększ grubość ściany"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+          {selectedLayoutItem.kind !== "WALL" && (
+            <div className="mb-3">
+              <p className="mb-1.5 text-xs font-medium text-zinc-500">Kształt</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(Object.keys(SHAPE_LABELS) as LayoutItemShape[]).map((shape) => (
+                  <button
+                    key={shape}
+                    type="button"
+                    onClick={() => handleSetShape(selectedLayoutItem, shape)}
+                    className={`rounded-full px-2.5 py-1 text-xs ${
+                      selectedLayoutItem.shape === shape
+                        ? "bg-zinc-900 text-white"
+                        : "border border-zinc-300 text-zinc-600 hover:border-zinc-400"
+                    }`}
+                  >
+                    {SHAPE_LABELS[shape]}
+                  </button>
+                ))}
               </div>
-              <button
-                type="button"
-                onClick={() => handleRotateWall(selectedLayoutItem)}
-                className="mb-2 w-full rounded-md border border-zinc-300 px-2 py-1.5 text-xs hover:border-zinc-400"
-              >
-                Obróć o 15°
-              </button>
-            </>
+            </div>
           )}
+
+          <div className="mb-3 space-y-3">
+            <SizeStepper
+              name={selectedLayoutItem.kind === "WALL" ? "Długość ściany" : "Szerokość elementu"}
+              label={`${selectedLayoutItem.kind === "WALL" ? "Długość" : "Szerokość"} (${Math.round(selectedLayoutItem.width)})`}
+              onDecrease={() => handleResizeItem(selectedLayoutItem, "width", -20)}
+              onIncrease={() => handleResizeItem(selectedLayoutItem, "width", 20)}
+            />
+            <SizeStepper
+              name={selectedLayoutItem.kind === "WALL" ? "Grubość ściany" : "Wysokość elementu"}
+              label={`${selectedLayoutItem.kind === "WALL" ? "Grubość" : "Wysokość"} (${Math.round(selectedLayoutItem.height)})`}
+              onDecrease={() => handleResizeItem(selectedLayoutItem, "height", -10)}
+              onIncrease={() => handleResizeItem(selectedLayoutItem, "height", 10)}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleRotateItem(selectedLayoutItem)}
+            className="mb-2 w-full rounded-md border border-zinc-300 px-2 py-1.5 text-xs hover:border-zinc-400"
+          >
+            Obróć o 15°
+          </button>
 
           <button
             type="button"
@@ -824,12 +971,121 @@ export default function TablePlanner({
   );
 }
 
+function SizeStepper({
+  name,
+  label,
+  onDecrease,
+  onIncrease,
+}: {
+  /** Stała nazwa wymiaru (np. "Długość") niezależna od aktualnej liczby w
+   * `label` - używana w title przycisków, żeby dało się je znaleźć w
+   * testach end-to-end niezależnie od tego, jaka wartość akurat wyświetla
+   * się w nawiasie. */
+  name: string;
+  label: string;
+  onDecrease: () => void;
+  onIncrease: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <p className="text-xs font-medium text-zinc-500">{label}</p>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onDecrease}
+          title={`Zmniejsz: ${name}`}
+          className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+        >
+          −
+        </button>
+        <button
+          type="button"
+          onClick={onIncrease}
+          title={`Zwiększ: ${name}`}
+          className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Jedna bryła Konva odpowiadająca LayoutItemShape - używana zarówno przez
+ * znaczniki (MARKER) jak i bryły planu sali (ROOM_SHAPE). Trójkąt/romb to
+ * ten sam RegularPolygon (Konva rysuje 4-kątny wielobok foremny jako romb -
+ * wierzchołki górny/prawy/dolny/lewy - bez dodatkowego obracania), tylko
+ * przeskalowany scaleX/scaleY do zadanej szerokości/wysokości, bo Konva nie
+ * ma bezpośrednio "prostokątnego trójkąta/rombu" jako gotowego kształtu. */
+function ShapeBody({
+  shape,
+  width,
+  height,
+  fill,
+  stroke,
+  strokeWidth,
+}: {
+  shape: LayoutItemShape;
+  width: number;
+  height: number;
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+}) {
+  if (shape === "RECT") {
+    return (
+      <Rect
+        x={-width / 2}
+        y={-height / 2}
+        width={width}
+        height={height}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+      />
+    );
+  }
+  if (shape === "OVAL") {
+    return (
+      <Ellipse
+        radiusX={width / 2}
+        radiusY={height / 2}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+      />
+    );
+  }
+  const sides = shape === "TRIANGLE" ? 3 : 4;
+  return (
+    <RegularPolygon
+      sides={sides}
+      radius={BASE_POLYGON_RADIUS}
+      scaleX={width / (2 * BASE_POLYGON_RADIUS)}
+      scaleY={height / (2 * BASE_POLYGON_RADIUS)}
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={strokeWidth / Math.max(width, height, 1) * BASE_POLYGON_RADIUS}
+    />
+  );
+}
+
+/** Rozkłada krzesła dookoła stołu tak, żeby się nie nakładały (patrz
+ * src/lib/tableGeometry.ts - to samo źródło minimalnych rozmiarów, którego
+ * pilnuje repozytorium przy auto-powiększaniu). Dla stołu prostokątnego
+ * krzesła idą po CAŁYM obwodzie (wszystkie 4 boki), proporcjonalnie do
+ * długości boku - dawniej tylko dwa dłuższe boki miały miejsca, więc przy
+ * kwadratowym/krótkim stole nikt nie mógł "siadać od czoła"; ten sposób
+ * automatycznie zajmuje też krótsze boki, kiedy jest ich sporo. Pełny
+ * ręczny wybór "to krzesło na tym konkretnym boku" to już osobna, większa
+ * funkcja (przeciąganie pojedynczych miejsc) - nie ma jej tutaj. */
 function seatPositions(table: WeddingTable): { x: number; y: number }[] {
   const n = table.seatsCount;
   const positions: { x: number; y: number }[] = [];
+  const margin = SEAT_RADIUS + 10;
 
   if (table.shape === "ROUND") {
-    const radius = TABLE_RADIUS + SEAT_RADIUS + 8;
+    const radius = table.radius + margin;
     for (let i = 0; i < n; i++) {
       const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
       positions.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
@@ -837,17 +1093,27 @@ function seatPositions(table: WeddingTable): { x: number; y: number }[] {
     return positions;
   }
 
-  // Stół prostokątny: miejsca rozłożone równo po dwóch dłuższych bokach.
-  const perSide = Math.ceil(n / 2);
-  const margin = SEAT_RADIUS + 10;
+  const W = table.width;
+  const H = table.height;
+  const perimeter = 2 * (W + H);
   for (let i = 0; i < n; i++) {
-    const onTopSide = i < perSide;
-    const indexInSide = onTopSide ? i : i - perSide;
-    const countInSide = onTopSide ? perSide : n - perSide;
-    const spacing = RECT_W / (countInSide + 1);
-    const x = -RECT_W / 2 + spacing * (indexInSide + 1);
-    const y = onTopSide ? -(RECT_H / 2 + margin) : RECT_H / 2 + margin;
-    positions.push({ x, y });
+    let dist = (i / n) * perimeter;
+    if (dist < W) {
+      positions.push({ x: -W / 2 + dist, y: -(H / 2 + margin) });
+      continue;
+    }
+    dist -= W;
+    if (dist < H) {
+      positions.push({ x: W / 2 + margin, y: -H / 2 + dist });
+      continue;
+    }
+    dist -= H;
+    if (dist < W) {
+      positions.push({ x: W / 2 - dist, y: H / 2 + margin });
+      continue;
+    }
+    dist -= W;
+    positions.push({ x: -(W / 2 + margin), y: H / 2 - dist });
   }
   return positions;
 }

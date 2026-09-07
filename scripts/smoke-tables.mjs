@@ -150,11 +150,11 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   assert(true, "usunięcie znacznika działa (panel boczny się zamknął)");
 
   await couple.click('button:has-text("+ Ściana")');
-  await couple.waitForSelector("text=Długość (160)", { timeout: 10000 });
-  assert(true, "dodano ścianę z domyślną długością 160");
+  await couple.waitForSelector("text=Długość (120)", { timeout: 10000 });
+  assert(true, "dodano ścianę z domyślną długością 120");
 
-  await couple.click('button[title="Wydłuż ścianę"]');
-  await couple.waitForSelector("text=Długość (180)", { timeout: 10000 });
+  await couple.click('button[title="Zwiększ: Długość ściany"]');
+  await couple.waitForSelector("text=Długość (140)", { timeout: 10000 });
   assert(true, "wydłużenie ściany działa (+20 na kliknięcie)");
 
   await couple.click('button:has-text("Obróć o 15°")');
@@ -170,6 +170,58 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.waitForSelector("canvas", { state: "visible", timeout: 15000 });
   await couple.waitForTimeout(500);
   assert(consoleErrors.length === 0, "strona planera po przeładowaniu wczytuje się bez błędów JS (ściana z bazy)");
+
+  // --- Kształt sali (rozciągana bryła dookoła stołów) ---
+  await couple.click('button:has-text("+ Kształt sali")');
+  await couple.waitForSelector("text=Szerokość (320)", { timeout: 10000 });
+  assert(true, "dodano domyślny kształt sali (prostokąt 320×220)");
+
+  await couple.click('button:has-text("Romb")');
+  await couple.waitForFunction(
+    () =>
+      Array.from(document.querySelectorAll("button")).some(
+        (b) => b.textContent === "Romb" && b.className.includes("bg-zinc-900")
+      ),
+    { timeout: 10000 }
+  );
+  assert(true, "zmiana kształtu na romb działa (przycisk 'Romb' aktywny)");
+
+  await couple.click('button[title="Zwiększ: Szerokość elementu"]');
+  await couple.waitForSelector("text=Szerokość (340)", { timeout: 10000 });
+  assert(true, "rozciąganie kształtu sali działa (+20 na kliknięcie)");
+
+  // --- Zmiana rozmiaru stołu (żeby krzesła się nie nakładały przy wielu gościach) ---
+  await couple.locator("canvas").first().click({ position: { x: 120, y: 120 } });
+  await couple.waitForSelector("text=Rozmiar (46)", { timeout: 10000 });
+  await couple.click('button[title="Zwiększ: Rozmiar stołu"]');
+  await couple.waitForSelector("text=Rozmiar (56)", { timeout: 10000 });
+  assert(true, "ręczne powiększenie okrągłego stołu działa (+10 na kliknięcie)");
+
+  // Dokładenie miejsc ponad to, co mieści bieżący rozmiar, automatycznie
+  // powiększa stół (patrz src/lib/tableGeometry.ts) - przy 8 miejscach i
+  // promieniu 56 jest jeszcze zapas, więc dokładamy sporo naraz.
+  for (let i = 0; i < 10; i++) {
+    await couple.click('button[title="Dodaj jedno miejsce"]');
+  }
+  await couple.waitForSelector("text=Miejsca (18)", { timeout: 10000 });
+  const radiusText = await couple.locator("p", { hasText: "Rozmiar (" }).innerText();
+  const radiusValue = Number(radiusText.match(/\((\d+)\)/)[1]);
+  assert(radiusValue > 56, `stół automatycznie urósł przy 18 miejscach (promień: ${radiusValue}, był 56)`);
+
+  // --- Limit 4 sal/planów ---
+  // Wedding startuje z 1 domyślną salą, więc potrzeba 3 kliknięć, żeby
+  // dojść do limitu MAX_ROOMS=4 (przycisk znika dopiero PO osiągnięciu limitu,
+  // patrz warunek `rooms.length < MAX_ROOMS` w TablePlanner.tsx).
+  couple.on("dialog", (dialog) => dialog.accept(`Sala ${Math.random()}`));
+  for (let i = 0; i < 3; i++) {
+    await couple.click('button:has-text("+ Nowa sala/plan")');
+    await couple.waitForTimeout(300);
+  }
+  const newRoomButtonCount = await couple.locator('button:has-text("+ Nowa sala/plan")').count();
+  assert(
+    newRoomButtonCount === 0,
+    "po osiągnięciu 4 sal przycisk '+ Nowa sala/plan' znika (limit działa)"
+  );
 
   await browser.close();
   console.log("\nWSZYSTKIE TESTY PLANERA STOŁÓW PRZESZŁY POMYŚLNIE");

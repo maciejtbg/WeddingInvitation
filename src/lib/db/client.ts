@@ -409,6 +409,53 @@ export function runMigrations() {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;
   }
+  // Rozmiar stołu - do tej pory sztywne stałe w komponencie (TABLE_RADIUS/
+  // RECT_W/RECT_H), przez co krzesła nachodziły na siebie przy większej
+  // liczbie gości. Teraz per-stół, z sensownymi wartościami domyślnymi
+  // (=stare stałe) dla wierszy sprzed tej zmiany - patrz src/lib/db/tables.ts.
+  for (const [col, def] of [
+    ["radius", 46],
+    ["width", 130],
+    ["height", 64],
+  ] as const) {
+    try {
+      db.exec(`ALTER TABLE tables_ ADD COLUMN ${col} REAL NOT NULL DEFAULT ${def};`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!message.includes("duplicate column")) throw err;
+    }
+  }
+  // Kształt znacznika (MARKER: koło/prostokąt) albo bryły planu sali
+  // (ROOM_SHAPE: prostokąt/koło/owal/trójkąt/romb) - patrz
+  // src/lib/db/layoutItems.ts. Bez znaczenia dla WALL (zawsze prostokąt).
+  try {
+    db.exec("ALTER TABLE layout_items ADD COLUMN shape TEXT NOT NULL DEFAULT 'OVAL';");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  // Dane kontaktowe gościa (do samodzielnego wysłania zaproszenia przez
+  // parę - mailto:/sms: linki, patrz src/app/admin/guests/page.tsx) oraz
+  // znacznik pierwszego udanego wejścia (czy gość w ogóle otworzył swój
+  // link/kod) - patrz src/lib/auth/guest.ts.
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN phone TEXT;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN email TEXT;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN first_visited_at TEXT;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
 }
 
 runMigrations();

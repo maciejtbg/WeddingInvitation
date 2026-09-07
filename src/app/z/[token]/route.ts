@@ -4,7 +4,7 @@
 // żeby przy kolejnych wizytach gość nie musiał nosić tokenu w adresie.
 
 import { NextRequest, NextResponse } from "next/server";
-import { findGuestByTokenForLogin } from "@/lib/db/guests";
+import { findGuestByTokenForLogin, markGuestFirstVisited } from "@/lib/db/guests";
 import { findWeddingById } from "@/lib/db/weddings";
 import { createGuestSession } from "@/lib/auth/guest";
 import { hasCurrentConsent } from "@/lib/db/consents";
@@ -44,6 +44,7 @@ export async function GET(
   }
 
   await createGuestSession(guest.id, guest.weddingId);
+  markGuestFirstVisited(guest.id);
 
   // RODO - gość bez jeszcze zapisanej zgody musi ją najpierw potwierdzić
   // (patrz src/app/w/[slug]/zgoda) - zwracający gość z ważną zgodą leci

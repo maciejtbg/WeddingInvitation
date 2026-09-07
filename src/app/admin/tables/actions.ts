@@ -25,6 +25,7 @@ import {
   adminDeleteTable,
   adminUpdateTablePosition,
   adminUpdateTableShape,
+  adminUpdateTableSize,
   adminRenameTable,
   adminUpdateSeatsCount,
   adminAssignSeat,
@@ -35,15 +36,18 @@ import {
   adminCreateLayoutItem,
   adminUpdateLayoutItemPosition,
   adminRenameLayoutItem,
+  adminSetLayoutItemShape,
   adminResizeLayoutItem,
   adminDeleteLayoutItem,
 } from "@/lib/db/layoutItems";
+import { MAX_TABLE_DIMENSION } from "@/lib/tableGeometry";
 import type {
   TableShape,
   WeddingTable,
   SeatWithGuestName,
   LayoutItem,
   LayoutItemKind,
+  LayoutItemShape,
 } from "@/lib/db/types";
 
 async function requireOwnedWedding(weddingId: string) {
@@ -121,6 +125,26 @@ export async function updateSeatsCountAction(
   return { table, seats: adminListSeats(wedding.id) };
 }
 
+/** Ręczna zmiana rozmiaru z suwaków w panelu bocznym - niezależna od
+ * auto-powiększania przy dokładaniu miejsc (patrz updateSeatsCountAction).
+ * Podaj TYLKO pole odpowiadające kształtowi stołu (radius dla ROUND,
+ * width/height dla RECT) - reszta jest ignorowana po stronie repozytorium. */
+export async function updateTableSizeAction(
+  weddingId: string,
+  tableId: string,
+  params: { radius?: number; width?: number; height?: number }
+): Promise<WeddingTable> {
+  const wedding = await requireOwnedWedding(weddingId);
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && (!Number.isFinite(value) || value < 20 || value > MAX_TABLE_DIMENSION)) {
+      throw new Error(`Nieprawidłowa wartość dla "${key}"`);
+    }
+  }
+  const table = adminUpdateTableSize(wedding.id, tableId, params);
+  if (!table) throw new Error("Nie znaleziono stołu");
+  return table;
+}
+
 export async function deleteTableAction(weddingId: string, tableId: string): Promise<void> {
   const wedding = await requireOwnedWedding(weddingId);
   adminDeleteTable(wedding.id, tableId);
@@ -159,6 +183,7 @@ export async function createLayoutItemAction(
     roomName: string;
     kind: LayoutItemKind;
     label?: string | null;
+    shape?: LayoutItemShape;
     x: number;
     y: number;
     width?: number;
@@ -167,6 +192,17 @@ export async function createLayoutItemAction(
 ): Promise<LayoutItem> {
   const wedding = await requireOwnedWedding(weddingId);
   return adminCreateLayoutItem({ weddingId: wedding.id, ...params });
+}
+
+export async function setLayoutItemShapeAction(
+  weddingId: string,
+  itemId: string,
+  shape: LayoutItemShape
+): Promise<LayoutItem> {
+  const wedding = await requireOwnedWedding(weddingId);
+  const item = adminSetLayoutItemShape(wedding.id, itemId, shape);
+  if (!item) throw new Error("Nie znaleziono elementu");
+  return item;
 }
 
 export async function updateLayoutItemPositionAction(
@@ -201,10 +237,10 @@ export async function resizeLayoutItemAction(
 ): Promise<LayoutItem> {
   const wedding = await requireOwnedWedding(weddingId);
   if (!Number.isFinite(width) || width < 20 || width > 1000) {
-    throw new Error("Szerokość ściany musi być liczbą od 20 do 1000");
+    throw new Error("Szerokość musi być liczbą od 20 do 1000");
   }
   if (!Number.isFinite(height) || height < 10 || height > 1000) {
-    throw new Error("Grubość ściany musi być liczbą od 10 do 1000");
+    throw new Error("Wysokość musi być liczbą od 10 do 1000");
   }
   const item = adminResizeLayoutItem(wedding.id, itemId, { width, height });
   if (!item) throw new Error("Nie znaleziono elementu");

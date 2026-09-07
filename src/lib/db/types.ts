@@ -70,6 +70,16 @@ export interface Guest {
   rsvpStatus: RsvpStatus;
   rsvpRespondedAt: string | null;
   dietaryNotes: string | null;
+  // Do samodzielnego wysłania zaproszenia przez parę (mailto:/sms: linki,
+  // patrz src/app/admin/guests/page.tsx) - opcjonalne, gość i tak dostaje
+  // dostęp przez token/kod niezależnie od tego, czy to wypełnione.
+  phone: string | null;
+  email: string | null;
+  // Znacznik "gość faktycznie otworzył swój link/kod" - ustawiane raz, przy
+  // pierwszym udanym logowaniu (patrz src/lib/auth/guest.ts) - prosty
+  // odpowiednik "potwierdzenia odbioru" bez integrowania się z żadnym
+  // dostawcą SMS/email (nie wysyłamy nic sami, tylko generujemy link).
+  firstVisitedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -133,10 +143,25 @@ export interface WeddingTable {
   y: number;
   rotation: number;
   seatsCount: number;
+  // Rozmiar stołu - radius ma znaczenie dla ROUND, width/height dla RECT.
+  // Osobne od seatsCount: para może dociągnąć rozmiar ręcznie (patrz
+  // suwaki w TablePlanner.tsx), a przy dokładaniu miejsc stół rośnie
+  // automatycznie tylko na tyle, żeby krzesła się nie nakładały.
+  radius: number;
+  width: number;
+  height: number;
 }
 
 // Elementy planu sali inne niż stół - patrz src/lib/db/layoutItems.ts.
-export type LayoutItemKind = "MARKER" | "WALL";
+// ROOM_SHAPE to bryła (prostokąt/koło/owal/trójkąt/romb) rozciągana wokół
+// stołów, żeby zaznaczyć obrys sali - w odróżnieniu od WALL (pojedynczy
+// odcinek ściany), ROOM_SHAPE to JEDEN duży kształt na całą salę.
+export type LayoutItemKind = "MARKER" | "WALL" | "ROOM_SHAPE";
+// OVAL z równą szerokością/wysokością wygląda jak koło - stąd brak osobnej
+// wartości "CIRCLE": to niepotrzebna druga nazwa na to samo, tylko z
+// dodatkowym ograniczeniem. "Kwadrat" analogicznie to po prostu RECT
+// z równymi bokami.
+export type LayoutItemShape = "RECT" | "OVAL" | "TRIANGLE" | "RHOMBUS";
 
 export interface LayoutItem {
   id: string;
@@ -144,6 +169,9 @@ export interface LayoutItem {
   roomName: string;
   kind: LayoutItemKind;
   label: string | null;
+  // MARKER i ROOM_SHAPE: dowolna z LayoutItemShape, zmieniana w UI. WALL:
+  // ignorowane (zawsze renderowane jako prostokąt).
+  shape: LayoutItemShape;
   x: number;
   y: number;
   width: number;
