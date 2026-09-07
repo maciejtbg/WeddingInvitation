@@ -35,6 +35,8 @@ export interface Wedding {
   venueName: string | null;
   venueAddress: string | null;
   story: string | null;
+  // Link do filmu (YouTube/Vimeo/inny) pokazywany obok historii pary.
+  videoUrl: string | null;
   theme: ThemeId;
   seatingMode: SeatingMode;
   giftNote: string | null;

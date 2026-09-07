@@ -186,6 +186,47 @@ boczny do przypisywania gości do konkretnych miejsc.
   testowej - w połączeniu z Konva i headless Chromium bez GPU powoduje to
   zawieszenie strony na 100% CPU bez żadnego błędu w konsoli (opisane
   dokładnie w komentarzu na górze `scripts/smoke-tables.mjs`).
+- Para może: zmienić nazwę stołu (kliknięcie nazwy w panelu bocznym),
+  zmienić liczbę miejsc strzałkami +/- (przydatne przy zsuniętych/
+  rozsuniętych stołach - zmniejszenie zwalnia gościa z usuwanego miejsca na
+  brzegu zamiast blokować zmianę), i zobaczyć nazwę grupy, dla której stół
+  jest zarezerwowany (`GROUP_CONSTRAINED`, patrz sekcja "Tryby
+  rozmieszczania gości") bezpośrednio na kanwie, nie tylko na osobnej
+  stronie Grupy gości.
+
+## Poprawki czytelności i kilka błędów złapanych na żywym teście
+
+Zestaw poprawek po pierwszym prawdziwym code review "z zewnątrz" (osoba,
+która nie pisała kodu, testująca gotową appkę) - zostawione jako lekcje,
+bo żadna z tych trzech nie była oczywista z samego kodu:
+
+- **Ciemne tło pod białymi kartami w panelu pary, prawie niewidoczny tekst
+  we wpisywanych polach** - `src/app/globals.css` miał niedotknięty,
+  pozostały po szablonie startowym Next.js `@media (prefers-color-scheme:
+  dark)`, który na systemie z ciemnym motywem zamieniał tło strony na
+  czarne i domyślny kolor tekstu na prawie biały - żaden formularz w tej
+  appce nie był projektowany z myślą o trybie ciemnym. Naprawa: usunięcie
+  tego bloku + `color-scheme: light` na `:root` (każe przeglądarce
+  renderować natywne kontrolki formularzy zawsze w jasnym wariancie,
+  niezależnie od ustawień systemu) + jawne `background/color` na
+  `input, textarea, select` w globalnym CSS.
+- **Pinezka na mapie (panel lokalizacji) to niezaładowany obrazek** -
+  domyślne ikonki Leaflet ładowane były z `unpkg.com`, którego CSP
+  (`img-src`, patrz `next.config.ts`, dodane przy pracy nad RODO) nie
+  wymieniał - przeglądarka po cichu blokowała obrazek, bez błędu widocznego
+  gdziekolwiek poza konsolą deweloperską. Naprawa: własne kopie plików w
+  `public/leaflet/` (skopiowane z `node_modules/leaflet/dist/images/`)
+  zamiast CDN - nie trzeba nawet zmieniać CSP, bo `img-src 'self'` już to
+  pokrywa.
+- **Polskie "ł" w adresie strony znikało, zamieniane na łącznik** (np.
+  "Chłop" → `ch-op`) - `slugify()` (`src/lib/db/weddings.ts`) czyścił
+  znaki diakrytyczne przez `.normalize("NFKD")`, co poprawnie rozkłada
+  ą/ę/ć/ń/ó/ś/ź/ż na literę bazową + osobny znak diakrytyczny, ale **nie**
+  "ł"/"Ł" - to osobny punkt kodowy Unicode (U+0142/U+0141), nie kombinacja
+  litery ze znakiem diakrytycznym, więc NFKD nic z nim nie robi, a kolejny
+  krok (wywalenie wszystkiego spoza `[a-z0-9]`) zamieniał go w myślnik.
+  Naprawa: jawna mapa transliteracji polskich znaków, zastosowana PRZED
+  normalizacją NFKD.
 
 ## Tryby rozmieszczania gości
 

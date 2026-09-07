@@ -118,7 +118,8 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
     weddingDate: readString(formData, "weddingDate") || undefined,
     venueName: readString(formData, "venueName") || undefined,
     venueAddress: readString(formData, "venueAddress") || undefined,
-    story: readString(formData, "story") || undefined,
+    story: readString(formData, "story") || null,
+    videoUrl: readString(formData, "videoUrl") || null,
     // Nieznana/pusta wartość jest ignorowana zamiast zapisana wprost do bazy -
     // formularz mógłby zostać wywołany bezpośrednim POST-em z dowolnym stringiem.
     theme: isThemeId(themeInput) ? themeInput : undefined,

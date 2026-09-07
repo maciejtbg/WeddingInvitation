@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
+/* Świadomie NIE ma tu @media (prefers-color-scheme: dark) - to był
+   pozostały po szablonie startowym Next.js automatyczny przełącznik na
+   ciemne tło/jasny tekst, którego reszta aplikacji (panel pary, formularze)
+   w ogóle nie uwzględniała projektowo. Efekt na systemie z ciemnym motywem:
+   czarne tło strony pod białymi "kartami" (panel pary) i prawie niewidoczny
+   tekst we wpisywanych polach formularzy (input/textarea/select dziedziczą
+   kolory systemowe w trybie ciemnym, jeśli się im jawnie nie każe być
+   jasnymi) - dokładnie to zgłoszone jako "ciemne tło, białe okna" i "nie
+   widać co się wpisuje". `color-scheme: light` niżej każe przeglądarce
+   renderować WSZYSTKIE natywne kontrolki (pola, scrollbary) w jasnym
+   wariancie, niezależnie od ustawień systemu. */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -12,15 +24,18 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Domyślne kolory pól formularzy w całej aplikacji - część stron (panel
+   pary) nie ustawia tego jawnie na każdym polu z osobna, więc bez tego
+   dziedziczą wygląd systemowy zamiast jasnego motywu appki. */
+input,
+textarea,
+select {
+  background-color: #ffffff;
+  color: #18181b;
 }

@@ -18,7 +18,7 @@ export default function LanguageSwitcher({ currentLocale, returnTo, dict }: Prop
   const isMoreLanguage = MORE_LANGUAGES.some((l) => l.code === currentLocale);
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-center gap-1.5">
+    <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
       {QUICK_LANGUAGES.map((lang) => (
         <form key={lang.code} action={setLocaleAction}>
           <input type="hidden" name="locale" value={lang.code} />
@@ -27,22 +27,25 @@ export default function LanguageSwitcher({ currentLocale, returnTo, dict }: Prop
             type="submit"
             title={lang.label}
             aria-label={lang.label}
-            className={`rounded-full px-1.5 py-1 text-lg leading-none ${
+            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-sm font-medium transition-colors ${
               currentLocale === lang.code
-                ? "ring-2 ring-[var(--wd-accent)]"
-                : "opacity-60 hover:opacity-100"
+                ? "border-[var(--wd-accent)] bg-[var(--wd-accent)] text-[var(--wd-accent-text)]"
+                : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-text)] hover:border-[var(--wd-accent)]"
             }`}
           >
-            {lang.flag}
+            <span className="text-base leading-none" aria-hidden="true">
+              {lang.flag}
+            </span>
+            <span className="uppercase tracking-wide">{lang.code}</span>
           </button>
         </form>
       ))}
-      <form action={setLocaleAction} className="inline-flex items-center gap-1">
+      <form action={setLocaleAction} className="inline-flex items-center gap-1.5">
         <input type="hidden" name="returnTo" value={returnTo} />
         <select
           name="locale"
           defaultValue={isMoreLanguage ? currentLocale : ""}
-          className="rounded-full border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-1 text-xs text-[var(--wd-text)]"
+          className="rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface)] px-2.5 py-1.5 text-sm font-medium text-[var(--wd-text)]"
         >
           <option value="" disabled>
             {dict.moreLanguages}
@@ -55,7 +58,7 @@ export default function LanguageSwitcher({ currentLocale, returnTo, dict }: Prop
         </select>
         <button
           type="submit"
-          className="rounded-full border border-[var(--wd-border)] px-2 py-1 text-xs text-[var(--wd-text)] hover:border-[var(--wd-accent)]"
+          className="rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface)] px-3 py-1.5 text-sm font-medium text-[var(--wd-text)] hover:border-[var(--wd-accent)]"
         >
           OK
         </button>

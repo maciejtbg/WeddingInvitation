@@ -42,11 +42,13 @@ export default function LocationMapPicker() {
     if (!containerRef.current || mapRef.current) return;
 
     // Domyślne ikonki Leaflet odwołują się do względnych URL-i, które po
-    // zbundlowaniu przez Next.js nie istnieją - podajemy je jawnie z CDN.
+    // zbundlowaniu przez Next.js nie istnieją - podajemy je jawnie, z
+    // własnych kopii w public/leaflet/ (nie z CDN - blokowane przez CSP,
+    // patrz next.config.ts i komentarz w LocationsMap.tsx).
     L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+      iconUrl: "/leaflet/marker-icon.png",
+      shadowUrl: "/leaflet/marker-shadow.png",
     });
 
     const map = L.map(containerRef.current).setView(DEFAULT_CENTER, DEFAULT_ZOOM);

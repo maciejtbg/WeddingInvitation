@@ -13,6 +13,7 @@ import { listPhotos } from "@/lib/db/photos";
 import { listScheduleItems } from "@/lib/db/schedule";
 import { listFaqItems } from "@/lib/db/faq";
 import { googleCalendarUrl } from "@/lib/calendarInvite";
+import { toEmbedUrl } from "@/lib/videoEmbed";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
@@ -138,6 +139,33 @@ export default async function WeddingPublicPage({
           <p className="mx-auto mb-8 max-w-md whitespace-pre-line text-[var(--wd-text)]">
             {wedding.story}
           </p>
+        )}
+        {wedding.videoUrl && (
+          <div className="mx-auto mb-8 max-w-md">
+            {(() => {
+              const embedUrl = toEmbedUrl(wedding.videoUrl);
+              return embedUrl ? (
+                <div className="aspect-video overflow-hidden rounded-lg border border-[var(--wd-border)]">
+                  <iframe
+                    src={embedUrl}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Film"
+                  />
+                </div>
+              ) : (
+                <a
+                  href={wedding.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--wd-accent)] underline"
+                >
+                  🎬 Zobacz film
+                </a>
+              );
+            })()}
+          </div>
         )}
         {wedding.giftNote && (
           <p className="mx-auto mb-8 max-w-md whitespace-pre-line rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3 text-sm text-[var(--wd-muted)]">

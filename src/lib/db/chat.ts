@@ -52,3 +52,24 @@ export function listGuestIdsWithMessages(weddingId: string): string[] {
     .all(weddingId) as { guestId: string }[];
   return rows.map((r) => r.guestId);
 }
+
+/** Gość "czeka na odpowiedź", jeśli jego OSTATNIA wiadomość w wątku jest od
+ * niego (GUEST), nie od pary - prosty sposób na "nieprzeczytane" bez osobnej
+ * kolumny/tabeli śledzącej stan przeczytania. Używane do odznaki na liście
+ * gości i w panelu głównym (src/app/admin/guests/page.tsx,
+ * src/app/admin/page.tsx) - czat jest schowany pod "Czat" przy każdym
+ * gościu z osobna (patrz model prywatności w README), więc bez takiej
+ * odznaki para łatwo przeoczy, że ktoś napisał. */
+export function listGuestIdsAwaitingReply(weddingId: string): string[] {
+  const rows = db
+    .prepare(
+      `SELECT guest_id as guestId FROM chat_messages cm
+       WHERE wedding_id = ? AND sender = 'GUEST'
+         AND created_at = (
+           SELECT MAX(created_at) FROM chat_messages
+           WHERE guest_id = cm.guest_id
+         )`
+    )
+    .all(weddingId) as { guestId: string }[];
+  return rows.map((r) => r.guestId);
+}

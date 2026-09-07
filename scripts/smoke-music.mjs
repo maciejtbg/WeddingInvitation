@@ -93,6 +93,15 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.waitForSelector("text=Nikt jeszcze nie poprosił o piosenkę");
   assert(true, "para usunęła zgłoszenie");
 
+  // --- Para sama dodaje piosenkę (np. dla DJ-a z dostępem do panelu) ---
+  await page.fill('input[name="q"]', "perfect ed sheeran");
+  await page.click('button:has-text("Szukaj")');
+  await page.waitForSelector('button:has-text("Dodaj")', { timeout: 10000 });
+  await page.locator('button:has-text("Dodaj")').first().click();
+  await page.waitForURL(/added=1/);
+  await page.waitForSelector("text=Ed Sheeran");
+  assert(true, "para sama dodała piosenkę do listy z poziomu panelu");
+
   await browser.close();
   console.log("\nWSZYSTKIE TESTY LISTY MUZYCZNEJ PRZESZŁY POMYŚLNIE");
 })().catch((err) => {

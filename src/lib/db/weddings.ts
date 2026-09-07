@@ -16,6 +16,7 @@ function rowToWedding(row: SqliteRow): Wedding {
     venueName: row.venue_name as string | null,
     venueAddress: row.venue_address as string | null,
     story: row.story as string | null,
+    videoUrl: row.video_url as string | null,
     // Obrona na wypadek starszego wiersza / nieznanej wartości w bazie -
     // zawsze wracamy z poprawnym ThemeId, nigdy z dowolnym stringiem.
     theme: isThemeId(rawTheme) ? rawTheme : DEFAULT_THEME,
@@ -29,18 +30,40 @@ function rowToWedding(row: SqliteRow): Wedding {
   };
 }
 
+// Polskie znaki, które NIE rozkładają się przez NFKD na literę bazową +
+// znak diakrytyczny (w odróżnieniu od np. ą/ę/ć/ń/ó/ś/ź/ż, które rozkładają
+// się poprawnie) - przede wszystkim "ł"/"Ł" (U+0142/U+0141, osobny punkt
+// kodowy, nie litera "l" ze skreśleniem jako oddzielny znak). Bez tej mapy
+// "ł" przechodziło przez NFKD bez zmian, a potem trafiało do tego samego
+// regexa co spacja - stąd np. "Chłop" → "ch-op" (litera po prostu znikała,
+// zamieniona na łącznik) zamiast oczekiwanego "chlop". Mapa obejmuje też
+// resztę liter z ogonkami/kreskami na wszelki wypadek (odporność na
+// nietypowe formy Unicode wejścia), nie tylko "ł".
+const POLISH_TRANSLITERATION: Record<string, string> = {
+  ą: "a",
+  ć: "c",
+  ę: "e",
+  ł: "l",
+  ń: "n",
+  ó: "o",
+  ś: "s",
+  ź: "z",
+  ż: "z",
+};
+
 export function slugify(text: string): string {
   return text
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "") // usuń polskie znaki diakrytyczne
     .toLowerCase()
+    .replace(/[ąćęłńóśźż]/g, (ch) => POLISH_TRANSLITERATION[ch] ?? ch)
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "") // usuń pozostałe znaki diakrytyczne (np. akcenty spoza polskiego)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
 
 /** Generuje unikalny slug na bazie imion pary, dokładając numer, gdy zajęty. */
 export function generateUniqueSlug(partner1Name: string, partner2Name: string): string {
-  const base = slugify(`${partner1Name}-i-${partner2Name}`) || "wesele";
+  const base = slugify(`${partner1Name}-${partner2Name}`) || "wesele";
   let candidate = base;
   let i = 2;
   while (findWeddingBySlug(candidate)) {
@@ -94,6 +117,7 @@ export function updateWeddingDetails(
       | "venueName"
       | "venueAddress"
       | "story"
+      | "videoUrl"
       | "theme"
       | "seatingMode"
       | "giftNote"
@@ -108,6 +132,7 @@ export function updateWeddingDetails(
     venueName: "venue_name",
     venueAddress: "venue_address",
     story: "story",
+    videoUrl: "video_url",
     theme: "theme",
     seatingMode: "seating_mode",
     giftNote: "gift_note",

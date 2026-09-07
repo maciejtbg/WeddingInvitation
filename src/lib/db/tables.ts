@@ -144,6 +144,31 @@ export function adminRenameTable(
   return adminFindTableById(weddingId, tableId);
 }
 
+/** Zmienia liczbę miejsc przy stole - w górę (np. dostawiono krzesła) albo
+ * w dół (np. rozłączono dwa zsunięte stoły, zostaje mniej miejsc na
+ * brzegu). Zmniejszenie poniżej obecnie zajętego numeru miejsca ZWALNIA
+ * tych gości (usuwa ich przypisanie, nie kasuje samego gościa) - para
+ * musi ich potem ręcznie posadzić gdzie indziej, ale to bezpieczniejsze niż
+ * po cichu zablokować zmianę liczby miejsc z powodu jednego zajętego krzesła
+ * na samym brzegu. */
+export function adminUpdateSeatsCount(
+  weddingId: string,
+  tableId: string,
+  seatsCount: number
+): WeddingTable | null {
+  db.prepare(
+    `DELETE FROM seat_assignments
+     WHERE table_id = ? AND seat_index >= ?
+       AND table_id IN (SELECT id FROM tables_ WHERE id = ? AND wedding_id = ?)`
+  ).run(tableId, seatsCount, tableId, weddingId);
+  db.prepare("UPDATE tables_ SET seats_count = ? WHERE id = ? AND wedding_id = ?").run(
+    seatsCount,
+    tableId,
+    weddingId
+  );
+  return adminFindTableById(weddingId, tableId);
+}
+
 export function adminDeleteTable(weddingId: string, tableId: string): void {
   // ON DELETE CASCADE w schemacie seat_assignments sprząta przypisania
   // gości do tego stołu automatycznie.

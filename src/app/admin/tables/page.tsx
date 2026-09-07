@@ -3,6 +3,7 @@ import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingsByCouple } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
 import { adminGetPlannerSnapshot } from "@/lib/db/tables";
+import { adminListGroupNamesByTable } from "@/lib/db/groups";
 import TablePlanner from "@/components/TablePlannerLoader";
 
 export default async function TablesPage() {
@@ -19,6 +20,7 @@ export default async function TablesPage() {
 
   const { tables, seats } = adminGetPlannerSnapshot(wedding.id);
   const guests = adminListGuests(wedding.id);
+  const groupNamesByTable = adminListGroupNamesByTable(wedding.id);
 
   return (
     <div className="flex h-screen flex-col">
@@ -36,6 +38,7 @@ export default async function TablesPage() {
           initialTables={tables}
           initialSeats={seats}
           guests={guests}
+          groupNamesByTable={groupNamesByTable}
         />
       </div>
     </div>

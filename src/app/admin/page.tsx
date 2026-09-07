@@ -5,6 +5,7 @@ import { THEME_LIST } from "@/lib/themes";
 import { SEATING_MODE_LIST } from "@/lib/seatingModes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import { adminListSeatChangeRequests } from "@/lib/db/seatRequests";
+import { listGuestIdsAwaitingReply } from "@/lib/db/chat";
 import { updateWeddingAction, publishWeddingAction, logoutCoupleAction } from "./actions";
 
 export default async function AdminDashboardPage({
@@ -18,6 +19,7 @@ export default async function AdminDashboardPage({
   const pendingSeatRequests = wedding
     ? adminListSeatChangeRequests(wedding.id).filter((r) => r.status === "PENDING").length
     : 0;
+  const awaitingReplyCount = wedding ? listGuestIdsAwaitingReply(wedding.id).length : 0;
 
   if (!wedding) {
     // W praktyce nie powinno się zdarzyć (rejestracja tworzy wesele od razu),
@@ -55,10 +57,14 @@ export default async function AdminDashboardPage({
         </p>
       )}
 
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4">
         <div className="flex-1">
-          <p className="text-sm text-zinc-500">Wasz adres</p>
-          <p className="font-mono text-sm text-zinc-900">/w/{wedding.slug}</p>
+          <p className="text-sm font-medium text-rose-900">Podgląd Waszego zaproszenia</p>
+          <p className="font-mono text-sm text-rose-700">/w/{wedding.slug}</p>
+          <p className="mt-0.5 text-xs text-rose-600">
+            Dokładnie to (historia, zdjęcia, harmonogram, FAQ...) zobaczy każdy gość po
+            wejściu na stronę - sprawdźcie, zanim wyślecie zaproszenia.
+          </p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${
@@ -72,15 +78,20 @@ export default async function AdminDashboardPage({
         <Link
           href={`/w/${wedding.slug}`}
           target="_blank"
-          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+          className="rounded-full bg-rose-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-rose-700"
         >
-          Zobacz stronę
+          👁 Zobacz podgląd
         </Link>
         <Link
           href={`/admin/guests?weddingId=${wedding.id}`}
-          className="rounded-full bg-zinc-900 px-4 py-1.5 text-sm text-white hover:bg-zinc-700"
+          className="relative rounded-full bg-zinc-900 px-4 py-1.5 text-sm text-white hover:bg-zinc-700"
         >
           Zarządzaj gośćmi
+          {awaitingReplyCount > 0 && (
+            <span className="ml-2 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-medium text-amber-950">
+              💬 {awaitingReplyCount}
+            </span>
+          )}
         </Link>
         <Link
           href="/admin/tables"
@@ -200,12 +211,34 @@ export default async function AdminDashboardPage({
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-zinc-700">
-              Kilka słów dla gości
+              Wasza historia
             </label>
+            <p className="mb-1.5 text-xs text-zinc-500">
+              Jak się poznaliście, jak wyglądały zaręczyny - to, co zobaczą goście na
+              stronie głównej zaproszenia, zanim zalogują się swoim linkiem.
+            </p>
             <textarea
               name="story"
               rows={4}
+              placeholder="Poznaliśmy się w..."
               defaultValue={wedding.story ?? ""}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Link do filmu (opcjonalnie)
+            </label>
+            <p className="mb-1.5 text-xs text-zinc-500">
+              Np. link YouTube/Vimeo do teledysku zaręczynowego albo zaproszenia wideo -
+              pojawi się na stronie głównej obok historii.
+            </p>
+            <input
+              type="url"
+              name="videoUrl"
+              placeholder="https://www.youtube.com/watch?v=..."
+              defaultValue={wedding.videoUrl ?? ""}
               className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
           </div>

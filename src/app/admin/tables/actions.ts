@@ -25,8 +25,11 @@ import {
   adminDeleteTable,
   adminUpdateTablePosition,
   adminUpdateTableShape,
+  adminRenameTable,
+  adminUpdateSeatsCount,
   adminAssignSeat,
   adminUnassignGuest,
+  adminListSeats,
 } from "@/lib/db/tables";
 import type { TableShape, WeddingTable, SeatWithGuestName } from "@/lib/db/types";
 
@@ -75,6 +78,34 @@ export async function updateTableShapeAction(
   const table = adminUpdateTableShape(wedding.id, tableId, shape);
   if (!table) throw new Error("Nie znaleziono stołu");
   return table;
+}
+
+export async function renameTableAction(
+  weddingId: string,
+  tableId: string,
+  label: string
+): Promise<WeddingTable> {
+  const wedding = await requireOwnedWedding(weddingId);
+  const trimmed = label.trim();
+  if (!trimmed) throw new Error("Nazwa stołu nie może być pusta");
+  const table = adminRenameTable(wedding.id, tableId, trimmed);
+  if (!table) throw new Error("Nie znaleziono stołu");
+  return table;
+}
+
+export async function updateSeatsCountAction(
+  weddingId: string,
+  tableId: string,
+  seatsCount: number
+): Promise<{ table: WeddingTable; seats: SeatWithGuestName[] }> {
+  const wedding = await requireOwnedWedding(weddingId);
+  if (!Number.isInteger(seatsCount) || seatsCount < 1 || seatsCount > 24) {
+    throw new Error("Liczba miejsc musi być liczbą całkowitą od 1 do 24");
+  }
+  const table = adminUpdateSeatsCount(wedding.id, tableId, seatsCount);
+  if (!table) throw new Error("Nie znaleziono stołu");
+  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
+  return { table, seats: adminListSeats(wedding.id) };
 }
 
 export async function deleteTableAction(weddingId: string, tableId: string): Promise<void> {

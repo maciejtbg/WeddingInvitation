@@ -83,6 +83,27 @@ export function adminListAllowancesByGroup(weddingId: string): Record<string, st
   return map;
 }
 
+/** Odwrotność adminListAllowancesByGroup: mapa tableId -> lista nazw grup,
+ * którym ten stół jest dozwolony - do pokazania "czyj to stół" bezpośrednio
+ * w planerze (src/components/TablePlanner.tsx), bez przełączania się na
+ * osobną stronę Grupy gości. */
+export function adminListGroupNamesByTable(weddingId: string): Record<string, string[]> {
+  const rows = db
+    .prepare(
+      `SELECT gta.table_id, gg.name
+       FROM group_table_allowances gta
+       JOIN guest_groups gg ON gg.id = gta.group_id
+       WHERE gg.wedding_id = ?
+       ORDER BY gg.name ASC`
+    )
+    .all(weddingId) as { table_id: string; name: string }[];
+  const map: Record<string, string[]> = {};
+  for (const row of rows) {
+    (map[row.table_id] ??= []).push(row.name);
+  }
+  return map;
+}
+
 export function adminSetGroupTableAllowance(
   groupId: string,
   tableId: string,

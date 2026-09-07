@@ -35,10 +35,15 @@ export default function LocationsMap({ locations }: Props) {
   useEffect(() => {
     if (!containerRef.current || locations.length === 0) return;
 
+    // Własne kopie w public/leaflet/ (patrz src/lib/db/client.ts dla analogii
+    // "trzymamy lokalnie zamiast po CDN") - domyślne ikonki Leaflet, wcześniej
+    // ładowane z unpkg.com, były blokowane przez CSP (img-src nie wymieniał
+    // tej domeny - patrz next.config.ts), co objawiało się jako niezaładowany
+    // obrazek zamiast pinezki na mapie.
     L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+      iconUrl: "/leaflet/marker-icon.png",
+      shadowUrl: "/leaflet/marker-shadow.png",
     });
 
     const map = L.map(containerRef.current);

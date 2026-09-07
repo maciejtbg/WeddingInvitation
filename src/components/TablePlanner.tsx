@@ -18,6 +18,8 @@ import {
   unassignSeatAction,
   updateTablePositionAction,
   updateTableShapeAction,
+  renameTableAction,
+  updateSeatsCountAction,
 } from "@/app/admin/tables/actions";
 import { deleteTableLocal, loadTablesLocal, saveTableLocal } from "@/lib/tablePlannerLocalStore";
 
@@ -26,6 +28,10 @@ interface Props {
   initialTables: WeddingTable[];
   initialSeats: SeatWithGuestName[];
   guests: Guest[];
+  /** tableId -> nazwy grup, którym ten stół jest dozwolony (patrz
+   * src/lib/db/groups.ts, adminListGroupNamesByTable) - puste, jeśli stół
+   * nie jest ograniczony do żadnej konkretnej grupy. */
+  groupNamesByTable: Record<string, string[]>;
 }
 
 const SEAT_RADIUS = 9;
@@ -35,7 +41,13 @@ const RECT_H = 64;
 const SAVE_DEBOUNCE_MS = 600;
 const DEFAULT_ROOM = "Sala główna";
 
-export default function TablePlanner({ weddingId, initialTables, initialSeats, guests }: Props) {
+export default function TablePlanner({
+  weddingId,
+  initialTables,
+  initialSeats,
+  guests,
+  groupNamesByTable,
+}: Props) {
   const [tables, setTables] = useState<WeddingTable[]>(initialTables);
   const [seats, setSeats] = useState<SeatWithGuestName[]>(initialSeats);
   const [rooms, setRooms] = useState<string[]>(() => {
@@ -179,6 +191,54 @@ export default function TablePlanner({ weddingId, initialTables, initialSeats, g
     }
   }
 
+  function handleRename(table: WeddingTable) {
+    const name = window.prompt("Nowa nazwa stołu:", table.label);
+    const trimmed = name?.trim();
+    if (!trimmed || trimmed === table.label) return;
+    renameTableAction(weddingId, table.id, trimmed)
+      .then((updated) => {
+        setTables((prev) => prev.map((t) => (t.id === table.id ? updated : t)));
+        saveTableLocal(updated).catch(() => {});
+      })
+      .catch((err) => reportError(err));
+  }
+
+  /** delta = +1/-1 - zmiana liczby miejsc o jeden na kliknięcie, prościej
+   * niż pole liczbowe do wpisania ręcznie, a przy okazji nie da się wpisać
+   * przypadkiem czegoś spoza sensownego zakresu. Zmniejszenie poniżej
+   * numeru zajętego miejsca zwalnia gościa z tego miejsca (patrz komentarz
+   * przy adminUpdateSeatsCount w src/lib/db/tables.ts) - ostrzegamy o tym
+   * przed wysłaniem, żeby nie zaskoczyć pary. */
+  async function handleSeatsCountChange(table: WeddingTable, delta: number) {
+    const nextCount = table.seatsCount + delta;
+    if (nextCount < 1 || nextCount > 24) return;
+    const removedSeats = (seatsByTable.get(table.id) ?? []).filter(
+      (s) => s.seatIndex >= nextCount
+    );
+    if (
+      removedSeats.length > 0 &&
+      !window.confirm(
+        `Zmniejszenie liczby miejsc zwolni ${removedSeats.length === 1 ? "gościa" : "gości"}: ${removedSeats
+          .map((s) => `${s.guestFirstName} ${s.guestLastName ?? ""}`.trim())
+          .join(", ")}. Kontynuować?`
+      )
+    ) {
+      return;
+    }
+    try {
+      const { table: updated, seats: updatedSeats } = await updateSeatsCountAction(
+        weddingId,
+        table.id,
+        nextCount
+      );
+      setTables((prev) => prev.map((t) => (t.id === table.id ? updated : t)));
+      setSeats(updatedSeats);
+      saveTableLocal(updated).catch(() => {});
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
   async function handleAssign(table: WeddingTable, seatIndex: number, guestId: string) {
     try {
       const updatedSeats = await assignSeatAction(weddingId, table.id, guestId, seatIndex);
@@ -294,10 +354,22 @@ export default function TablePlanner({ weddingId, initialTables, initialSeats, g
                       align="center"
                       width={table.shape === "ROUND" ? TABLE_RADIUS * 2 : RECT_W}
                       x={table.shape === "ROUND" ? -TABLE_RADIUS : -RECT_W / 2}
-                      y={-7}
+                      y={groupNamesByTable[table.id]?.length ? -14 : -7}
                       fontSize={13}
+                      fontStyle="bold"
                       fill="#3f3f46"
                     />
+                    {!!groupNamesByTable[table.id]?.length && (
+                      <Text
+                        text={groupNamesByTable[table.id].join(", ")}
+                        align="center"
+                        width={table.shape === "ROUND" ? TABLE_RADIUS * 2 : RECT_W}
+                        x={table.shape === "ROUND" ? -TABLE_RADIUS : -RECT_W / 2}
+                        y={4}
+                        fontSize={10}
+                        fill="#7c2d12"
+                      />
+                    )}
                     {seatPositions(table).map((pos, seatIndex) => {
                       const occupied = tableSeats.find((s) => s.seatIndex === seatIndex);
                       return (
@@ -323,7 +395,14 @@ export default function TablePlanner({ weddingId, initialTables, initialSeats, g
       {selectedTable && (
         <div className="w-80 shrink-0 overflow-y-auto border-l border-zinc-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-900">{selectedTable.label}</h2>
+            <button
+              type="button"
+              onClick={() => handleRename(selectedTable)}
+              className="text-sm font-semibold text-zinc-900 underline decoration-dotted underline-offset-2 hover:text-zinc-600"
+              title="Kliknij, żeby zmienić nazwę"
+            >
+              {selectedTable.label}
+            </button>
             <button
               type="button"
               onClick={() => setSelectedTableId(null)}
@@ -332,6 +411,11 @@ export default function TablePlanner({ weddingId, initialTables, initialSeats, g
               Zamknij
             </button>
           </div>
+          {!!groupNamesByTable[selectedTable.id]?.length && (
+            <p className="mb-3 text-xs text-amber-800">
+              Zarezerwowany dla: {groupNamesByTable[selectedTable.id].join(", ")}
+            </p>
+          )}
 
           <div className="mb-4 flex gap-2">
             <button
@@ -357,9 +441,31 @@ export default function TablePlanner({ weddingId, initialTables, initialSeats, g
             </button>
           </div>
 
-          <p className="mb-2 text-xs font-medium text-zinc-500">
-            Miejsca ({selectedTable.seatsCount})
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-medium text-zinc-500">
+              Miejsca ({selectedTable.seatsCount})
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleSeatsCountChange(selectedTable, -1)}
+                disabled={selectedTable.seatsCount <= 1}
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400 disabled:opacity-30"
+                title="Usuń jedno miejsce (z brzegu)"
+              >
+                −
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSeatsCountChange(selectedTable, 1)}
+                disabled={selectedTable.seatsCount >= 24}
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400 disabled:opacity-30"
+                title="Dodaj jedno miejsce"
+              >
+                +
+              </button>
+            </div>
+          </div>
           <div className="space-y-2">
             {Array.from({ length: selectedTable.seatsCount }).map((_, seatIndex) => {
               const seat = selectedTableSeats.find((s) => s.seatIndex === seatIndex);

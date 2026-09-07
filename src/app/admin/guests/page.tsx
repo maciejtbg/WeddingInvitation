@@ -4,6 +4,7 @@ import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
 import { adminListGroups } from "@/lib/db/groups";
+import { listGuestIdsAwaitingReply } from "@/lib/db/chat";
 import { addGuestAction, deleteGuestAction, assignGuestGroupAction } from "../actions";
 import CopyLinkButton from "@/components/CopyLinkButton";
 
@@ -28,6 +29,7 @@ export default async function GuestsPage({
 
   const guests = adminListGuests(wedding.id);
   const groups = adminListGroups(wedding.id);
+  const awaitingReply = new Set(listGuestIdsAwaitingReply(wedding.id));
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -45,6 +47,14 @@ export default async function GuestsPage({
           </Link>
         </div>
       </div>
+
+      {awaitingReply.size > 0 && (
+        <p className="mb-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          💬 {awaitingReply.size}{" "}
+          {awaitingReply.size === 1 ? "gość czeka" : "gości czeka"} na Waszą odpowiedź w
+          czacie - patrz podświetlone przyciski &bdquo;Czat&rdquo; niżej.
+        </p>
+      )}
 
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-medium text-zinc-900">Dodaj gościa</h2>
@@ -160,9 +170,13 @@ export default async function GuestsPage({
               )}
               <Link
                 href={`/admin/guests/${guest.id}?weddingId=${wedding.id}`}
-                className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
+                className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  awaitingReply.has(guest.id)
+                    ? "border-amber-400 bg-amber-100 text-amber-900 hover:border-amber-500"
+                    : "border-zinc-300 text-zinc-700 hover:border-zinc-400"
+                }`}
               >
-                Czat
+                Czat{awaitingReply.has(guest.id) ? " 💬" : ""}
               </Link>
               <form action={deleteGuestAction}>
                 <input type="hidden" name="weddingId" value={wedding.id} />

@@ -37,6 +37,7 @@ function rowToWedding(row: Record<string, unknown>): Wedding {
     venueName: row.venue_name as string | null,
     venueAddress: row.venue_address as string | null,
     story: row.story as string | null,
+    videoUrl: row.video_url as string | null,
     theme: row.theme as Wedding["theme"],
     seatingMode: row.seating_mode as Wedding["seatingMode"],
     giftNote: row.gift_note as string | null,

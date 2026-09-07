@@ -24,6 +24,9 @@ const CSP = [
   // Wyszukiwanie adresu w panelu pary (src/components/LocationMapPicker.tsx)
   // odpytuje Nominatim bezpośrednio z przeglądarki.
   "connect-src 'self' https://nominatim.openstreetmap.org",
+  // Osadzony film na stronie głównej zaproszenia (opcjonalny link
+  // YouTube/Vimeo od pary) - patrz src/lib/videoEmbed.ts.
+  "frame-src https://www.youtube-nocookie.com https://player.vimeo.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
