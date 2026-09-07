@@ -31,7 +31,20 @@ import {
   adminUnassignGuest,
   adminListSeats,
 } from "@/lib/db/tables";
-import type { TableShape, WeddingTable, SeatWithGuestName } from "@/lib/db/types";
+import {
+  adminCreateLayoutItem,
+  adminUpdateLayoutItemPosition,
+  adminRenameLayoutItem,
+  adminResizeLayoutItem,
+  adminDeleteLayoutItem,
+} from "@/lib/db/layoutItems";
+import type {
+  TableShape,
+  WeddingTable,
+  SeatWithGuestName,
+  LayoutItem,
+  LayoutItemKind,
+} from "@/lib/db/types";
 
 async function requireOwnedWedding(weddingId: string) {
   const session = await getCoupleSession();
@@ -133,4 +146,72 @@ export async function unassignSeatAction(
   const seats = adminUnassignGuest(wedding.id, guestId);
   revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
   return seats;
+}
+
+// --- Elementy planu sali: znaczniki (DJ, bufet...) i ściany ---
+// Patrz src/lib/db/layoutItems.ts - dzielą jedną tabelę, bo to ten sam
+// rodzaj obiektu z punktu widzenia kanwy (coś przeciąganego po planie sali,
+// nie będącego stołem).
+
+export async function createLayoutItemAction(
+  weddingId: string,
+  params: {
+    roomName: string;
+    kind: LayoutItemKind;
+    label?: string | null;
+    x: number;
+    y: number;
+    width?: number;
+    height?: number;
+  }
+): Promise<LayoutItem> {
+  const wedding = await requireOwnedWedding(weddingId);
+  return adminCreateLayoutItem({ weddingId: wedding.id, ...params });
+}
+
+export async function updateLayoutItemPositionAction(
+  weddingId: string,
+  itemId: string,
+  x: number,
+  y: number,
+  rotation: number
+): Promise<void> {
+  const wedding = await requireOwnedWedding(weddingId);
+  adminUpdateLayoutItemPosition(wedding.id, itemId, { x, y, rotation });
+}
+
+export async function renameLayoutItemAction(
+  weddingId: string,
+  itemId: string,
+  label: string
+): Promise<LayoutItem> {
+  const wedding = await requireOwnedWedding(weddingId);
+  const trimmed = label.trim();
+  if (!trimmed) throw new Error("Nazwa znacznika nie może być pusta");
+  const item = adminRenameLayoutItem(wedding.id, itemId, trimmed);
+  if (!item) throw new Error("Nie znaleziono elementu");
+  return item;
+}
+
+export async function resizeLayoutItemAction(
+  weddingId: string,
+  itemId: string,
+  width: number,
+  height: number
+): Promise<LayoutItem> {
+  const wedding = await requireOwnedWedding(weddingId);
+  if (!Number.isFinite(width) || width < 20 || width > 1000) {
+    throw new Error("Szerokość ściany musi być liczbą od 20 do 1000");
+  }
+  if (!Number.isFinite(height) || height < 10 || height > 1000) {
+    throw new Error("Grubość ściany musi być liczbą od 10 do 1000");
+  }
+  const item = adminResizeLayoutItem(wedding.id, itemId, { width, height });
+  if (!item) throw new Error("Nie znaleziono elementu");
+  return item;
+}
+
+export async function deleteLayoutItemAction(weddingId: string, itemId: string): Promise<void> {
+  const wedding = await requireOwnedWedding(weddingId);
+  adminDeleteLayoutItem(wedding.id, itemId);
 }

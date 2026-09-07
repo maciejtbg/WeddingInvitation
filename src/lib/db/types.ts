@@ -135,6 +135,22 @@ export interface WeddingTable {
   seatsCount: number;
 }
 
+// Elementy planu sali inne niż stół - patrz src/lib/db/layoutItems.ts.
+export type LayoutItemKind = "MARKER" | "WALL";
+
+export interface LayoutItem {
+  id: string;
+  weddingId: string;
+  roomName: string;
+  kind: LayoutItemKind;
+  label: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+}
+
 export interface SeatAssignment {
   id: string;
   tableId: string;

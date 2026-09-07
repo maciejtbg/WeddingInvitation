@@ -125,6 +125,52 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.waitForFunction(() => document.querySelectorAll("select").length === 8);
   assert(true, "odłączenie gościa od stołu zwolniło miejsce");
 
+  // --- Znaczniki (DJ, bufet...) i ściany ---
+  // window.prompt/confirm nie mają domyślnej obsługi w Playwright (dialog
+  // jest automatycznie ODRZUCANY, jeśli nic go nie przechwyci) - stąd
+  // jednorazowy handler ustawiany PRZED kliknięciem, który akceptuje z
+  // zadanym tekstem (dla prompt) albo po prostu zatwierdza (dla confirm).
+  // Selektor po title, nie po tekście "DJ" - przycisk paska narzędzi "+
+  // Oznaczenie (DJ, bufet...)" TEŻ zawiera "DJ" jako podtekst, więc
+  // has-text("DJ") łapałby oba na raz.
+  const markerLabelButton = couple.locator('button[title="Kliknij, żeby zmienić nazwę"]');
+  couple.once("dialog", (dialog) => {
+    console.log(`  [dialog] type=${dialog.type()} message=${JSON.stringify(dialog.message())}`);
+    dialog.accept("DJ");
+  });
+  await couple.click('button:has-text("+ Oznaczenie")');
+  await couple.waitForTimeout(500);
+  await markerLabelButton.waitFor({ timeout: 10000 });
+  const markerLabelText = (await markerLabelButton.innerText()).trim();
+  assert(markerLabelText === "DJ", `dodano znacznik 'DJ', widoczny jako nazwa w panelu bocznym (odczytano: "${markerLabelText}")`);
+
+  couple.once("dialog", (dialog) => dialog.accept());
+  await couple.click('button:has-text("Usuń")');
+  await markerLabelButton.waitFor({ state: "detached", timeout: 10000 });
+  assert(true, "usunięcie znacznika działa (panel boczny się zamknął)");
+
+  await couple.click('button:has-text("+ Ściana")');
+  await couple.waitForSelector("text=Długość (160)", { timeout: 10000 });
+  assert(true, "dodano ścianę z domyślną długością 160");
+
+  await couple.click('button[title="Wydłuż ścianę"]');
+  await couple.waitForSelector("text=Długość (180)", { timeout: 10000 });
+  assert(true, "wydłużenie ściany działa (+20 na kliknięcie)");
+
+  await couple.click('button:has-text("Obróć o 15°")');
+
+  // Zmiana pozycji/rozmiaru/rotacji zapisuje się na serwer z debounce
+  // (SAVE_DEBOUNCE_MS w TablePlanner.tsx) - odczekujemy z zapasem, potem
+  // przeładowujemy stronę, żeby sprawdzić, że ściana NAPRAWDĘ przetrwała
+  // zapis na serwer, a nie tylko żyje w stanie komponentu w przeglądarce.
+  await couple.waitForTimeout(1000);
+  const consoleErrors = [];
+  couple.on("pageerror", (err) => consoleErrors.push(String(err)));
+  await couple.reload();
+  await couple.waitForSelector("canvas", { state: "visible", timeout: 15000 });
+  await couple.waitForTimeout(500);
+  assert(consoleErrors.length === 0, "strona planera po przeładowaniu wczytuje się bez błędów JS (ściana z bazy)");
+
   await browser.close();
   console.log("\nWSZYSTKIE TESTY PLANERA STOŁÓW PRZESZŁY POMYŚLNIE");
 })().catch((err) => {

@@ -10,7 +10,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Group, Layer, Rect, Stage, Text } from "react-konva";
-import type { Guest, SeatWithGuestName, TableShape, WeddingTable } from "@/lib/db/types";
+import type {
+  Guest,
+  SeatWithGuestName,
+  TableShape,
+  WeddingTable,
+  LayoutItem,
+} from "@/lib/db/types";
 import {
   assignSeatAction,
   createTableAction,
@@ -20,6 +26,11 @@ import {
   updateTableShapeAction,
   renameTableAction,
   updateSeatsCountAction,
+  createLayoutItemAction,
+  updateLayoutItemPositionAction,
+  renameLayoutItemAction,
+  resizeLayoutItemAction,
+  deleteLayoutItemAction,
 } from "@/app/admin/tables/actions";
 import { deleteTableLocal, loadTablesLocal, saveTableLocal } from "@/lib/tablePlannerLocalStore";
 
@@ -32,12 +43,15 @@ interface Props {
    * src/lib/db/groups.ts, adminListGroupNamesByTable) - puste, jeśli stół
    * nie jest ograniczony do żadnej konkretnej grupy. */
   groupNamesByTable: Record<string, string[]>;
+  /** Znaczniki (DJ, bufet...) i ściany - patrz src/lib/db/layoutItems.ts. */
+  initialLayoutItems: LayoutItem[];
 }
 
 const SEAT_RADIUS = 9;
 const TABLE_RADIUS = 46;
 const RECT_W = 130;
 const RECT_H = 64;
+const MARKER_RADIUS = 14;
 const SAVE_DEBOUNCE_MS = 600;
 const DEFAULT_ROOM = "Sala główna";
 
@@ -47,15 +61,18 @@ export default function TablePlanner({
   initialSeats,
   guests,
   groupNamesByTable,
+  initialLayoutItems,
 }: Props) {
   const [tables, setTables] = useState<WeddingTable[]>(initialTables);
   const [seats, setSeats] = useState<SeatWithGuestName[]>(initialSeats);
+  const [layoutItems, setLayoutItems] = useState<LayoutItem[]>(initialLayoutItems);
   const [rooms, setRooms] = useState<string[]>(() => {
     const fromTables = Array.from(new Set(initialTables.map((t) => t.roomName)));
     return fromTables.length > 0 ? fromTables : [DEFAULT_ROOM];
   });
   const [activeRoom, setActiveRoom] = useState<string>(rooms[0]);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [selectedLayoutItemId, setSelectedLayoutItemId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -98,6 +115,10 @@ export default function TablePlanner({
     () => tables.filter((t) => t.roomName === activeRoom),
     [tables, activeRoom]
   );
+  const layoutItemsInRoom = useMemo(
+    () => layoutItems.filter((i) => i.roomName === activeRoom),
+    [layoutItems, activeRoom]
+  );
 
   const seatsByTable = useMemo(() => {
     const map = new Map<string, SeatWithGuestName[]>();
@@ -112,6 +133,21 @@ export default function TablePlanner({
   const assignedGuestIds = useMemo(() => new Set(seats.map((s) => s.guestId)), [seats]);
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
   const selectedTableSeats = selectedTable ? seatsByTable.get(selectedTable.id) ?? [] : [];
+  const selectedLayoutItem = layoutItems.find((i) => i.id === selectedLayoutItemId) ?? null;
+
+  /** Tylko jedno zaznaczenie naraz - stół albo znacznik/ściana. */
+  function selectTable(id: string) {
+    setSelectedLayoutItemId(null);
+    setSelectedTableId(id);
+  }
+  function selectLayoutItem(id: string) {
+    setSelectedTableId(null);
+    setSelectedLayoutItemId(id);
+  }
+  function clearSelection() {
+    setSelectedTableId(null);
+    setSelectedLayoutItemId(null);
+  }
 
   function scheduleServerSave(table: WeddingTable) {
     saveTableLocal(table).catch(() => {
@@ -146,7 +182,7 @@ export default function TablePlanner({
       });
       setTables((prev) => [...prev, table]);
       saveTableLocal(table).catch(() => {});
-      setSelectedTableId(table.id);
+      selectTable(table.id);
     } catch (err) {
       reportError(err);
     }
@@ -158,7 +194,7 @@ export default function TablePlanner({
     if (!trimmed) return;
     setRooms((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
     setActiveRoom(trimmed);
-    setSelectedTableId(null);
+    clearSelection();
   }
 
   async function handleDeleteTable(table: WeddingTable) {
@@ -168,7 +204,7 @@ export default function TablePlanner({
       await deleteTableLocal(table.id).catch(() => {});
       setTables((prev) => prev.filter((t) => t.id !== table.id));
       setSeats((prev) => prev.filter((s) => s.tableId !== table.id));
-      setSelectedTableId(null);
+      clearSelection();
     } catch (err) {
       reportError(err);
     }
@@ -257,6 +293,107 @@ export default function TablePlanner({
     }
   }
 
+  // --- Znaczniki (DJ, bufet, fotobudka...) i ściany - patrz
+  // src/lib/db/layoutItems.ts. Świadomie WOLNY TEKST zamiast gotowego
+  // zestawu ikon dla znaczników - para najlepiej wie, jak nazwać to, co u
+  // niej stoi, a lista "typowych" miejsc na weselu jest w praktyce otwarta
+  // (fontanna czekoladowa? stół z tortem? namiot dla dzieci?).
+
+  async function handleAddMarker() {
+    const label = window.prompt(
+      "Co oznaczyć? (np. DJ, Orkiestra, Bufet, Fotobudka, Stół pary młodej)"
+    );
+    const trimmed = label?.trim();
+    if (!trimmed) return;
+    try {
+      const item = await createLayoutItemAction(weddingId, {
+        roomName: activeRoom,
+        kind: "MARKER",
+        label: trimmed,
+        x: 120 + (layoutItemsInRoom.length % 5) * 80,
+        y: 320,
+      });
+      setLayoutItems((prev) => [...prev, item]);
+      selectLayoutItem(item.id);
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
+  async function handleAddWall() {
+    try {
+      const item = await createLayoutItemAction(weddingId, {
+        roomName: activeRoom,
+        kind: "WALL",
+        x: 100,
+        y: 60 + (layoutItemsInRoom.length % 6) * 30,
+        width: 160,
+        height: 16,
+      });
+      setLayoutItems((prev) => [...prev, item]);
+      selectLayoutItem(item.id);
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
+  function scheduleLayoutItemSave(item: LayoutItem) {
+    clearTimeout(saveTimers.current[item.id]);
+    saveTimers.current[item.id] = setTimeout(() => {
+      updateLayoutItemPositionAction(weddingId, item.id, item.x, item.y, item.rotation).catch(
+        (err) => reportError(err)
+      );
+    }, SAVE_DEBOUNCE_MS);
+  }
+
+  function handleLayoutItemDragEnd(item: LayoutItem, x: number, y: number) {
+    const updated = { ...item, x, y };
+    setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
+    scheduleLayoutItemSave(updated);
+  }
+
+  function handleRotateWall(item: LayoutItem) {
+    const updated = { ...item, rotation: (item.rotation + 15) % 360 };
+    setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
+    scheduleLayoutItemSave(updated);
+  }
+
+  function handleRenameMarker(item: LayoutItem) {
+    const name = window.prompt("Nowa nazwa znacznika:", item.label ?? "");
+    const trimmed = name?.trim();
+    if (!trimmed || trimmed === item.label) return;
+    renameLayoutItemAction(weddingId, item.id, trimmed)
+      .then((updated) => setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i))))
+      .catch((err) => reportError(err));
+  }
+
+  /** dimension = "width" | "height", delta w pikselach - ściana zmienia
+   * rozmiar krokowo (podobnie jak liczba miejsc przy stole), bez
+   * przeciągania uchwytów na kanwie. */
+  async function handleResizeWall(item: LayoutItem, dimension: "width" | "height", delta: number) {
+    const nextWidth = dimension === "width" ? item.width + delta : item.width;
+    const nextHeight = dimension === "height" ? item.height + delta : item.height;
+    if (nextWidth < 20 || nextWidth > 1000 || nextHeight < 10 || nextHeight > 1000) return;
+    try {
+      const updated = await resizeLayoutItemAction(weddingId, item.id, nextWidth, nextHeight);
+      setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
+  async function handleDeleteLayoutItem(item: LayoutItem) {
+    const label = item.kind === "MARKER" ? `znacznik "${item.label}"` : "ścianę";
+    if (!window.confirm(`Usunąć ${label}?`)) return;
+    try {
+      await deleteLayoutItemAction(weddingId, item.id);
+      setLayoutItems((prev) => prev.filter((i) => i.id !== item.id));
+      clearSelection();
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex flex-1 flex-col">
@@ -267,7 +404,7 @@ export default function TablePlanner({
               type="button"
               onClick={() => {
                 setActiveRoom(room);
-                setSelectedTableId(null);
+                clearSelection();
               }}
               className={`rounded-full px-3 py-1 text-sm ${
                 room === activeRoom
@@ -300,6 +437,21 @@ export default function TablePlanner({
           >
             + Stół prostokątny
           </button>
+          <div className="mx-2 h-5 w-px bg-zinc-200" />
+          <button
+            type="button"
+            onClick={handleAddMarker}
+            className="rounded-full border border-amber-400 bg-amber-50 px-3 py-1 text-sm text-amber-900 hover:border-amber-500"
+          >
+            + Oznaczenie (DJ, bufet...)
+          </button>
+          <button
+            type="button"
+            onClick={handleAddWall}
+            className="rounded-full border border-zinc-400 bg-zinc-100 px-3 py-1 text-sm text-zinc-700 hover:border-zinc-500"
+          >
+            + Ściana
+          </button>
           {errorMessage && (
             <span className="ml-auto rounded-md bg-red-50 px-3 py-1 text-xs text-red-700">
               {errorMessage}
@@ -312,10 +464,37 @@ export default function TablePlanner({
             width={size.width}
             height={size.height}
             onMouseDown={(e) => {
-              if (e.target === e.target.getStage()) setSelectedTableId(null);
+              if (e.target === e.target.getStage()) clearSelection();
             }}
           >
             <Layer>
+              {/* Ściany pod spodem - to obrys/tło pomieszczenia, stoły i
+                  znaczniki mają być zawsze widoczne NAD nimi. */}
+              {layoutItemsInRoom
+                .filter((item) => item.kind === "WALL")
+                .map((item) => {
+                  const isSelected = item.id === selectedLayoutItemId;
+                  return (
+                    <Group
+                      key={item.id}
+                      x={item.x}
+                      y={item.y}
+                      rotation={item.rotation}
+                      draggable
+                      onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
+                      onClick={() => selectLayoutItem(item.id)}
+                      onTap={() => selectLayoutItem(item.id)}
+                    >
+                      <Rect
+                        width={item.width}
+                        height={item.height}
+                        fill={isSelected ? "#78716c" : "#57534e"}
+                        stroke={isSelected ? "#fde68a" : undefined}
+                        strokeWidth={isSelected ? 2 : 0}
+                      />
+                    </Group>
+                  );
+                })}
               {tablesInRoom.map((table) => {
                 const tableSeats = seatsByTable.get(table.id) ?? [];
                 const isSelected = table.id === selectedTableId;
@@ -327,8 +506,8 @@ export default function TablePlanner({
                     rotation={table.rotation}
                     draggable
                     onDragEnd={(e) => handleDragEnd(table, e.target.x(), e.target.y())}
-                    onClick={() => setSelectedTableId(table.id)}
-                    onTap={() => setSelectedTableId(table.id)}
+                    onClick={() => selectTable(table.id)}
+                    onTap={() => selectTable(table.id)}
                   >
                     {table.shape === "ROUND" ? (
                       <Circle
@@ -387,6 +566,41 @@ export default function TablePlanner({
                   </Group>
                 );
               })}
+              {/* Znaczniki na wierzchu - mają być zawsze widoczne, nawet
+                  gdyby ktoś przesunął je blisko stołu/ściany. */}
+              {layoutItemsInRoom
+                .filter((item) => item.kind === "MARKER")
+                .map((item) => {
+                  const isSelected = item.id === selectedLayoutItemId;
+                  return (
+                    <Group
+                      key={item.id}
+                      x={item.x}
+                      y={item.y}
+                      draggable
+                      onDragEnd={(e) => handleLayoutItemDragEnd(item, e.target.x(), e.target.y())}
+                      onClick={() => selectLayoutItem(item.id)}
+                      onTap={() => selectLayoutItem(item.id)}
+                    >
+                      <Circle
+                        radius={MARKER_RADIUS}
+                        fill={isSelected ? "#f59e0b" : "#fbbf24"}
+                        stroke="#92400e"
+                        strokeWidth={1.5}
+                      />
+                      <Text
+                        text={item.label ?? ""}
+                        align="center"
+                        width={120}
+                        x={-60}
+                        y={MARKER_RADIUS + 4}
+                        fontSize={11}
+                        fontStyle="bold"
+                        fill="#78350f"
+                      />
+                    </Group>
+                  );
+                })}
             </Layer>
           </Stage>
         </div>
@@ -405,7 +619,7 @@ export default function TablePlanner({
             </button>
             <button
               type="button"
-              onClick={() => setSelectedTableId(null)}
+              onClick={clearSelection}
               className="text-xs text-zinc-400 hover:text-zinc-600"
             >
               Zamknij
@@ -510,6 +724,100 @@ export default function TablePlanner({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {selectedLayoutItem && (
+        <div className="w-80 shrink-0 overflow-y-auto border-l border-zinc-200 bg-white p-4">
+          <div className="mb-3 flex items-center justify-between">
+            {selectedLayoutItem.kind === "MARKER" ? (
+              <button
+                type="button"
+                onClick={() => handleRenameMarker(selectedLayoutItem)}
+                className="text-sm font-semibold text-zinc-900 underline decoration-dotted underline-offset-2 hover:text-zinc-600"
+                title="Kliknij, żeby zmienić nazwę"
+              >
+                {selectedLayoutItem.label}
+              </button>
+            ) : (
+              <h2 className="text-sm font-semibold text-zinc-900">Ściana</h2>
+            )}
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="text-xs text-zinc-400 hover:text-zinc-600"
+            >
+              Zamknij
+            </button>
+          </div>
+
+          {selectedLayoutItem.kind === "WALL" && (
+            <>
+              <div className="mb-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-zinc-500">
+                    Długość ({Math.round(selectedLayoutItem.width)})
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleResizeWall(selectedLayoutItem, "width", -20)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+                      title="Skróć ścianę"
+                    >
+                      −
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleResizeWall(selectedLayoutItem, "width", 20)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+                      title="Wydłuż ścianę"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-zinc-500">
+                    Grubość ({Math.round(selectedLayoutItem.height)})
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleResizeWall(selectedLayoutItem, "height", -10)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+                      title="Zmniejsz grubość ściany"
+                    >
+                      −
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleResizeWall(selectedLayoutItem, "height", 10)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+                      title="Zwiększ grubość ściany"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRotateWall(selectedLayoutItem)}
+                className="mb-2 w-full rounded-md border border-zinc-300 px-2 py-1.5 text-xs hover:border-zinc-400"
+              >
+                Obróć o 15°
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={() => handleDeleteLayoutItem(selectedLayoutItem)}
+            className="w-full rounded-md border border-red-300 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
+          >
+            Usuń
+          </button>
         </div>
       )}
     </div>

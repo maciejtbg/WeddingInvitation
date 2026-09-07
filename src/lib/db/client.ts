@@ -139,6 +139,32 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_tables_wedding ON tables_(wedding_id);
 
+    -- Elementy planu sali NIE będące stołem - patrz src/lib/db/layoutItems.ts,
+    -- src/components/TablePlanner.tsx. Dwa rodzaje w jednej tabeli (zamiast
+    -- dwóch osobnych), bo współdzielą wszystko poza znaczeniem
+    -- label/width/height - oba to po prostu "coś, co da się przeciągnąć po
+    -- tej samej kanwie co stoły, w obrębie tej samej sali":
+    --   MARKER - dowolnie podpisany znacznik miejsca (DJ, fotobudka, bufet,
+    --     stół pary młodej...) - świadomie WOLNY TEKST zamiast zestawu
+    --     gotowych ikon na sztywno, para i tak najlepiej wie, jak nazwać to,
+    --     co akurat u niej stoi. label wymagane, width/height ignorowane.
+    --   WALL - prostokąt reprezentujący ścianę/obrys pomieszczenia - kilka
+    --     obok siebie (pod dowolnym rotation) daje kontur sali. label puste,
+    --     width/height/rotation mają znaczenie.
+    CREATE TABLE IF NOT EXISTS layout_items (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      room_name TEXT NOT NULL,
+      kind TEXT NOT NULL, -- MARKER | WALL
+      label TEXT,
+      x REAL NOT NULL DEFAULT 0,
+      y REAL NOT NULL DEFAULT 0,
+      width REAL NOT NULL DEFAULT 120,
+      height REAL NOT NULL DEFAULT 20,
+      rotation REAL NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_layout_items_wedding ON layout_items(wedding_id);
+
     CREATE TABLE IF NOT EXISTS seat_assignments (
       id TEXT PRIMARY KEY,
       table_id TEXT NOT NULL REFERENCES tables_(id) ON DELETE CASCADE,
