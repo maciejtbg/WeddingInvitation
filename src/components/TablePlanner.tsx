@@ -95,6 +95,12 @@ export default function TablePlanner({
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [selectedLayoutItemId, setSelectedLayoutItemId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Id-y stołów/elementów z zapisem rozmiaru/liczby miejsc aktualnie w locie -
+  // blokuje przyciski stepperów na czas zapytania, żeby szybkie powtórne
+  // kliknięcie (zanim serwer odpowie) nie policzyło kolejnej zmiany od tej
+  // samej, już nieaktualnej wartości z domknięcia (np. +1 miejsce dwa razy
+  // z rzędu liczone od tego samego seatsCount zamiast od seatsCount+1).
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
@@ -285,6 +291,7 @@ export default function TablePlanner({
    * tyle, żeby nowe krzesła się nie nakładały (patrz src/lib/tableGeometry.ts) -
    * niezależnie od tego, para może go jeszcze ręcznie powiększyć suwakami. */
   async function handleSeatsCountChange(table: WeddingTable, delta: number) {
+    if (pendingIds.has(table.id)) return;
     const nextCount = table.seatsCount + delta;
     if (nextCount < 1 || nextCount > 24) return;
     const removedSeats = (seatsByTable.get(table.id) ?? []).filter(
@@ -300,6 +307,7 @@ export default function TablePlanner({
     ) {
       return;
     }
+    setPendingIds((prev) => new Set(prev).add(table.id));
     try {
       const { table: updated, seats: updatedSeats } = await updateSeatsCountAction(
         weddingId,
@@ -311,6 +319,12 @@ export default function TablePlanner({
       saveTableLocal(updated).catch(() => {});
     } catch (err) {
       reportError(err);
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(table.id);
+        return next;
+      });
     }
   }
 
@@ -323,8 +337,10 @@ export default function TablePlanner({
     dimension: "radius" | "width" | "height",
     delta: number
   ) {
+    if (pendingIds.has(table.id)) return;
     const next = { ...table, [dimension]: table[dimension] + delta };
     if (next[dimension] < 20 || next[dimension] > MAX_TABLE_DIMENSION) return;
+    setPendingIds((prev) => new Set(prev).add(table.id));
     try {
       const updated = await updateTableSizeAction(weddingId, table.id, {
         [dimension]: next[dimension],
@@ -333,6 +349,12 @@ export default function TablePlanner({
       saveTableLocal(updated).catch(() => {});
     } catch (err) {
       reportError(err);
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(table.id);
+        return next;
+      });
     }
   }
 
@@ -460,14 +482,22 @@ export default function TablePlanner({
    * się krokowo, bez przeciągania uchwytów na kanwie (spójne z resztą
    * planera - patrz handleSeatsCountChange). */
   async function handleResizeItem(item: LayoutItem, dimension: "width" | "height", delta: number) {
+    if (pendingIds.has(item.id)) return;
     const nextWidth = dimension === "width" ? item.width + delta : item.width;
     const nextHeight = dimension === "height" ? item.height + delta : item.height;
     if (nextWidth < 20 || nextWidth > 1000 || nextHeight < 10 || nextHeight > 1000) return;
+    setPendingIds((prev) => new Set(prev).add(item.id));
     try {
       const updated = await resizeLayoutItemAction(weddingId, item.id, nextWidth, nextHeight);
       setLayoutItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
     } catch (err) {
       reportError(err);
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
     }
   }
 
@@ -791,6 +821,7 @@ export default function TablePlanner({
               <SizeStepper
                 name="Rozmiar stołu"
                 label={`Rozmiar (${Math.round(selectedTable.radius)})`}
+                disabled={pendingIds.has(selectedTable.id)}
                 onDecrease={() => handleResizeTable(selectedTable, "radius", -10)}
                 onIncrease={() => handleResizeTable(selectedTable, "radius", 10)}
               />
@@ -799,12 +830,14 @@ export default function TablePlanner({
                 <SizeStepper
                   name="Szerokość stołu"
                   label={`Szerokość (${Math.round(selectedTable.width)})`}
+                  disabled={pendingIds.has(selectedTable.id)}
                   onDecrease={() => handleResizeTable(selectedTable, "width", -20)}
                   onIncrease={() => handleResizeTable(selectedTable, "width", 20)}
                 />
                 <SizeStepper
                   name="Głębokość stołu"
                   label={`Głębokość (${Math.round(selectedTable.height)})`}
+                  disabled={pendingIds.has(selectedTable.id)}
                   onDecrease={() => handleResizeTable(selectedTable, "height", -10)}
                   onIncrease={() => handleResizeTable(selectedTable, "height", 10)}
                 />
@@ -824,7 +857,7 @@ export default function TablePlanner({
               <button
                 type="button"
                 onClick={() => handleSeatsCountChange(selectedTable, -1)}
-                disabled={selectedTable.seatsCount <= 1}
+                disabled={selectedTable.seatsCount <= 1 || pendingIds.has(selectedTable.id)}
                 className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400 disabled:opacity-30"
                 title="Usuń jedno miejsce (z brzegu)"
               >
@@ -833,7 +866,7 @@ export default function TablePlanner({
               <button
                 type="button"
                 onClick={() => handleSeatsCountChange(selectedTable, 1)}
-                disabled={selectedTable.seatsCount >= 24}
+                disabled={selectedTable.seatsCount >= 24 || pendingIds.has(selectedTable.id)}
                 className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400 disabled:opacity-30"
                 title="Dodaj jedno miejsce"
               >
@@ -939,12 +972,14 @@ export default function TablePlanner({
             <SizeStepper
               name={selectedLayoutItem.kind === "WALL" ? "Długość ściany" : "Szerokość elementu"}
               label={`${selectedLayoutItem.kind === "WALL" ? "Długość" : "Szerokość"} (${Math.round(selectedLayoutItem.width)})`}
+              disabled={pendingIds.has(selectedLayoutItem.id)}
               onDecrease={() => handleResizeItem(selectedLayoutItem, "width", -20)}
               onIncrease={() => handleResizeItem(selectedLayoutItem, "width", 20)}
             />
             <SizeStepper
               name={selectedLayoutItem.kind === "WALL" ? "Grubość ściany" : "Wysokość elementu"}
               label={`${selectedLayoutItem.kind === "WALL" ? "Grubość" : "Wysokość"} (${Math.round(selectedLayoutItem.height)})`}
+              disabled={pendingIds.has(selectedLayoutItem.id)}
               onDecrease={() => handleResizeItem(selectedLayoutItem, "height", -10)}
               onIncrease={() => handleResizeItem(selectedLayoutItem, "height", 10)}
             />
@@ -974,6 +1009,7 @@ export default function TablePlanner({
 function SizeStepper({
   name,
   label,
+  disabled,
   onDecrease,
   onIncrease,
 }: {
@@ -983,6 +1019,10 @@ function SizeStepper({
    * się w nawiasie. */
   name: string;
   label: string;
+  /** Blokuje oba przyciski na czas zapisu na serwer (patrz `pendingIds` w
+   * TablePlannerze) - bez tego szybkie podwójne kliknięcie liczyłoby drugą
+   * zmianę od tej samej, jeszcze nieodświeżonej wartości. */
+  disabled?: boolean;
   onDecrease: () => void;
   onIncrease: () => void;
 }) {
@@ -993,16 +1033,18 @@ function SizeStepper({
         <button
           type="button"
           onClick={onDecrease}
+          disabled={disabled}
           title={`Zmniejsz: ${name}`}
-          className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+          className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400 disabled:opacity-30"
         >
           −
         </button>
         <button
           type="button"
           onClick={onIncrease}
+          disabled={disabled}
           title={`Zwiększ: ${name}`}
-          className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+          className="flex h-6 w-6 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:border-zinc-400 disabled:opacity-30"
         >
           +
         </button>
