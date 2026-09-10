@@ -28,6 +28,7 @@ import {
 import { sendMessage } from "@/lib/db/chat";
 import { isThemeId } from "@/lib/themes";
 import { isSeatingMode } from "@/lib/seatingModes";
+import { isInviteCardVariant } from "@/lib/inviteCard";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -146,6 +147,21 @@ export async function publishWeddingAction(formData: FormData): Promise<void> {
   publishWedding(wedding.id);
   revalidatePath(`/${wedding.slug}`);
   redirect("/admin?published=1");
+}
+
+/** Styl drukowanej karty zaproszenia (QR) - osobna, mała akcja zamiast
+ * dokładania kolejnego pola do wielkiego formularza `updateWeddingAction`,
+ * bo wybór dzieje się na dedykowanej stronie z podglądem na żywo (patrz
+ * /admin/invite-card), nie w formularzu tekstowym. */
+export async function setInvitationCardVariantAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  const variant = readString(formData, "variant");
+  if (!isInviteCardVariant(variant)) redirect(`/admin/invite-card?weddingId=${weddingId}`);
+
+  updateWeddingDetails(wedding.id, { invitationCardVariant: variant });
+  redirect(`/admin/invite-card?weddingId=${weddingId}&saved=1`);
 }
 
 export async function addGuestAction(formData: FormData): Promise<void> {

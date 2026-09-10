@@ -474,6 +474,15 @@ export function runMigrations() {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;
   }
+  // Styl graficzny drukowanej karty zaproszenia (QR) - patrz src/lib/inviteCard.ts.
+  // Jedno ustawienie na wesele (jak theme), nie per gość - wszystkie karty
+  // tej pary mają wyglądać spójnie.
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN invitation_card_variant TEXT NOT NULL DEFAULT 'classic';");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
 }
 
 runMigrations();

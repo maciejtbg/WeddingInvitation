@@ -136,6 +136,12 @@ export default async function AdminDashboardPage({
           Lista muzyczna
         </Link>
         <Link
+          href={`/admin/invite-card?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Karta zaproszenia
+        </Link>
+        <Link
           href={`/admin/seat-requests?weddingId=${wedding.id}`}
           className="relative rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
         >

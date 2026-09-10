@@ -7,6 +7,11 @@ export type RsvpStatus = "PENDING" | "YES" | "NO";
 // src/lib/themes.ts (tam pełna definicja kolorów i grafik każdego z nich).
 export type ThemeId = "cream-gold" | "blush-black" | "burgundy-gold";
 
+// Styl graficzny drukowanej karty zaproszenia (QR) - patrz src/lib/inviteCard.ts.
+// Kolory zawsze biorą się z ThemeId powyżej; wariant zmienia WYŁĄCZNIE
+// typografię i układ (fonty, ornamenty, proporcje).
+export type InviteCardVariant = "classic" | "modern" | "romantic";
+
 // Tryb rozmieszczania gości przy stołach - patrz src/lib/seatingModes.ts.
 export type SeatingMode =
   | "COUPLE_ONLY"
@@ -38,6 +43,7 @@ export interface Wedding {
   // Link do filmu (YouTube/Vimeo/inny) pokazywany obok historii pary.
   videoUrl: string | null;
   theme: ThemeId;
+  invitationCardVariant: InviteCardVariant;
   seatingMode: SeatingMode;
   giftNote: string | null;
   // RODO - liczba dni po dacie ślubu, po której dane osobowe gości są

@@ -61,6 +61,27 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   const cardBody = await cardResponse.body();
   assert(cardBody.length > 10000, "obrazek karty ma sensowny rozmiar (nie jest pusty/uszkodzony)");
 
+  // --- Wybór wariantu graficznego karty (klasyczna/nowoczesna/romantyczna) ---
+  await couple.goto(`${BASE}/admin/invite-card?weddingId=${weddingId}`);
+  await couple.waitForSelector("text=Klasyczna");
+  assert(
+    (await couple.locator("text=Aktualnie wybrana").count()) === 1,
+    "domyślny wariant (Klasyczna) jest od razu oznaczony jako wybrany"
+  );
+  await couple
+    .locator("form", { has: couple.locator('input[value="modern"]') })
+    .locator('button:has-text("Wybierz ten wariant")')
+    .click();
+  await couple.waitForURL(/saved=1/);
+  assert(
+    (await couple.locator("text=Zapisano wybrany styl karty.").count()) === 1,
+    "zapisanie wariantu pokazuje potwierdzenie"
+  );
+  assert(
+    (await couple.locator("text=Aktualnie wybrana").count()) === 1,
+    "po zapisaniu dokładnie jeden wariant (Nowoczesna) jest oznaczony jako wybrany"
+  );
+
   // --- Logowanie kodem: normalizacja (małe litery, spacja zamiast myślnika) ---
   const guestCtx = await browser.newContext();
   const guest = await guestCtx.newPage();

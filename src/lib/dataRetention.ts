@@ -39,6 +39,7 @@ function rowToWedding(row: Record<string, unknown>): Wedding {
     story: row.story as string | null,
     videoUrl: row.video_url as string | null,
     theme: row.theme as Wedding["theme"],
+    invitationCardVariant: row.invitation_card_variant as Wedding["invitationCardVariant"],
     seatingMode: row.seating_mode as Wedding["seatingMode"],
     giftNote: row.gift_note as string | null,
     dataRetentionDays: row.data_retention_days as number,

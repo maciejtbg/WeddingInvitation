@@ -2,10 +2,12 @@ import { db, newId } from "./client";
 import type { Wedding, SqliteRow } from "./types";
 import { DEFAULT_THEME, isThemeId } from "@/lib/themes";
 import { DEFAULT_SEATING_MODE, isSeatingMode } from "@/lib/seatingModes";
+import { DEFAULT_INVITE_CARD_VARIANT, isInviteCardVariant } from "@/lib/inviteCard";
 
 function rowToWedding(row: SqliteRow): Wedding {
   const rawTheme = row.theme as string | null;
   const rawSeatingMode = row.seating_mode as string | null;
+  const rawInvitationCardVariant = row.invitation_card_variant as string | null;
   return {
     id: row.id as string,
     coupleId: row.couple_id as string,
@@ -20,6 +22,9 @@ function rowToWedding(row: SqliteRow): Wedding {
     // Obrona na wypadek starszego wiersza / nieznanej wartości w bazie -
     // zawsze wracamy z poprawnym ThemeId, nigdy z dowolnym stringiem.
     theme: isThemeId(rawTheme) ? rawTheme : DEFAULT_THEME,
+    invitationCardVariant: isInviteCardVariant(rawInvitationCardVariant)
+      ? rawInvitationCardVariant
+      : DEFAULT_INVITE_CARD_VARIANT,
     seatingMode: isSeatingMode(rawSeatingMode) ? rawSeatingMode : DEFAULT_SEATING_MODE,
     giftNote: row.gift_note as string | null,
     dataRetentionDays: row.data_retention_days as number,
@@ -141,6 +146,7 @@ export function updateWeddingDetails(
       | "story"
       | "videoUrl"
       | "theme"
+      | "invitationCardVariant"
       | "seatingMode"
       | "giftNote"
       | "dataRetentionDays"
@@ -156,6 +162,7 @@ export function updateWeddingDetails(
     story: "story",
     videoUrl: "video_url",
     theme: "theme",
+    invitationCardVariant: "invitation_card_variant",
     seatingMode: "seating_mode",
     giftNote: "gift_note",
     dataRetentionDays: "data_retention_days",
