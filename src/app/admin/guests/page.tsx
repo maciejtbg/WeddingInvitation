@@ -217,7 +217,7 @@ export default async function GuestsPage({
                   </button>
                 </form>
               )}
-              <form action={setGuestContactAction} className="mt-1 flex items-center gap-1">
+              <form action={setGuestContactAction} className="mt-1 flex flex-wrap items-center gap-1">
                 <input type="hidden" name="weddingId" value={wedding.id} />
                 <input type="hidden" name="guestId" value={guest.id} />
                 <input
@@ -239,7 +239,7 @@ export default async function GuestsPage({
                 </button>
               </form>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
                 {RSVP_LABELS[guest.rsvpStatus]}
               </span>

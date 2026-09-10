@@ -107,14 +107,20 @@ export default function TablePlanner({
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    // ResizeObserver zamiast (albo obok) window "resize" - kontener zmienia
+    // rozmiar też wtedy, gdy okno się NIE zmienia, np. gdy na telefonie pod
+    // kanwą pojawia się panel boczny stołu/elementu (na mobile są ułożone
+    // w kolumnie, patrz JSX niżej) i kanwa musi się skurczyć, żeby panel
+    // zmieścił się w tym samym ekranie zamiast wyjechać poza widoczny obszar.
     function measure() {
-      const el = containerRef.current;
-      if (!el) return;
-      setSize({ width: el.clientWidth, height: el.clientHeight });
+      setSize({ width: el!.clientWidth, height: el!.clientHeight });
     }
     measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // Hydratacja z IndexedDB: jeśli poprzednia sesja skończyła się offline
@@ -519,8 +525,8 @@ export default function TablePlanner({
   }
 
   return (
-    <div className="flex h-full">
-      <div className="flex flex-1 flex-col">
+    <div className="flex h-full min-w-0 flex-col sm:flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-white px-4 py-2">
           {rooms.map((room) => (
             <button
@@ -592,7 +598,7 @@ export default function TablePlanner({
           )}
         </div>
 
-        <div ref={containerRef} className="relative flex-1 overflow-hidden bg-zinc-50">
+        <div ref={containerRef} className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-zinc-50">
           <Stage
             width={size.width}
             height={size.height}
@@ -768,7 +774,7 @@ export default function TablePlanner({
       </div>
 
       {selectedTable && (
-        <div className="w-80 shrink-0 overflow-y-auto border-l border-zinc-200 bg-white p-4">
+        <div className="max-h-[45vh] w-full shrink-0 overflow-y-auto border-t border-zinc-200 bg-white p-4 sm:max-h-none sm:w-80 sm:border-l sm:border-t-0">
           <div className="mb-3 flex items-center justify-between">
             <button
               type="button"
@@ -922,7 +928,7 @@ export default function TablePlanner({
       )}
 
       {selectedLayoutItem && (
-        <div className="w-80 shrink-0 overflow-y-auto border-l border-zinc-200 bg-white p-4">
+        <div className="max-h-[45vh] w-full shrink-0 overflow-y-auto border-t border-zinc-200 bg-white p-4 sm:max-h-none sm:w-80 sm:border-l sm:border-t-0">
           <div className="mb-3 flex items-center justify-between">
             {selectedLayoutItem.kind === "WALL" ? (
               <h2 className="text-sm font-semibold text-zinc-900">Ściana</h2>
