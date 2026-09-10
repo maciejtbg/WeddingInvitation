@@ -30,15 +30,19 @@ function createConnection(): DatabaseSync {
     fs.mkdirSync(dir, { recursive: true });
   }
   const database = new DatabaseSync(DB_PATH);
+  // MUSI być pierwszym poleceniem na tym połączeniu, przed journal_mode
+  // niżej - inaczej to WŁAŚNIE journal_mode (pierwsza instrukcja, która
+  // faktycznie dotyka pliku) obrywa natychmiastowym "database is locked"
+  // zamiast poczekać na zwolnienie blokady, bo w momencie jej wykonania
+  // busy_timeout jeszcze by nie obowiązywał. Bez tego równoległy dostęp do
+  // świeżo utworzonej bazy (np. next build odpalający kilku workerów, z
+  // których każdy pierwszy raz importuje ten moduł i uruchamia
+  // runMigrations() poniżej) kończy się failem builda - złapane empirycznie:
+  // świeży plik bazy + 3 workery next builda = częsty fail. 5s to i tak
+  // tylko górny limit oczekiwania, nie stały narzut.
+  database.exec("PRAGMA busy_timeout = 5000;");
   database.exec("PRAGMA journal_mode = WAL;");
   database.exec("PRAGMA foreign_keys = ON;");
-  // Bez tego równoległy dostęp do świeżo utworzonej bazy (np. next build
-  // odpalający kilku workerów, z których każdy pierwszy raz importuje ten
-  // moduł i uruchamia runMigrations() poniżej) kończy się natychmiastowym
-  // "database is locked" zamiast poczekania na zwolnienie blokady - złapane
-  // empirycznie: świeży plik bazy + 3 workery next builda = częsty fail.
-  // 5s to i tak tylko górny limit oczekiwania, nie stały narzut.
-  database.exec("PRAGMA busy_timeout = 5000;");
   return database;
 }
 
