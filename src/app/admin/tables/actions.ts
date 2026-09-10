@@ -121,7 +121,7 @@ export async function updateSeatsCountAction(
   }
   const table = adminUpdateSeatsCount(wedding.id, tableId, seatsCount);
   if (!table) throw new Error("Nie znaleziono stołu");
-  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
   return { table, seats: adminListSeats(wedding.id) };
 }
 
@@ -158,7 +158,7 @@ export async function assignSeatAction(
 ): Promise<SeatWithGuestName[]> {
   const wedding = await requireOwnedWedding(weddingId);
   const seats = adminAssignSeat(wedding.id, { tableId, guestId, seatIndex });
-  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
   return seats;
 }
 
@@ -168,7 +168,7 @@ export async function unassignSeatAction(
 ): Promise<SeatWithGuestName[]> {
   const wedding = await requireOwnedWedding(weddingId);
   const seats = adminUnassignGuest(wedding.id, guestId);
-  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
   return seats;
 }
 

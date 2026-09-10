@@ -65,8 +65,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.click("text=Poproś o piosenkę");
   await page.waitForURL(/\/muzyka/);
 
-  await page.fill('input[name="q"]', "perfect ed sheeran");
-  await page.click('button:has-text("Szukaj")');
+  // Wyszukiwanie jest teraz "na żywo" (debounce po stronie klienta, patrz
+  // src/components/LiveSearchInput.tsx) - nie ma już osobnego przycisku
+  // "Szukaj" ani atrybutu name na polu, samo wpisanie tekstu i odczekanie
+  // na aktualizację URL-a (?q=...) wystarcza.
+  await page.fill('input[placeholder="Szukaj piosenki lub wykonawcy..."]', "perfect ed sheeran");
+  await page.waitForURL(/[?&]q=/, { timeout: 5000 });
   await page.waitForSelector('button:has-text("Dodaj")', { timeout: 10000 });
   const resultCount = await page.locator('button:has-text("Dodaj")').count();
   assert(resultCount > 0, `wyszukiwarka zwróciła wyniki (${resultCount})`);
@@ -94,8 +98,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   assert(true, "para usunęła zgłoszenie");
 
   // --- Para sama dodaje piosenkę (np. dla DJ-a z dostępem do panelu) ---
-  await page.fill('input[name="q"]', "perfect ed sheeran");
-  await page.click('button:has-text("Szukaj")');
+  // Wyszukiwanie jest teraz "na żywo" (debounce po stronie klienta, patrz
+  // src/components/LiveSearchInput.tsx) - nie ma już osobnego przycisku
+  // "Szukaj" ani atrybutu name na polu, samo wpisanie tekstu i odczekanie
+  // na aktualizację URL-a (?q=...) wystarcza.
+  await page.fill('input[placeholder="Szukaj piosenki lub wykonawcy..."]', "perfect ed sheeran");
+  await page.waitForURL(/[?&]q=/, { timeout: 5000 });
   await page.waitForSelector('button:has-text("Dodaj")', { timeout: 10000 });
   await page.locator('button:has-text("Dodaj")').first().click();
   await page.waitForURL(/added=1/);

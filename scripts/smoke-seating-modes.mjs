@@ -85,7 +85,7 @@ async function setSeatingMode(couplePage, mode) {
   if (guest.url().includes("/zgoda")) {
     // RODO - tylko pierwsze wejście gościa wymaga potwierdzenia zgody,
     // kolejne odwiedziny inviteUrl w tym pliku lecą prosto do
-    // /moje-zaproszenie (patrz src/app/w/[slug]/zgoda).
+    // /moje-zaproszenie (patrz src/app/[slug]/zgoda).
     await guest.check('input[name="consent"]');
     await guest.click('button[type="submit"]');
     await guest.waitForURL(/\/moje-zaproszenie/);

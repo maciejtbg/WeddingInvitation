@@ -60,7 +60,7 @@ export default async function AdminDashboardPage({
       <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4">
         <div className="flex-1">
           <p className="text-sm font-medium text-rose-900">Podgląd Waszego zaproszenia</p>
-          <p className="font-mono text-sm text-rose-700">/w/{wedding.slug}</p>
+          <p className="font-mono text-sm text-rose-700">/{wedding.slug}</p>
           <p className="mt-0.5 text-xs text-rose-600">
             Dokładnie to (historia, zdjęcia, harmonogram, FAQ...) zobaczy każdy gość po
             wejściu na stronę - sprawdźcie, zanim wyślecie zaproszenia.
@@ -76,7 +76,7 @@ export default async function AdminDashboardPage({
           {wedding.publishedAt ? "Opublikowana" : "Wersja robocza"}
         </span>
         <Link
-          href={`/w/${wedding.slug}`}
+          href={`/${wedding.slug}`}
           target="_blank"
           className="rounded-full bg-rose-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-rose-700"
         >

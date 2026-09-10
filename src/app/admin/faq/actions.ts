@@ -31,7 +31,7 @@ export async function createFaqItemAction(formData: FormData): Promise<void> {
 
   createFaqItem({ weddingId: wedding.id, question, answer });
   revalidatePath("/admin/faq");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/faq?weddingId=${weddingId}`);
 }
 
@@ -42,7 +42,7 @@ export async function deleteFaqItemAction(formData: FormData): Promise<void> {
 
   deleteFaqItem(wedding.id, itemId);
   revalidatePath("/admin/faq");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/faq?weddingId=${weddingId}`);
 }
 
@@ -56,6 +56,6 @@ export async function moveFaqItemAction(formData: FormData): Promise<void> {
     moveFaqItem(wedding.id, itemId, direction);
   }
   revalidatePath("/admin/faq");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/faq?weddingId=${weddingId}`);
 }

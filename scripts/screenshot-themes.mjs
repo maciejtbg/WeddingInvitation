@@ -51,7 +51,7 @@ for (const theme of ["cream-gold", "blush-black", "burgundy-gold"]) {
     page.waitForURL(/\/admin\?saved=1/),
     page.locator('button:has-text("Zapisz")').click(),
   ]);
-  await page.goto(`${BASE}/w/${slug}`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/${slug}`, { waitUntil: "networkidle" });
   await page.screenshot({ path: `${OUT_DIR}/wedding-${theme}.png`, fullPage: true });
 }
 

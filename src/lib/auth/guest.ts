@@ -49,7 +49,7 @@ export async function requireGuestSessionOrRedirect(
 ): Promise<GuestSessionPayload> {
   const session = await getGuestSession();
   if (!session) {
-    redirect(`/w/${fallbackSlug}`);
+    redirect(`/${fallbackSlug}`);
   }
   return session;
 }

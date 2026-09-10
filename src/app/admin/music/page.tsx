@@ -43,7 +43,7 @@ export default async function MusicAdminPage({
         Prośby gości o piosenki (wyszukane przez darmowe iTunes Search API) -
         widoczne dla wszystkich na{" "}
         <Link
-          href={`/w/${wedding.slug}/moje-zaproszenie`}
+          href={`/${wedding.slug}/moje-zaproszenie`}
           target="_blank"
           className="underline"
         >

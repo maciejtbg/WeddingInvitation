@@ -42,7 +42,7 @@ export async function adminUploadPhotoAction(formData: FormData): Promise<void> 
   }
 
   revalidatePath("/admin/gallery");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/gallery?weddingId=${weddingId}`);
 }
 
@@ -53,6 +53,6 @@ export async function deletePhotoAction(formData: FormData): Promise<void> {
 
   await removePhoto(wedding.id, photoId);
   revalidatePath("/admin/gallery");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/gallery?weddingId=${weddingId}`);
 }

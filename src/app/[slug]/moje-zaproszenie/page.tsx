@@ -43,18 +43,18 @@ export default async function MyInvitePage({
   // w URL-u - inaczej gość jednej pary nie mógłby przypadkiem podejrzeć
   // strony (czy tym bardziej danych) innej pary pod innym slugiem.
   if (!session || session.weddingId !== wedding.id) {
-    redirect(`/w/${wedding.slug}`);
+    redirect(`/${wedding.slug}`);
   }
   // RODO - strona z formularzami/danymi gościa jest dostępna wyłącznie PO
   // zgodzie, nie tylko z ważną sesją - sama sesja powstaje wcześniej, w
   // route handlerze /z/[token] (patrz komentarz tam), więc bez tego
   // sprawdzenia dałoby się ominąć bramę /zgoda, wpisując ten adres ręcznie.
   if (!hasCurrentConsent("GUEST", session.guestId)) {
-    redirect(`/w/${wedding.slug}/zgoda`);
+    redirect(`/${wedding.slug}/zgoda`);
   }
 
   const guest = guestGetSelf(session.guestId);
-  if (!guest) redirect(`/w/${wedding.slug}`);
+  if (!guest) redirect(`/${wedding.slug}`);
 
   const messages = listMessagesForGuest(guest.id);
   const theme = getTheme(wedding.theme);
@@ -75,7 +75,7 @@ export default async function MyInvitePage({
         <PollingRefresher />
         <LanguageSwitcher
           currentLocale={locale}
-          returnTo={`/w/${wedding.slug}/moje-zaproszenie`}
+          returnTo={`/${wedding.slug}/moje-zaproszenie`}
           dict={dict}
         />
         <ThemeOrnament
@@ -91,7 +91,7 @@ export default async function MyInvitePage({
         </h1>
         <p className="mb-8 text-center text-sm">
           <Link
-            href={`/w/${wedding.slug}/moje-zaproszenie/muzyka`}
+            href={`/${wedding.slug}/moje-zaproszenie/muzyka`}
             className="text-[var(--wd-accent)] underline"
           >
             {dict.musicLinkLabel}
@@ -258,7 +258,7 @@ export default async function MyInvitePage({
             {dict.privacyPolicyLinkLabel}
           </Link>
           {" · "}
-          <Link href={`/w/${wedding.slug}/usun-dane`} className="underline">
+          <Link href={`/${wedding.slug}/usun-dane`} className="underline">
             {dict.deleteMyDataLink}
           </Link>
         </p>

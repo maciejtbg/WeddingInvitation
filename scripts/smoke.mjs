@@ -91,7 +91,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   if (guest.url().includes("/zgoda")) {
     // RODO - pierwsze wejście gościa wymaga potwierdzenia zgody na
     // przetwarzanie danych, zanim zobaczy /moje-zaproszenie - patrz
-    // src/app/w/[slug]/zgoda.
+    // src/app/[slug]/zgoda.
     await guest.check('input[name="consent"]');
     await guest.click('button[type="submit"]');
     await guest.waitForURL(/\/moje-zaproszenie/);

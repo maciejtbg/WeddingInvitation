@@ -85,7 +85,7 @@ export interface Dictionary {
   moreLanguages: string;
 
   // RODO - zgoda przy pierwszym wejściu i usunięcie danych (patrz
-  // src/app/w/[slug]/zgoda i src/app/w/[slug]/usun-dane)
+  // src/app/[slug]/zgoda i src/app/[slug]/usun-dane)
   privacyPolicyLinkLabel: string;
   consentTitle: string;
   consentIntro: string;

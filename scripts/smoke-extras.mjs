@@ -80,7 +80,7 @@ function isoDatePlusDays(days) {
   assert(true, "dodano pytanie FAQ");
 
   // --- Strona publiczna: odliczanie, harmonogram, FAQ jako <details> ---
-  await page.goto(`${BASE}/w/${slug}`);
+  await page.goto(`${BASE}/${slug}`);
   await page.waitForSelector("text=Zostało 5 dni do ślubu!");
   assert(true, "odliczanie pokazuje poprawną liczbę dni (5)");
 
@@ -101,7 +101,7 @@ function isoDatePlusDays(days) {
   assert(true, "kliknięcie pytania rozwija odpowiedź (natywne <details>)");
 
   // --- Kalendarz: prawidłowy plik .ics z poprawną datą ---
-  const icsResponse = await page.request.get(`${BASE}/w/${slug}/calendar`);
+  const icsResponse = await page.request.get(`${BASE}/${slug}/calendar`);
   assert(icsResponse.ok(), "endpoint kalendarza zwraca 200");
   assert(
     icsResponse.headers()["content-type"].includes("text/calendar"),

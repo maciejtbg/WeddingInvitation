@@ -56,7 +56,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   const weddingId = new URL(BASE + weddingIdMatch).searchParams.get("weddingId");
 
   // --- Strona publiczna: domyślnie polski, przełącznik zmienia na angielski ---
-  await page.goto(`${BASE}/w/${slug}`);
+  await page.goto(`${BASE}/${slug}`);
   await page.waitForSelector("text=Wersja robocza");
   assert(true, "domyślny język strony publicznej to polski");
 

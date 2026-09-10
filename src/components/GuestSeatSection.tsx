@@ -7,7 +7,7 @@ import type { RsvpStatus, SeatingMode } from "@/lib/db/types";
 import type { GuestSeatView } from "@/lib/db/tables";
 import { guestListAvailableSeats } from "@/lib/db/tables";
 import { guestListMyRequests } from "@/lib/db/seatRequests";
-import { guestSelfAssignSeatAction, guestRequestSeatChangeAction } from "@/app/w/[slug]/moje-zaproszenie/actions";
+import { guestSelfAssignSeatAction, guestRequestSeatChangeAction } from "@/app/[slug]/moje-zaproszenie/actions";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { t } from "@/lib/i18n/dictionary";
 

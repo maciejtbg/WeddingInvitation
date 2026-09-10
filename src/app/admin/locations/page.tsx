@@ -31,7 +31,7 @@ export default async function LocationsPage({
       </div>
       <p className="mb-6 text-sm text-zinc-500">
         Dodane tu miejsca pojawią się na mapie na Waszej publicznej stronie
-        (`/w/{wedding.slug}`), żeby goście dokładnie wiedzieli, gdzie trafić -
+        (`/{wedding.slug}`), żeby goście dokładnie wiedzieli, gdzie trafić -
         z linkiem do nawigacji w Google Maps i Apple Maps.
       </p>
 

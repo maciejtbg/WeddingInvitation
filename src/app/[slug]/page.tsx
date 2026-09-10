@@ -72,7 +72,7 @@ export default async function WeddingPublicPage({
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="w-full max-w-xl text-center">
-        <LanguageSwitcher currentLocale={locale} returnTo={`/w/${wedding.slug}`} dict={dict} />
+        <LanguageSwitcher currentLocale={locale} returnTo={`/${wedding.slug}`} dict={dict} />
         {deleted === "1" && (
           <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
             {dict.deleteMyDataDone}
@@ -121,7 +121,7 @@ export default async function WeddingPublicPage({
               </a>
               <span className="text-[var(--wd-border)]">·</span>
               <a
-                href={`/w/${wedding.slug}/calendar`}
+                href={`/${wedding.slug}/calendar`}
                 className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
               >
                 {dict.downloadIcs}
@@ -265,7 +265,7 @@ export default async function WeddingPublicPage({
 
         {isThisGuest ? (
           <Link
-            href={`/w/${wedding.slug}/moje-zaproszenie`}
+            href={`/${wedding.slug}/moje-zaproszenie`}
             className="inline-block rounded-full bg-[var(--wd-accent)] px-6 py-3 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
           >
             {dict.goToMyInvite}

@@ -3,7 +3,7 @@
 // do public/ po starcie serwera (patrz obszerny komentarz w photoStorage.ts).
 //
 // To są zdjęcia z publicznej galerii wesela - każdy, kto zna adres strony
-// wesela, i tak może je zobaczyć na /w/<slug>, więc ten route nie sprawdza
+// wesela, i tak może je zobaczyć na /<slug>, więc ten route nie sprawdza
 // żadnej sesji - jedyna "ochrona" to walidacja formatu id/nazwy pliku
 // (musi wyglądać dokładnie tak, jak to, co sami generujemy), żeby ktoś nie
 // spróbował `../../` i nie wyszedł poza katalog uploads.

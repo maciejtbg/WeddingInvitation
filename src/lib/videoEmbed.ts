@@ -2,7 +2,7 @@
 // wkleja normalny link ze swojej przeglądarki (np. "watch?v=..." albo
 // "youtu.be/..."), nie musi znać formatu embed. Nierozpoznany link (inny
 // serwis, literówka) zwraca null - strona publiczna pokazuje wtedy zwykły
-// link zamiast osadzonego odtwarzacza, patrz src/app/w/[slug]/page.tsx.
+// link zamiast osadzonego odtwarzacza, patrz src/app/[slug]/page.tsx.
 
 export function toEmbedUrl(rawUrl: string): string | null {
   let url: URL;

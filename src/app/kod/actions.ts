@@ -31,7 +31,7 @@ export async function loginByShortCodeAction(formData: FormData): Promise<void> 
   // RODO - patrz analogiczny komentarz w src/app/z/[token]/route.ts.
   redirect(
     hasCurrentConsent("GUEST", guest.id)
-      ? `/w/${wedding.slug}/moje-zaproszenie`
-      : `/w/${wedding.slug}/zgoda`
+      ? `/${wedding.slug}/moje-zaproszenie`
+      : `/${wedding.slug}/zgoda`
   );
 }

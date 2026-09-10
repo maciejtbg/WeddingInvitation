@@ -1,6 +1,6 @@
 // Publiczna, ogólna polityka prywatności (RODO/GDPR) - nie jest przypisana
 // do konkretnego wesela (para nie ma jeszcze konta, kiedy widzi ją pierwszy
-// raz - patrz link z formularza rejestracji), stąd stały adres, nie /w/[slug]/...
+// raz - patrz link z formularza rejestracji), stąd stały adres, nie /[slug]/...
 // Dostępna każdemu, bez sesji - to wymóg RODO (art. 13-14), nie coś, co
 // wolno schować za logowaniem.
 

@@ -402,7 +402,7 @@ export function runMigrations() {
     if (!message.includes("duplicate column")) throw err;
   }
   // Link do filmu (np. YouTube/Vimeo) pokazywany obok historii pary na
-  // stronie głównej zaproszenia - patrz src/app/w/[slug]/page.tsx.
+  // stronie głównej zaproszenia - patrz src/app/[slug]/page.tsx.
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN video_url TEXT;");
   } catch (err) {

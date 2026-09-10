@@ -61,12 +61,34 @@ export function slugify(text: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-/** Generuje unikalny slug na bazie imion pary, dokładając numer, gdy zajęty. */
+// Strony wesela mieszkają bezpośrednio pod "/<slug>" (patrz src/app/[slug]/),
+// więc slug pary NIE MOŻE pokrywać się z żadną inną trasą na tym samym
+// poziomie - inaczej Next.js dopasowałby statyczną trasę (np. /admin) zamiast
+// [slug], i strona pary stałaby się nieosiągalna. Lista = dokładnie to, co
+// jest w src/app/ obok [slug] (plus kilka generycznych nazw zarezerwowanych
+// przez samego Next.js/hosting), więc trzeba ją aktualizować razem z nowymi
+// trasami najwyższego poziomu.
+const RESERVED_SLUGS = new Set([
+  "admin",
+  "api",
+  "kod",
+  "polityka-prywatnosci",
+  "uploads",
+  "w",
+  "z",
+  "favicon.ico",
+  "robots.txt",
+  "sitemap.xml",
+  "_next",
+]);
+
+/** Generuje unikalny slug na bazie imion pary, dokładając numer, gdy zajęty
+ * albo zarezerwowany (patrz RESERVED_SLUGS). */
 export function generateUniqueSlug(partner1Name: string, partner2Name: string): string {
   const base = slugify(`${partner1Name}-${partner2Name}`) || "wesele";
   let candidate = base;
   let i = 2;
-  while (findWeddingBySlug(candidate)) {
+  while (RESERVED_SLUGS.has(candidate) || findWeddingBySlug(candidate)) {
     candidate = `${base}-${i}`;
     i += 1;
   }

@@ -26,10 +26,10 @@ export default async function MusicPage({
 
   const session = await getGuestSession();
   if (!session || session.weddingId !== wedding.id) {
-    redirect(`/w/${wedding.slug}`);
+    redirect(`/${wedding.slug}`);
   }
   if (!hasCurrentConsent("GUEST", session.guestId)) {
-    redirect(`/w/${wedding.slug}/zgoda`);
+    redirect(`/${wedding.slug}/zgoda`);
   }
 
   const theme = getTheme(wedding.theme);
@@ -63,7 +63,7 @@ export default async function MusicPage({
           {dict.musicTitle}
         </h1>
         <p className="mb-6 text-center text-sm text-[var(--wd-muted)]">
-          <Link href={`/w/${wedding.slug}/moje-zaproszenie`} className="underline">
+          <Link href={`/${wedding.slug}/moje-zaproszenie`} className="underline">
             {dict.backToInvite}
           </Link>
         </p>

@@ -75,7 +75,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   );
 
   // --- Widoczne na stronie publicznej ---
-  await page.goto(`${BASE}/w/${slug}`);
+  await page.goto(`${BASE}/${slug}`);
   await page.waitForSelector('img[src*="/uploads/"]');
   assert(true, "zdjęcie widoczne na publicznej stronie wesela");
 

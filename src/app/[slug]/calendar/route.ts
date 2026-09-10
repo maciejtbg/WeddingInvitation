@@ -1,6 +1,6 @@
 // Zwraca plik .ics do dodania ślubu do kalendarza gościa (Google/Apple/
 // Outlook) - patrz src/lib/calendarInvite.ts. Publiczne (jak reszta
-// /w/[slug]) - nazwa pliku w Content-Disposition kończy się na .ics, żeby
+// /[slug]) - nazwa pliku w Content-Disposition kończy się na .ics, żeby
 // aplikacje kalendarza rozpoznały format mimo że sam URL go nie ma.
 
 import { NextRequest, NextResponse } from "next/server";

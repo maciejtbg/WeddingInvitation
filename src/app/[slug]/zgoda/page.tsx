@@ -30,10 +30,10 @@ export default async function GuestConsentPage({
 
   const session = await getGuestSession();
   if (!session || session.weddingId !== wedding.id) {
-    redirect(`/w/${wedding.slug}`);
+    redirect(`/${wedding.slug}`);
   }
   if (hasCurrentConsent("GUEST", session.guestId)) {
-    redirect(`/w/${wedding.slug}/moje-zaproszenie`);
+    redirect(`/${wedding.slug}/moje-zaproszenie`);
   }
 
   const theme = getTheme(wedding.theme);

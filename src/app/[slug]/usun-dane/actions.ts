@@ -13,7 +13,7 @@ export async function deleteMyDataAction(formData: FormData): Promise<void> {
 
   const session = await getGuestSession();
   if (!session || session.weddingId !== wedding.id) {
-    redirect(`/w/${wedding.slug}`);
+    redirect(`/${wedding.slug}`);
   }
 
   // Kolejność ma znaczenie: zdjęcia trzeba skasować PRZED wierszem gościa,
@@ -23,5 +23,5 @@ export async function deleteMyDataAction(formData: FormData): Promise<void> {
   guestDeleteSelf(session.guestId);
   await clearGuestSession();
 
-  redirect(`/w/${wedding.slug}?deleted=1`);
+  redirect(`/${wedding.slug}?deleted=1`);
 }

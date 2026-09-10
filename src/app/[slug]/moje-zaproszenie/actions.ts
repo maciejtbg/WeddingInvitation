@@ -29,7 +29,7 @@ function readString(formData: FormData, key: string): string {
 async function requireGuestConsent(guestId: string, wedding: Wedding | null): Promise<void> {
   if (!wedding) redirect("/");
   if (!hasCurrentConsent("GUEST", guestId)) {
-    redirect(`/w/${wedding.slug}/zgoda`);
+    redirect(`/${wedding.slug}/zgoda`);
   }
 }
 
@@ -50,8 +50,8 @@ export async function submitRsvpAction(formData: FormData): Promise<void> {
   });
 
   const wedding = findWeddingById(session.weddingId);
-  revalidatePath(`/w/${wedding?.slug ?? ""}/moje-zaproszenie`);
-  redirect(`/w/${wedding?.slug ?? ""}/moje-zaproszenie?saved=1`);
+  revalidatePath(`/${wedding?.slug ?? ""}/moje-zaproszenie`);
+  redirect(`/${wedding?.slug ?? ""}/moje-zaproszenie?saved=1`);
 }
 
 export async function sendGuestMessageAction(formData: FormData): Promise<void> {
@@ -61,7 +61,7 @@ export async function sendGuestMessageAction(formData: FormData): Promise<void> 
 
   const body = readString(formData, "body");
   const wedding = findWeddingById(session.weddingId);
-  if (!body || !wedding) redirect(`/w/${wedding?.slug ?? ""}/moje-zaproszenie`);
+  if (!body || !wedding) redirect(`/${wedding?.slug ?? ""}/moje-zaproszenie`);
 
   const weddingId = guestGetWeddingId(session.guestId);
   if (weddingId !== session.weddingId) {
@@ -70,8 +70,8 @@ export async function sendGuestMessageAction(formData: FormData): Promise<void> 
   }
 
   sendMessage({ weddingId: session.weddingId, guestId: session.guestId, sender: "GUEST", body });
-  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie`);
-  redirect(`/w/${wedding.slug}/moje-zaproszenie`);
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
+  redirect(`/${wedding.slug}/moje-zaproszenie`);
 }
 
 /** Tryby GUEST_SELF_SELECT / GROUP_CONSTRAINED - gość wybiera/zmienia
@@ -84,7 +84,7 @@ export async function guestSelfAssignSeatAction(formData: FormData): Promise<voi
   const wedding = findWeddingById(session.weddingId);
   await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
-  const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
+  const inviteUrl = `/${wedding.slug}/moje-zaproszenie`;
 
   if (!allowsGuestSelfSelect(wedding.seatingMode)) redirect(inviteUrl);
 
@@ -121,7 +121,7 @@ export async function guestRequestSeatChangeAction(formData: FormData): Promise<
   const wedding = findWeddingById(session.weddingId);
   await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
-  const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
+  const inviteUrl = `/${wedding.slug}/moje-zaproszenie`;
 
   if (!guestHasPendingRequest(session.guestId)) {
     const message = readString(formData, "message");
@@ -142,7 +142,7 @@ export async function guestUploadPhotoAction(formData: FormData): Promise<void> 
   const wedding = findWeddingById(session.weddingId);
   await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
-  const inviteUrl = `/w/${wedding.slug}/moje-zaproszenie`;
+  const inviteUrl = `/${wedding.slug}/moje-zaproszenie`;
 
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) redirect(inviteUrl);
@@ -161,7 +161,7 @@ export async function guestUploadPhotoAction(formData: FormData): Promise<void> 
   }
 
   revalidatePath(inviteUrl);
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`${inviteUrl}?photoSaved=1`);
 }
 
@@ -176,7 +176,7 @@ export async function addSongRequestAction(formData: FormData): Promise<void> {
   const wedding = findWeddingById(session.weddingId);
   await requireGuestConsent(session.guestId, wedding);
   if (!wedding) redirect("/");
-  const musicUrl = `/w/${wedding.slug}/moje-zaproszenie/muzyka`;
+  const musicUrl = `/${wedding.slug}/moje-zaproszenie/muzyka`;
 
   const trackName = readString(formData, "trackName");
   const artistName = readString(formData, "artistName");

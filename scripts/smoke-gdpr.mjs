@@ -1,5 +1,5 @@
 // Test end-to-end zgodności z RODO/GDPR - patrz src/lib/db/consents.ts,
-// src/lib/dataRetention.ts, src/app/w/[slug]/zgoda, src/app/w/[slug]/usun-dane,
+// src/lib/dataRetention.ts, src/app/[slug]/zgoda, src/app/[slug]/usun-dane,
 // src/app/admin/privacy.
 //
 // Sprawdza: rejestrację BEZ zaznaczonej zgody (odrzucona), politykę
@@ -111,7 +111,7 @@ async function registerCouple(page, { email, partner1, partner2, skipConsent = f
   // z adresu paska, z pominięciem bramy) MUSI zawrócić na /zgoda - sama
   // sesja gościa (którą route handler /z/[token] tworzy PRZED sprawdzeniem
   // zgody) nie może wystarczać do zobaczenia formularzy z danymi.
-  await guest.goto(`${BASE}/w/${slug}/moje-zaproszenie`);
+  await guest.goto(`${BASE}/${slug}/moje-zaproszenie`);
   await guest.waitForURL(/\/zgoda/);
   assert(true, "OMIJANIE BRAMY: bezpośrednie wejście na /moje-zaproszenie bez zgody zawraca na /zgoda");
 
@@ -180,7 +180,7 @@ async function registerCouple(page, { email, partner1, partner2, skipConsent = f
 
   const publicCtx = await browser.newContext();
   const publicPage = await publicCtx.newPage();
-  const publicResponse = await publicPage.goto(`${BASE}/w/${slug}`);
+  const publicResponse = await publicPage.goto(`${BASE}/${slug}`);
   assert(publicResponse.status() === 404, "PRAWO DO USUNIĘCIA: strona usuniętego wesela znika (404)");
 
   await couple.goto(`${BASE}/admin`);

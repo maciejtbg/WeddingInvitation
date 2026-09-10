@@ -135,7 +135,7 @@ export async function updateWeddingAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect("/admin?saved=1");
 }
 
@@ -143,7 +143,7 @@ export async function publishWeddingAction(formData: FormData): Promise<void> {
   const weddingId = readString(formData, "weddingId");
   const wedding = await requireOwnedWedding(weddingId);
   publishWedding(wedding.id);
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect("/admin?published=1");
 }
 

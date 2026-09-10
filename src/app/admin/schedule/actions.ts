@@ -38,7 +38,7 @@ export async function createScheduleItemAction(formData: FormData): Promise<void
   });
 
   revalidatePath("/admin/schedule");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/schedule?weddingId=${weddingId}`);
 }
 
@@ -49,7 +49,7 @@ export async function deleteScheduleItemAction(formData: FormData): Promise<void
 
   deleteScheduleItem(wedding.id, itemId);
   revalidatePath("/admin/schedule");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/schedule?weddingId=${weddingId}`);
 }
 
@@ -63,6 +63,6 @@ export async function moveScheduleItemAction(formData: FormData): Promise<void> 
     moveScheduleItem(wedding.id, itemId, direction);
   }
   revalidatePath("/admin/schedule");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/schedule?weddingId=${weddingId}`);
 }

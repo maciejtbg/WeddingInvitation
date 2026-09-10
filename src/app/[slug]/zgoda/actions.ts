@@ -12,13 +12,13 @@ export async function acceptGuestConsentAction(formData: FormData): Promise<void
 
   const session = await getGuestSession();
   if (!session || session.weddingId !== wedding.id) {
-    redirect(`/w/${wedding.slug}`);
+    redirect(`/${wedding.slug}`);
   }
 
   if (formData.get("consent") !== "on") {
-    redirect(`/w/${wedding.slug}/zgoda?error=required`);
+    redirect(`/${wedding.slug}/zgoda?error=required`);
   }
 
   recordConsent("GUEST", session.guestId);
-  redirect(`/w/${wedding.slug}/moje-zaproszenie`);
+  redirect(`/${wedding.slug}/moje-zaproszenie`);
 }

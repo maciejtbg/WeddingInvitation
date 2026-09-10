@@ -23,7 +23,7 @@ export default async function DeleteMyDataPage({
 
   const session = await getGuestSession();
   if (!session || session.weddingId !== wedding.id) {
-    redirect(`/w/${wedding.slug}`);
+    redirect(`/${wedding.slug}`);
   }
 
   const theme = getTheme(wedding.theme);
@@ -49,7 +49,7 @@ export default async function DeleteMyDataPage({
         </p>
         <div className="flex justify-center gap-3">
           <a
-            href={`/w/${wedding.slug}/moje-zaproszenie`}
+            href={`/${wedding.slug}/moje-zaproszenie`}
             className="rounded-full border border-[var(--wd-border)] px-5 py-2.5 text-sm font-medium text-[var(--wd-text)] hover:border-[var(--wd-accent)]"
           >
             {dict.deleteMyDataCancel}

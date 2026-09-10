@@ -38,7 +38,7 @@ export async function adminAddSongAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/music");
-  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie/muzyka`);
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie/muzyka`);
   redirect(`/admin/music?weddingId=${weddingId}&q=${encodeURIComponent(q)}&added=1`);
 }
 
@@ -53,6 +53,6 @@ export async function adminDeleteSongAction(formData: FormData): Promise<void> {
 
   deleteSongRequest(wedding.id, requestId);
   revalidatePath("/admin/music");
-  revalidatePath(`/w/${wedding.slug}/moje-zaproszenie/muzyka`);
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie/muzyka`);
   redirect(`/admin/music?weddingId=${weddingId}`);
 }

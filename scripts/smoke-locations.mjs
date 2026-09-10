@@ -61,7 +61,7 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   assert(true, "miejsce zapisane i widoczne na liście");
 
   // --- Strona publiczna: mapa + linki do nawigacji ---
-  await page.goto(`${BASE}/w/${slugMatch}`);
+  await page.goto(`${BASE}/${slugMatch}`);
   await page.waitForSelector(".leaflet-container", { state: "visible", timeout: 15000 });
   assert((await page.content()).includes("Jak do nas trafić"), "sekcja mapy widoczna na stronie publicznej");
   assert((await page.content()).includes("Kaplica w parku"), "legenda pod mapą wymienia dodane miejsce");

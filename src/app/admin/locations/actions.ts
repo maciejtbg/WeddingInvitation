@@ -46,7 +46,7 @@ export async function createLocationAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/locations");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/locations?weddingId=${weddingId}`);
 }
 
@@ -57,6 +57,6 @@ export async function deleteLocationAction(formData: FormData): Promise<void> {
 
   deleteLocation(wedding.id, locationId);
   revalidatePath("/admin/locations");
-  revalidatePath(`/w/${wedding.slug}`);
+  revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/locations?weddingId=${weddingId}`);
 }
