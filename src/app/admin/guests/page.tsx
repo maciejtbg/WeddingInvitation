@@ -5,8 +5,14 @@ import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
 import { adminListGroups } from "@/lib/db/groups";
 import { listGuestIdsAwaitingReply } from "@/lib/db/chat";
-import { addGuestAction, deleteGuestAction, assignGuestGroupAction } from "../actions";
+import {
+  addGuestAction,
+  deleteGuestAction,
+  assignGuestGroupAction,
+  setGuestContactAction,
+} from "../actions";
 import CopyLinkButton from "@/components/CopyLinkButton";
+import SendInviteButtons from "@/components/SendInviteButtons";
 
 const RSVP_LABELS: Record<string, string> = {
   PENDING: "Oczekuje",
@@ -31,6 +37,11 @@ export default async function GuestsPage({
   const groups = adminListGroups(wedding.id);
   const awaitingReply = new Set(listGuestIdsAwaitingReply(wedding.id));
 
+  const openedCount = guests.filter((g) => g.firstVisitedAt).length;
+  const yesCount = guests.filter((g) => g.rsvpStatus === "YES").length;
+  const noCount = guests.filter((g) => g.rsvpStatus === "NO").length;
+  const pendingCount = guests.length - yesCount - noCount;
+
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
@@ -47,6 +58,32 @@ export default async function GuestsPage({
           </Link>
         </div>
       </div>
+
+      {guests.length > 0 && (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-lg border border-zinc-200 bg-white p-3 text-center">
+            <p className="text-lg font-semibold text-zinc-900">{guests.length}</p>
+            <p className="text-xs text-zinc-500">gości</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-white p-3 text-center">
+            <p className="text-lg font-semibold text-zinc-900">{openedCount}</p>
+            <p className="text-xs text-zinc-500">otworzyło zaproszenie</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-white p-3 text-center">
+            <p className="text-lg font-semibold text-green-700">{yesCount}</p>
+            <p className="text-xs text-zinc-500">potwierdziło</p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-white p-3 text-center">
+            <p className="text-lg font-semibold text-zinc-500">
+              {pendingCount}
+              {noCount > 0 ? ` / ${noCount}` : ""}
+            </p>
+            <p className="text-xs text-zinc-500">
+              {noCount > 0 ? "oczekuje / nie przyjdzie" : "oczekuje"}
+            </p>
+          </div>
+        </div>
+      )}
 
       {awaitingReply.size > 0 && (
         <p className="mb-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -92,6 +129,28 @@ export default async function GuestsPage({
               className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
             />
           </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Telefon (opcjonalnie)
+            </label>
+            <input
+              name="phone"
+              type="tel"
+              placeholder="np. 600 100 200"
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              E-mail (opcjonalnie)
+            </label>
+            <input
+              name="email"
+              type="email"
+              placeholder="np. jan@example.com"
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
           <div className="flex items-end">
             <label className="flex items-center gap-2 text-sm text-zinc-700">
               <input type="checkbox" name="allowPlusOne" className="h-4 w-4" />
@@ -132,6 +191,11 @@ export default async function GuestsPage({
                   </>
                 )}
               </p>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                {guest.firstVisitedAt
+                  ? `✓ otworzył(a) zaproszenie ${guest.firstVisitedAt.slice(0, 10)}`
+                  : "jeszcze nie otworzył(a) zaproszenia"}
+              </p>
               {groups.length > 0 && (
                 <form action={assignGuestGroupAction} className="mt-1 flex items-center gap-1">
                   <input type="hidden" name="weddingId" value={wedding.id} />
@@ -153,12 +217,41 @@ export default async function GuestsPage({
                   </button>
                 </form>
               )}
+              <form action={setGuestContactAction} className="mt-1 flex items-center gap-1">
+                <input type="hidden" name="weddingId" value={wedding.id} />
+                <input type="hidden" name="guestId" value={guest.id} />
+                <input
+                  name="phone"
+                  type="tel"
+                  defaultValue={guest.phone ?? ""}
+                  placeholder="telefon"
+                  className="w-24 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+                />
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue={guest.email ?? ""}
+                  placeholder="e-mail"
+                  className="w-32 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+                />
+                <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
+                  Zapisz
+                </button>
+              </form>
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
                 {RSVP_LABELS[guest.rsvpStatus]}
               </span>
               <CopyLinkButton path={`/z/${guest.token}`} />
+              <SendInviteButtons
+                path={`/z/${guest.token}`}
+                phone={guest.phone}
+                email={guest.email}
+                partner1Name={wedding.partner1Name}
+                partner2Name={wedding.partner2Name}
+                guestFirstName={guest.firstName}
+              />
               {guest.shortCode && (
                 <a
                   href={`/admin/guests/${guest.id}/invite-card?weddingId=${wedding.id}`}

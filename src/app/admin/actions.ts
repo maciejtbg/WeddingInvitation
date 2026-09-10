@@ -23,6 +23,7 @@ import {
   adminDeleteGuest,
   adminFindGuestById,
   adminSetGuestGroup,
+  adminSetGuestContact,
 } from "@/lib/db/guests";
 import { sendMessage } from "@/lib/db/chat";
 import { isThemeId } from "@/lib/themes";
@@ -160,6 +161,30 @@ export async function addGuestAction(formData: FormData): Promise<void> {
     lastName: readString(formData, "lastName") || null,
     groupLabel: readString(formData, "groupLabel") || null,
     allowPlusOne: formData.get("allowPlusOne") === "on",
+    phone: readString(formData, "phone") || null,
+    email: readString(formData, "email") || null,
+  });
+
+  revalidatePath("/admin/guests");
+  redirect(`/admin/guests?weddingId=${weddingId}`);
+}
+
+/** Dopisanie/zmiana danych kontaktowych - osobno od dodawania gościa, żeby
+ * dało się uzupełnić telefon/e-mail gościom dodanym wcześniej (patrz
+ * komentarz przy adminSetGuestContact w src/lib/db/guests.ts). Same dane
+ * służą WYŁĄCZNIE do wygenerowania linków mailto:/sms: po stronie pary
+ * (patrz SendInviteButtons) - nic nie wysyłamy sami. */
+export async function setGuestContactAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const guestId = readString(formData, "guestId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  const guest = adminFindGuestById(wedding.id, guestId);
+  if (!guest) redirect(`/admin/guests?weddingId=${weddingId}`);
+
+  adminSetGuestContact(wedding.id, guestId, {
+    phone: readString(formData, "phone") || null,
+    email: readString(formData, "email") || null,
   });
 
   revalidatePath("/admin/guests");

@@ -58,9 +58,22 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.fill('input[name="firstName"]', "Marek");
   await couple.fill('input[name="lastName"]', "Testowy");
   await couple.fill('input[name="groupLabel"]', "Rodzina Pana Młodego (tajne)");
+  await couple.fill('input[name="phone"]', "600100200");
+  await couple.fill('input[name="email"]', "marek.testowy@example.com");
   await couple.click('button:has-text("Dodaj gościa")');
   await couple.waitForSelector("text=Marek Testowy");
   assert(true, "gość dodany i widoczny na liście");
+
+  // --- Raport dla pary (liczniki) i przyciski wysyłki (dane kontaktowe) ---
+  await couple.waitForSelector("text=jeszcze nie otworzył(a) zaproszenia");
+  assert(true, "gość, który jeszcze nie kliknął linku, ma widoczny status w raporcie");
+  await couple.waitForSelector('button:has-text("Wyślij mailem")');
+  await couple.waitForSelector('button:has-text("Wyślij SMS-em")');
+  assert(true, "przyciski wysyłki (mailto:/sms:) widoczne, bo gość ma telefon i e-mail");
+
+  const reportTiles = await couple.locator(".grid.grid-cols-2 p.text-lg").allInnerTexts();
+  assert(reportTiles[0] === "1", `raport: liczba gości = ${reportTiles[0]}`);
+  assert(reportTiles[2] === "0", `raport: liczba potwierdzeń = ${reportTiles[2]}`);
 
   // Link kopiowany jest przez JS do schowka - przechwytujemy zamiast
   // klikać "prawdziwy" schowek systemowy (niedostępny w CI/headless).
@@ -124,6 +137,10 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.goto(`${BASE}/admin/guests?weddingId=${weddingId}`);
   const adminGuestsHtml = await couple.content();
   assert(adminGuestsHtml.includes("Przyjdzie"), "panel pary pokazuje status RSVP 'Przyjdzie'");
+  assert(
+    adminGuestsHtml.includes("otworzył(a) zaproszenie"),
+    "raport: gość, który wszedł w link, ma teraz status 'otworzył(a) zaproszenie'"
+  );
 
   const chatLink = await couple.locator("a:has-text('Czat')").first().getAttribute("href");
   await couple.goto(BASE + chatLink);
