@@ -132,8 +132,12 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   // zadanym tekstem (dla prompt) albo po prostu zatwierdza (dla confirm).
   // Selektor po title, nie po tekście "DJ" - przycisk paska narzędzi "+
   // Oznaczenie (DJ, bufet...)" TEŻ zawiera "DJ" jako podtekst, więc
-  // has-text("DJ") łapałby oba na raz.
-  const markerLabelButton = couple.locator('button[title="Kliknij, żeby zmienić nazwę"]');
+  // has-text("DJ") łapałby oba na raz. "elementu", nie samo "zmień nazwę" -
+  // przycisk zmiany nazwy STOŁU ma bardzo podobny title ("...nazwę stołu"),
+  // więc na wolniejszym łączu (żywy serwer) można było chwilowo złapać
+  // jeszcze widoczny panel stołu sprzed kliknięcia zamiast nowo dodanego
+  // znacznika - złapane empirycznie.
+  const markerLabelButton = couple.locator('button[title="Kliknij, żeby zmienić nazwę elementu"]');
   couple.once("dialog", (dialog) => {
     console.log(`  [dialog] type=${dialog.type()} message=${JSON.stringify(dialog.message())}`);
     dialog.accept("DJ");

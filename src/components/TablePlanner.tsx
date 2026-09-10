@@ -774,7 +774,7 @@ export default function TablePlanner({
               type="button"
               onClick={() => handleRename(selectedTable)}
               className="text-sm font-semibold text-zinc-900 underline decoration-dotted underline-offset-2 hover:text-zinc-600"
-              title="Kliknij, żeby zmienić nazwę"
+              title="Kliknij, żeby zmienić nazwę stołu"
             >
               {selectedTable.label}
             </button>
@@ -931,7 +931,7 @@ export default function TablePlanner({
                 type="button"
                 onClick={() => handleRenameItem(selectedLayoutItem)}
                 className="text-sm font-semibold text-zinc-900 underline decoration-dotted underline-offset-2 hover:text-zinc-600"
-                title="Kliknij, żeby zmienić nazwę"
+                title="Kliknij, żeby zmienić nazwę elementu"
               >
                 {selectedLayoutItem.label ||
                   (selectedLayoutItem.kind === "ROOM_SHAPE" ? "Bez nazwy (kliknij)" : "")}
