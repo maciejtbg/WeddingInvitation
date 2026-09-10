@@ -21,10 +21,20 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM;
 }
 
+// UWAGA: celowo NIE toISOString() - ono liczy w UTC, a data ślubu (jak z
+// natywnego <input type="date">, i jak liczy ją daysUntilWedding w
+// src/lib/weddingCountdown.ts) to zawsze data w lokalnej strefie czasowej.
+// W okolicach północy w strefie przed UTC (np. Polska, UTC+1/+2) te dwa
+// się rozjeżdżają o dzień - złapane empirycznie: test uruchomiony 01:12
+// czasu lokalnego (23:12 UTC dnia poprzedniego) liczył "+5 dni" od
+// niewłaściwego dnia i odliczanie na stronie pokazywało o jeden dzień mniej.
 function isoDatePlusDays(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 (async () => {
