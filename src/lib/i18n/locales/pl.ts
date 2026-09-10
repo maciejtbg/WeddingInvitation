@@ -46,9 +46,6 @@ export const pl: Dictionary = {
   saveSelectedSeat: "Zapisz wybrane miejsce",
 
   galleryTitle: "Galeria zdjęć",
-  galleryFull: "Galeria jest pełna",
-  addPhoto: "Dodaj zdjęcie",
-  photoUploaded: "Zdjęcie dodane!",
 
   musicTitle: "Lista muzyczna",
   musicLinkLabel: "🎵 Poproś o piosenkę",

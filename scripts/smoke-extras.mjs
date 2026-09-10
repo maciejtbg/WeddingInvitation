@@ -100,6 +100,41 @@ function isoDatePlusDays(days) {
   await page.waitForSelector("text=Tak, bezpłatny.");
   assert(true, "kliknięcie pytania rozwija odpowiedź (natywne <details>)");
 
+  // --- Ta sama treść (odliczanie/harmonogram/FAQ) na spersonalizowanej
+  //     stronie gościa /moje-zaproszenie, nie tylko na stronie publicznej ---
+  await page.goto(`${BASE}/admin/guests?weddingId=${weddingId}`);
+  await page.fill('input[name="firstName"]', "Nela");
+  await page.click('button:has-text("Dodaj gościa")');
+  await page.waitForSelector("text=Nela");
+  await page.evaluate(() => {
+    window.__copied = null;
+    navigator.clipboard.writeText = async (text) => {
+      window.__copied = text;
+    };
+  });
+  await page.click('button:has-text("Skopiuj link dla gościa")');
+  const inviteUrl = await page.evaluate(() => window.__copied);
+
+  await page.goto(inviteUrl);
+  await page.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (page.url().includes("/zgoda")) {
+    await page.check('input[name="consent"]');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/moje-zaproszenie/);
+  }
+  await page.waitForSelector("text=Zostało 5 dni do ślubu!");
+  assert(true, "gość na /moje-zaproszenie widzi odliczanie do ślubu");
+
+  const guestPageText = await page.locator("body").innerText();
+  assert(
+    guestPageText.indexOf("Ceremonia") < guestPageText.indexOf("Przyjęcie"),
+    "gość na /moje-zaproszenie widzi harmonogram we właściwej kolejności"
+  );
+  assert(
+    (await page.locator("summary", { hasText: "Czy jest parking?" }).count()) === 1,
+    "gość na /moje-zaproszenie widzi FAQ"
+  );
+
   // --- Kalendarz: prawidłowy plik .ics z poprawną datą ---
   const icsResponse = await page.request.get(`${BASE}/${slug}/calendar`);
   assert(icsResponse.ok(), "endpoint kalendarza zwraca 200");

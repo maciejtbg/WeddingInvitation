@@ -49,11 +49,10 @@ export interface Dictionary {
   seatIsYouSuffix: string;
   saveSelectedSeat: string;
 
-  // Galeria zdjęć (placeholder do R2)
+  // Galeria zdjęć (placeholder do R2) - tylko na stronie publicznej, para
+  // dodaje zdjęcia z /admin/gallery; dodawanie przez gości na
+  // /moje-zaproszenie to planowana funkcja premium, na razie wyłączona.
   galleryTitle: string;
-  galleryFull: string;
-  addPhoto: string;
-  photoUploaded: string;
 
   // Lista życzeń muzycznych
   musicTitle: string;

@@ -41,9 +41,6 @@ export const uk: Dictionary = {
   saveSelectedSeat: "Зберегти обране місце",
 
   galleryTitle: "Фотогалерея",
-  galleryFull: "Галерея заповнена",
-  addPhoto: "Додати фото",
-  photoUploaded: "Фото додано!",
 
   musicTitle: "Музичні побажання",
   musicLinkLabel: "🎵 Замовити пісню",

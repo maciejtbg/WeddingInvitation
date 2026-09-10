@@ -17,31 +17,7 @@ import { toEmbedUrl } from "@/lib/videoEmbed";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
-
-function formatDate(iso: string | null, locale: string): string | null {
-  if (!iso) return null;
-  try {
-    return new Date(iso).toLocaleDateString(locale, {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
-
-/** Liczba pełnych dni do ślubu, licząc od dzisiejszej północy - null jeśli
- * data już minęła (wtedy nie pokazujemy odliczania) albo jej brak. */
-function daysUntil(iso: string | null): number | null {
-  if (!iso) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const wedding = new Date(iso + "T00:00:00");
-  wedding.setHours(0, 0, 0, 0);
-  const days = Math.round((wedding.getTime() - today.getTime()) / 86400000);
-  return days >= 0 ? days : null;
-}
+import { formatWeddingDate, daysUntilWedding } from "@/lib/weddingCountdown";
 
 export default async function WeddingPublicPage({
   params,
@@ -64,7 +40,7 @@ export default async function WeddingPublicPage({
   const faqItems = listFaqItems(wedding.id);
   const locale = await getLocale();
   const dict = await getDictionary(locale);
-  const days = daysUntil(wedding.weddingDate);
+  const days = daysUntilWedding(wedding.weddingDate);
 
   return (
     <div
@@ -94,7 +70,7 @@ export default async function WeddingPublicPage({
         {wedding.weddingDate && (
           <>
             <p className="mb-2 text-lg text-[var(--wd-text)]">
-              {formatDate(wedding.weddingDate, locale)}
+              {formatWeddingDate(wedding.weddingDate, locale)}
             </p>
             {days !== null && (
               <p className="mb-3 font-serif text-xl text-[var(--wd-accent)]">
@@ -129,7 +105,12 @@ export default async function WeddingPublicPage({
             </div>
           </>
         )}
-        {wedding.venueName && (
+        {/* Stary, wolnotekstowy adres pokazujemy TYLKO dopóki para nie doda
+            żadnego typowanego Miejsca (patrz sekcja "howToFindUs" niżej) -
+            inaczej dwa opisy tego samego miejsca (jeden bez pinezki na
+            mapie) wprowadzały w błąd, np. nieaktualne "Kraków" wpisane przy
+            rejestracji wisiało obok prawdziwych, dodanych już Lokalizacji. */}
+        {wedding.venueName && locations.length === 0 && (
           <p className="mb-6 text-[var(--wd-muted)]">
             {wedding.venueName}
             {wedding.venueAddress ? `, ${wedding.venueAddress}` : ""}

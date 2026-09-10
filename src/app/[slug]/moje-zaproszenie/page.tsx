@@ -6,18 +6,23 @@ import { guestGetSelf } from "@/lib/db/guests";
 import { hasCurrentConsent } from "@/lib/db/consents";
 import { guestFindMySeat } from "@/lib/db/tables";
 import { listMessagesForGuest } from "@/lib/db/chat";
-import { listPhotos } from "@/lib/db/photos";
-import { MAX_PHOTOS_PER_WEDDING } from "@/lib/photoStorage";
+import { listLocations } from "@/lib/db/locations";
+import { getLocationKind } from "@/lib/locationKinds";
+import { listScheduleItems } from "@/lib/db/schedule";
+import { listFaqItems } from "@/lib/db/faq";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
-import PhotoGallery from "@/components/PhotoGallery";
+import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { PollingRefresher } from "@/components/PollingRefresher";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
-import { submitRsvpAction, sendGuestMessageAction, guestUploadPhotoAction } from "./actions";
+import { googleCalendarUrl } from "@/lib/calendarInvite";
+import { toEmbedUrl } from "@/lib/videoEmbed";
+import { formatWeddingDate, daysUntilWedding } from "@/lib/weddingCountdown";
+import { submitRsvpAction, sendGuestMessageAction } from "./actions";
 
 export default async function MyInvitePage({
   params,
@@ -29,12 +34,10 @@ export default async function MyInvitePage({
     seatSaved?: string;
     seatError?: string;
     requestSent?: string;
-    photoSaved?: string;
-    photoError?: string;
   }>;
 }) {
   const { slug } = await params;
-  const { saved, seatSaved, seatError, requestSent, photoSaved, photoError } = await searchParams;
+  const { saved, seatSaved, seatError, requestSent } = await searchParams;
   const wedding = findWeddingBySlug(slug);
   if (!wedding) notFound();
 
@@ -63,8 +66,10 @@ export default async function MyInvitePage({
   const mySeat = guestFindMySeat(guest.id);
   const locale = await getLocale();
   const dict = await getDictionary(locale);
-  const photos = listPhotos(wedding.id);
-  const galleryFull = photos.length >= MAX_PHOTOS_PER_WEDDING;
+  const locations = listLocations(wedding.id);
+  const scheduleItems = listScheduleItems(wedding.id);
+  const faqItems = listFaqItems(wedding.id);
+  const days = daysUntilWedding(wedding.weddingDate);
 
   return (
     <div
@@ -89,7 +94,45 @@ export default async function MyInvitePage({
         <h1 className="mb-2 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
-        <p className="mb-8 text-center text-sm">
+        {wedding.weddingDate && (
+          <div className="mb-2 text-center">
+            <p className="text-sm text-[var(--wd-text)]">
+              {formatWeddingDate(wedding.weddingDate, locale)}
+            </p>
+            {days !== null && (
+              <p className="font-serif text-lg text-[var(--wd-accent)]">
+                {days === 0
+                  ? dict.todayIsWedding
+                  : days === 1
+                    ? dict.oneDayUntilWedding
+                    : t(dict.daysUntilWedding, { days: String(days) })}
+              </p>
+            )}
+            <div className="mt-1 flex items-center justify-center gap-3 text-xs">
+              <a
+                href={googleCalendarUrl({
+                  partner1Name: wedding.partner1Name,
+                  partner2Name: wedding.partner2Name,
+                  weddingDate: wedding.weddingDate,
+                  location: wedding.venueName,
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+              >
+                {dict.addToCalendar}
+              </a>
+              <span className="text-[var(--wd-border)]">·</span>
+              <a
+                href={`/${wedding.slug}/calendar`}
+                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+              >
+                {dict.downloadIcs}
+              </a>
+            </div>
+          </div>
+        )}
+        <p className="mb-8 mt-4 text-center text-sm">
           <Link
             href={`/${wedding.slug}/moje-zaproszenie/muzyka`}
             className="text-[var(--wd-accent)] underline"
@@ -175,6 +218,127 @@ export default async function MyInvitePage({
           </form>
         </div>
 
+        {locations.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+              {dict.howToFindUs}
+            </h2>
+            <LocationsMap locations={locations} />
+            <div className="mt-3 space-y-1">
+              {locations.map((loc) => {
+                const kind = getLocationKind(loc.kind);
+                return (
+                  <p key={loc.id} className="text-xs text-[var(--wd-muted)]">
+                    <span
+                      className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
+                      style={{ background: kind.color }}
+                    />
+                    <strong className="text-[var(--wd-text)]">{loc.label}</strong>
+                    {" - "}
+                    {kind.label}
+                    {loc.address ? `, ${loc.address}` : ""}
+                  </p>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {wedding.story && (
+          <p className="mb-8 whitespace-pre-line text-center text-[var(--wd-text)]">
+            {wedding.story}
+          </p>
+        )}
+
+        {wedding.videoUrl && (
+          <div className="mb-8">
+            {(() => {
+              const embedUrl = toEmbedUrl(wedding.videoUrl);
+              return embedUrl ? (
+                <div className="aspect-video overflow-hidden rounded-lg border border-[var(--wd-border)]">
+                  <iframe
+                    src={embedUrl}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Film"
+                  />
+                </div>
+              ) : (
+                <a
+                  href={wedding.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--wd-accent)] underline"
+                >
+                  🎬 Zobacz film
+                </a>
+              );
+            })()}
+          </div>
+        )}
+
+        {wedding.giftNote && (
+          <p className="mb-8 whitespace-pre-line rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3 text-sm text-[var(--wd-muted)]">
+            {wedding.giftNote}
+          </p>
+        )}
+
+        {scheduleItems.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+              {dict.scheduleTitle}
+            </h2>
+            <div className="space-y-3 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
+              {scheduleItems.map((item, index) => {
+                const prevDay = index > 0 ? scheduleItems[index - 1].dayLabel : undefined;
+                const showDayHeader = item.dayLabel && item.dayLabel !== prevDay;
+                return (
+                  <div key={item.id}>
+                    {showDayHeader && (
+                      <p className="mb-1 mt-2 text-xs font-semibold uppercase tracking-wide text-[var(--wd-accent)]">
+                        {item.dayLabel}
+                      </p>
+                    )}
+                    <div className="flex gap-3">
+                      <span className="w-16 shrink-0 text-sm font-medium text-[var(--wd-accent)]">
+                        {item.timeLabel}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-[var(--wd-text)]">{item.title}</p>
+                        {item.description && (
+                          <p className="text-xs text-[var(--wd-muted)]">{item.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {faqItems.length > 0 && (
+          <div className="mb-8">
+            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+              {dict.faqTitle}
+            </h2>
+            <div className="space-y-2">
+              {faqItems.map((item) => (
+                <details
+                  key={item.id}
+                  className="rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-3"
+                >
+                  <summary className="cursor-pointer text-sm font-medium text-[var(--wd-text)]">
+                    {item.question}
+                  </summary>
+                  <p className="mt-2 text-sm text-[var(--wd-muted)]">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
           <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">
             {dict.questionForCouple}
@@ -211,46 +375,6 @@ export default async function MyInvitePage({
               {dict.send}
             </button>
           </form>
-        </div>
-
-        <div className="mt-8 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
-          <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">{dict.galleryTitle}</h2>
-          {photoSaved && (
-            <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-              {dict.photoUploaded}
-            </p>
-          )}
-          {photoError && (
-            <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{photoError}</p>
-          )}
-          {photos.length > 0 && (
-            <div className="mb-4">
-              <PhotoGallery weddingId={wedding.id} photos={photos} />
-            </div>
-          )}
-          {galleryFull ? (
-            <p className="text-sm text-[var(--wd-muted)]">{dict.galleryFull}</p>
-          ) : (
-            <form
-              action={guestUploadPhotoAction}
-              encType="multipart/form-data"
-              className="flex flex-wrap items-center gap-2"
-            >
-              <input
-                type="file"
-                name="photo"
-                accept="image/*"
-                required
-                className="text-sm text-[var(--wd-text)]"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-[var(--wd-accent)] px-4 py-1.5 text-sm font-medium text-[var(--wd-accent-text)] hover:opacity-90"
-              >
-                {dict.addPhoto}
-              </button>
-            </form>
-          )}
         </div>
 
         <p className="mt-8 text-center text-xs text-[var(--wd-muted)]">

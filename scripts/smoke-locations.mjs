@@ -60,11 +60,24 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.waitForSelector("text=Kaplica w parku");
   assert(true, "miejsce zapisane i widoczne na liście");
 
+  // --- Stary, wolnotekstowy adres (venueName) NIE miesza się z nowymi,
+  //     typowanymi Lokalizacjami - patrz src/app/[slug]/page.tsx, sekcja
+  //     `locations.length === 0`. Bez tej poprawki np. nieaktualne "Kraków"
+  //     wpisane przy rejestracji wisiałoby obok prawdziwego miejsca. ---
+  await page.goto(`${BASE}/admin`);
+  await page.fill('input[name="venueName"]', "Nieaktualna Nazwa Sali");
+  await page.click('form:has(input[name="venueName"]) button:has-text("Zapisz")');
+  await page.waitForURL(/saved=1/);
+
   // --- Strona publiczna: mapa + linki do nawigacji ---
   await page.goto(`${BASE}/${slugMatch}`);
   await page.waitForSelector(".leaflet-container", { state: "visible", timeout: 15000 });
   assert((await page.content()).includes("Jak do nas trafić"), "sekcja mapy widoczna na stronie publicznej");
   assert((await page.content()).includes("Kaplica w parku"), "legenda pod mapą wymienia dodane miejsce");
+  assert(
+    !(await page.content()).includes("Nieaktualna Nazwa Sali"),
+    "KONFLIKT: stary wolnotekstowy adres znika ze strony, gdy są już typowane Lokalizacje"
+  );
 
   await page.waitForSelector(".leaflet-marker-icon", { timeout: 10000 });
   const markerCount = await page.locator(".leaflet-marker-icon").count();
@@ -76,6 +89,33 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   assert(
     popupLinks.includes("Google Maps") && popupLinks.includes("Apple Maps"),
     "popup pinezki ma linki do Google Maps i Apple Maps"
+  );
+
+  // --- Ta sama mapa na spersonalizowanej stronie gościa /moje-zaproszenie ---
+  await page.goto(`${BASE}/admin/guests?weddingId=${weddingId}`);
+  await page.fill('input[name="firstName"]', "Olek");
+  await page.click('button:has-text("Dodaj gościa")');
+  await page.waitForSelector("text=Olek");
+  await page.evaluate(() => {
+    window.__copied = null;
+    navigator.clipboard.writeText = async (text) => {
+      window.__copied = text;
+    };
+  });
+  await page.click('button:has-text("Skopiuj link dla gościa")');
+  const inviteUrl = await page.evaluate(() => window.__copied);
+
+  await page.goto(inviteUrl);
+  await page.waitForURL(/\/(zgoda|moje-zaproszenie)/);
+  if (page.url().includes("/zgoda")) {
+    await page.check('input[name="consent"]');
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/moje-zaproszenie/);
+  }
+  await page.waitForSelector(".leaflet-container", { state: "visible", timeout: 15000 });
+  assert(
+    (await page.content()).includes("Kaplica w parku"),
+    "gość na /moje-zaproszenie widzi tę samą mapę z miejscem"
   );
 
   // --- Usunięcie miejsca ---

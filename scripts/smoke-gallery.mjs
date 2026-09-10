@@ -1,9 +1,10 @@
 // Test end-to-end galerii zdjęć (placeholder do R2) - patrz
 // src/lib/photoStorage.ts (limity, kompresja), src/lib/db/photos.ts.
 //
-// Sprawdza: upload przez gościa i przez parę, że zdjęcie faktycznie jest
-// skompresowane (dużo mniejsze niż oryginał), twardy limit
-// MAX_PHOTOS_PER_WEDDING, i że usunięcie przez parę zwalnia miejsce w limicie.
+// Sprawdza: upload przez parę (jedyny obecnie dostępny kanał - dodawanie
+// przez gości to planowana funkcja premium, patrz komentarz niżej), że
+// zdjęcie faktycznie jest skompresowane (dużo mniejsze niż oryginał), twardy
+// limit MAX_PHOTOS_PER_WEDDING, i że usunięcie przez parę zwalnia miejsce.
 //
 // Uruchomienie:
 //   npm run build && npm run start -- -p 3100   (w jednym terminalu)
@@ -79,7 +80,9 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.waitForSelector('img[src*="/uploads/"]');
   assert(true, "zdjęcie widoczne na publicznej stronie wesela");
 
-  // --- Gość też może dorzucić zdjęcie ---
+  // --- Gość NIE może dorzucić zdjęcia - dodawanie przez gości to planowana
+  //     funkcja premium, na razie /moje-zaproszenie w ogóle nie pokazuje
+  //     galerii (patrz src/app/[slug]/moje-zaproszenie/page.tsx). ---
   await page.goto(`${BASE}/admin/guests?weddingId=${weddingId}`);
   await page.fill('input[name="firstName"]', "Kuba");
   await page.click('button:has-text("Dodaj gościa")');
@@ -100,17 +103,17 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/moje-zaproszenie/);
   }
-  await page.setInputFiles('input[name="photo"]', SAMPLE_PHOTO);
-  await page.click('button:has-text("Dodaj zdjęcie")');
-  await page.waitForURL(/photoSaved=1/);
-  assert(true, "gość wgrał własne zdjęcie do wspólnej galerii");
+  assert(
+    (await page.locator('input[name="photo"]').count()) === 0,
+    "gość nie widzi formularza dodawania zdjęć na /moje-zaproszenie (premium na potem)"
+  );
 
   // --- Twardy limit: dobijamy do 10, sprawdzamy blokadę ---
   await page.goto(`${BASE}/admin/gallery?weddingId=${weddingId}`);
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 9; i++) {
     await page.setInputFiles('input[name="photo"]', SAMPLE_PHOTO);
     await page.click('button:has-text("Dodaj zdjęcie")');
-    await page.waitForSelector(`text=Zdjęcia (${i + 3}/10)`);
+    await page.waitForSelector(`text=Zdjęcia (${i + 2}/10)`);
   }
   assert(true, "galeria doszła do 10/10");
   assert(
