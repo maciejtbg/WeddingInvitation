@@ -24,25 +24,39 @@ const DB_PATH = process.env.DATABASE_FILE || path.join(process.cwd(), "data", "d
 // pliku bazy wielokrotnie w tym samym procesie.
 const globalForDb = globalThis as unknown as { __weddingDb?: DatabaseSync };
 
+/** `busy_timeout` chroni przed SQLITE_BUSY na zajętej blokadzie, ale NIE
+ * pomaga na wyścig przy pierwszym utworzeniu pliku bazy - kilka procesów
+ * (np. 3 workery next builda, z których każdy pierwszy raz importuje ten
+ * moduł) potrafi jednocześnie trafić na `new DatabaseSync(path)` na jeszcze
+ * nieistniejący plik, i to właśnie samo tworzenie/inicjalizacja pliku
+ * (nie zwykłe oczekiwanie na zwolnienie blokady) kończy się "database is
+ * locked" na pierwszej instrukcji, która faktycznie go dotyka -
+ * `journal_mode = WAL` - mimo ustawionego wcześniej busy_timeout. Złapane
+ * empirycznie: sam busy_timeout=5000 nie wystarczał, dopiero jawny retry
+ * na poziomie JS (Atomics.wait, bo DatabaseSync jest synchroniczne, więc
+ * nie ma tu await/setTimeout) usunął ten fail. */
+function execWithRetry(database: DatabaseSync, sql: string, attempts = 15): void {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      database.exec(sql);
+      return;
+    } catch (err) {
+      const isLocked = err instanceof Error && /database is locked/i.test(err.message);
+      if (!isLocked || i === attempts - 1) throw err;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 200);
+    }
+  }
+}
+
 function createConnection(): DatabaseSync {
   const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
   const database = new DatabaseSync(DB_PATH);
-  // MUSI być pierwszym poleceniem na tym połączeniu, przed journal_mode
-  // niżej - inaczej to WŁAŚNIE journal_mode (pierwsza instrukcja, która
-  // faktycznie dotyka pliku) obrywa natychmiastowym "database is locked"
-  // zamiast poczekać na zwolnienie blokady, bo w momencie jej wykonania
-  // busy_timeout jeszcze by nie obowiązywał. Bez tego równoległy dostęp do
-  // świeżo utworzonej bazy (np. next build odpalający kilku workerów, z
-  // których każdy pierwszy raz importuje ten moduł i uruchamia
-  // runMigrations() poniżej) kończy się failem builda - złapane empirycznie:
-  // świeży plik bazy + 3 workery next builda = częsty fail. 5s to i tak
-  // tylko górny limit oczekiwania, nie stały narzut.
-  database.exec("PRAGMA busy_timeout = 5000;");
-  database.exec("PRAGMA journal_mode = WAL;");
-  database.exec("PRAGMA foreign_keys = ON;");
+  execWithRetry(database, "PRAGMA busy_timeout = 5000;");
+  execWithRetry(database, "PRAGMA journal_mode = WAL;");
+  execWithRetry(database, "PRAGMA foreign_keys = ON;");
   return database;
 }
 
