@@ -136,6 +136,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Playfair Display", headingWeight: 600, body: "Cormorant Garamond" },
     swatches: ["#e9eddd", "#fdfcf7", "#7d8c5c"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/botanical-elegance-fresh-greenery.jpg",
+      credit: "Zdjęcie: Anja Pietsch, CC BY 2.0",
+    },
   },
   "modern-minimal": {
     id: "modern-minimal",
@@ -152,6 +156,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Montserrat", headingWeight: 700, body: "Montserrat" },
     swatches: ["#f0eee7", "#ffffff", "#b5654a"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/modern-minimal-marble.jpg",
+      credit: "Zdjęcie: James St. John, CC BY 2.0",
+    },
   },
   "romantic-script": {
     id: "romantic-script",
@@ -168,6 +176,7 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Great Vibes", headingWeight: 400, body: "Cormorant Garamond" },
     swatches: ["#f8e7eb", "#fffbfa", "#c76b83"],
+    defaultCoverPhoto: { url: "/demo-photos/romantic-script-peony.jpg" },
   },
   "rustic-boho": {
     id: "rustic-boho",
@@ -184,6 +193,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Josefin Sans", headingWeight: 600, body: "Cormorant Garamond" },
     swatches: ["#f0dfc2", "#fffaf0", "#c1662f"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/rustic-boho-wheat-field.jpg",
+      credit: "Zdjęcie: Marco Montagna, CC BY-SA 3.0",
+    },
   },
   "art-deco-glam": {
     id: "art-deco-glam",
@@ -200,6 +213,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Cinzel", headingWeight: 600, body: "Montserrat" },
     swatches: ["#0f0f0f", "#cba135", "#f2e9d8"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/art-deco-glam-golden-evening.jpg",
+      credit: "Zdjęcie: PattayaPatrol, CC BY-SA 4.0",
+    },
   },
   "coastal-nautical": {
     id: "coastal-nautical",
@@ -216,6 +233,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Playfair Display", headingWeight: 600, body: "Josefin Sans" },
     swatches: ["#e6edf2", "#ffffff", "#1c5a73"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/coastal-nautical-turquoise-shore.jpg",
+      credit: "Zdjęcie: Jean-Marie Hullot, CC BY 3.0",
+    },
   },
   "winter-elegance": {
     id: "winter-elegance",
@@ -232,6 +253,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Cormorant Garamond", headingWeight: 600, body: "Montserrat" },
     swatches: ["#e2e7f0", "#ffffff", "#4a5b8c"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/winter-elegance-frosted-pine.jpg",
+      credit: "Zdjęcie: Ville Tuominen, CC BY 3.0",
+    },
   },
 };
 
