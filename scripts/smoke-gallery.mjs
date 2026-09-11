@@ -80,6 +80,23 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await page.waitForSelector('img[src*="/uploads/"]');
   assert(true, "zdjęcie widoczne na publicznej stronie wesela");
 
+  // --- Zdjęcie "powitalne" (tło hero na stronie głównej) ---
+  await page.goto(`${BASE}/admin/gallery?weddingId=${weddingId}`);
+  await page.click('button:has-text("Ustaw jako powitalne")');
+  await page.waitForSelector("text=Powitalne");
+  assert(true, "zdjęcie oznaczone jako powitalne (widoczna plakietka)");
+
+  await page.goto(`${BASE}/${slug}`);
+  assert(
+    (await page.locator("h1.text-white").count()) === 1,
+    "hero na stronie publicznej używa jasnego tekstu, gdy jest zdjęcie powitalne"
+  );
+
+  await page.goto(`${BASE}/admin/gallery?weddingId=${weddingId}`);
+  await page.click('button:has-text("Usuń z powitalnych")');
+  await page.waitForSelector('button:has-text("Ustaw jako powitalne")');
+  assert(true, "cofnięcie zdjęcia powitalnego działa");
+
   // --- Gość NIE może dorzucić zdjęcia - dodawanie przez gości to planowana
   //     funkcja premium, na razie /moje-zaproszenie w ogóle nie pokazuje
   //     galerii (patrz src/app/[slug]/moje-zaproszenie/page.tsx). ---

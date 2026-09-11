@@ -16,6 +16,9 @@ import GuestSeatSection from "@/components/GuestSeatSection";
 import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { PollingRefresher } from "@/components/PollingRefresher";
+import { HeroCoverPhotos } from "@/components/HeroCoverPhotos";
+import { listCoverPhotos } from "@/lib/db/photos";
+import { photoUrl } from "@/lib/photoStorage";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
@@ -70,77 +73,111 @@ export default async function MyInvitePage({
   const scheduleItems = listScheduleItems(wedding.id);
   const faqItems = listFaqItems(wedding.id);
   const days = daysUntilWedding(wedding.weddingDate);
+  const coverUrls = listCoverPhotos(wedding.id).map((p) => photoUrl(wedding.id, p.fileName));
+  const hasHeroPhoto = coverUrls.length > 0;
 
   return (
     <div
-      className="flex-1 px-6 py-12 font-[family-name:var(--wd-font-body)]"
+      className="flex-1 font-[family-name:var(--wd-font-body)]"
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
-      <div className="mx-auto w-full max-w-xl">
-        <PollingRefresher />
-        <LanguageSwitcher
-          currentLocale={locale}
-          returnTo={`/${wedding.slug}/moje-zaproszenie`}
-          dict={dict}
-        />
-        <ThemeOrnament
-          theme={theme.id}
-          className="mx-auto mb-6 h-8 w-40"
-          style={{ color: theme.colors.accent }}
-        />
-        <p className="mb-1 text-center text-sm text-[var(--wd-muted)]">
-          {t(dict.greeting, { name: guest.firstName })}
-        </p>
-        <h1 className="mb-2 text-center wd-heading-font text-3xl font-semibold text-[var(--wd-text)]">
-          {wedding.partner1Name} &amp; {wedding.partner2Name}
-        </h1>
-        {wedding.weddingDate && (
-          <div className="mb-2 text-center">
-            <p className="text-sm text-[var(--wd-text)]">
-              {formatWeddingDate(wedding.weddingDate, locale)}
-            </p>
-            {days !== null && (
-              <p className="wd-heading-font text-lg text-[var(--wd-accent)]">
-                {days === 0
-                  ? dict.todayIsWedding
-                  : days === 1
-                    ? dict.oneDayUntilWedding
-                    : t(dict.daysUntilWedding, { days: String(days) })}
-              </p>
-            )}
-            <div className="mt-1 flex items-center justify-center gap-3 text-xs">
-              <a
-                href={googleCalendarUrl({
-                  partner1Name: wedding.partner1Name,
-                  partner2Name: wedding.partner2Name,
-                  weddingDate: wedding.weddingDate,
-                  location: wedding.venueName,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
-              >
-                {dict.addToCalendar}
-              </a>
-              <span className="text-[var(--wd-border)]">·</span>
-              <a
-                href={`/${wedding.slug}/calendar`}
-                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
-              >
-                {dict.downloadIcs}
-              </a>
-            </div>
-          </div>
-        )}
-        <p className="mb-8 mt-4 text-center text-sm">
-          <Link
-            href={`/${wedding.slug}/moje-zaproszenie/muzyka`}
-            className="text-[var(--wd-accent)] underline"
-          >
-            {dict.musicLinkLabel}
-          </Link>
-        </p>
+      <PollingRefresher />
 
+      {/* Ten sam hero co na stronie publicznej (patrz src/app/[slug]/page.tsx)
+          - te same zdjęcia powitalne pary, żeby wyglądało spójnie niezależnie
+          od tego, czy gość trafił tu z linku, czy z publicznej strony. */}
+      <div
+        className="relative flex min-h-[50vh] flex-col items-center justify-center overflow-hidden px-6 py-12 text-center"
+        style={!hasHeroPhoto ? { background: theme.colors.background } : undefined}
+      >
+        {hasHeroPhoto && <HeroCoverPhotos urls={coverUrls} />}
+        <div className="relative z-10 w-full max-w-xl">
+          <LanguageSwitcher
+            currentLocale={locale}
+            returnTo={`/${wedding.slug}/moje-zaproszenie`}
+            dict={dict}
+          />
+          <ThemeOrnament
+            theme={theme.id}
+            className="mx-auto mb-6 h-8 w-40"
+            style={{ color: hasHeroPhoto ? "#ffffff" : theme.colors.accent }}
+          />
+          <p className={`mb-1 text-sm ${hasHeroPhoto ? "text-white/90" : "text-[var(--wd-muted)]"}`}>
+            {t(dict.greeting, { name: guest.firstName })}
+          </p>
+          <h1
+            className={`mb-2 wd-heading-font text-3xl font-semibold ${
+              hasHeroPhoto ? "text-white drop-shadow-sm" : "text-[var(--wd-text)]"
+            }`}
+          >
+            {wedding.partner1Name} &amp; {wedding.partner2Name}
+          </h1>
+          {wedding.weddingDate && (
+            <div className="mb-2">
+              <p className={`text-sm ${hasHeroPhoto ? "text-white/90" : "text-[var(--wd-text)]"}`}>
+                {formatWeddingDate(wedding.weddingDate, locale)}
+              </p>
+              {days !== null && (
+                <p
+                  className={`wd-heading-font text-lg ${
+                    hasHeroPhoto ? "text-white" : "text-[var(--wd-accent)]"
+                  }`}
+                >
+                  {days === 0
+                    ? dict.todayIsWedding
+                    : days === 1
+                      ? dict.oneDayUntilWedding
+                      : t(dict.daysUntilWedding, { days: String(days) })}
+                </p>
+              )}
+              <div
+                className={`mt-1 flex items-center justify-center gap-3 text-xs ${
+                  hasHeroPhoto ? "text-white/80" : ""
+                }`}
+              >
+                <a
+                  href={googleCalendarUrl({
+                    partner1Name: wedding.partner1Name,
+                    partner2Name: wedding.partner2Name,
+                    weddingDate: wedding.weddingDate,
+                    location: wedding.venueName,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={
+                    hasHeroPhoto
+                      ? "underline hover:text-white"
+                      : "text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+                  }
+                >
+                  {dict.addToCalendar}
+                </a>
+                <span className={hasHeroPhoto ? "text-white/40" : "text-[var(--wd-border)]"}>·</span>
+                <a
+                  href={`/${wedding.slug}/calendar`}
+                  className={
+                    hasHeroPhoto
+                      ? "underline hover:text-white"
+                      : "text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+                  }
+                >
+                  {dict.downloadIcs}
+                </a>
+              </div>
+            </div>
+          )}
+          <p className={`mt-4 text-sm ${hasHeroPhoto ? "text-white/90" : ""}`}>
+            <Link
+              href={`/${wedding.slug}/moje-zaproszenie/muzyka`}
+              className={hasHeroPhoto ? "underline hover:text-white" : "text-[var(--wd-accent)] underline"}
+            >
+              {dict.musicLinkLabel}
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-xl px-6 py-12">
         {saved && (
           <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
             {dict.rsvpSavedThanks}

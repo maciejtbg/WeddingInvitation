@@ -235,6 +235,10 @@ export interface WeddingPhoto {
   uploadedByGuestId: string | null;
   fileName: string;
   byteSize: number;
+  /** NULL = zwykłe zdjęcie w galerii; liczba = wybrane przez parę jako tło
+   * "powitalne" na stronie głównej zaproszenia, ta liczba to kolejność w
+   * rotacji (patrz src/lib/db/photos.ts, MAX_COVER_PHOTOS). */
+  coverOrder: number | null;
   createdAt: string;
 }
 

@@ -13,9 +13,14 @@ interface Props {
   /** Podaj tylko w panelu pary - obecność tej propsy włącza przycisk
    * usuwania na każdej miniaturce. */
   deleteAction?: (formData: FormData) => Promise<void>;
+  /** Podaj tylko w panelu pary - obecność tej propsy włącza przełącznik
+   * "zdjęcie powitalne" (tło strony głównej, patrz src/lib/db/photos.ts).
+   * Widoczny tylko przy zdjęciach wgranych przez samą parę, nie gości -
+   * to jej wybór wizerunkowy. */
+  coverAction?: (formData: FormData) => Promise<void>;
 }
 
-export default function PhotoGallery({ weddingId, photos, deleteAction }: Props) {
+export default function PhotoGallery({ weddingId, photos, deleteAction, coverAction }: Props) {
   if (photos.length === 0) return null;
 
   return (
@@ -33,6 +38,11 @@ export default function PhotoGallery({ weddingId, photos, deleteAction }: Props)
             className="h-full w-full object-cover"
             loading="lazy"
           />
+          {photo.coverOrder !== null && (
+            <span className="absolute left-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
+              Powitalne
+            </span>
+          )}
           {deleteAction && (
             <form action={deleteAction} className="absolute right-1 top-1">
               <input type="hidden" name="weddingId" value={weddingId} />
@@ -43,6 +53,18 @@ export default function PhotoGallery({ weddingId, photos, deleteAction }: Props)
                 className="flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs text-white hover:bg-black/80"
               >
                 ✕
+              </button>
+            </form>
+          )}
+          {coverAction && photo.uploadedByGuestId === null && (
+            <form action={coverAction} className="absolute inset-x-1 bottom-1">
+              <input type="hidden" name="weddingId" value={weddingId} />
+              <input type="hidden" name="photoId" value={photo.id} />
+              <button
+                type="submit"
+                className="w-full rounded-md bg-white/90 px-1 py-1 text-[10px] font-medium text-zinc-800 hover:bg-white"
+              >
+                {photo.coverOrder !== null ? "Usuń z powitalnych" : "Ustaw jako powitalne"}
               </button>
             </form>
           )}

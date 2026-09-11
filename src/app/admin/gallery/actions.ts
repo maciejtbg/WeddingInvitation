@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCoupleSession } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
-import { uploadPhoto, removePhoto } from "@/lib/photoStorage";
+import { uploadPhoto, removePhoto, MAX_COVER_PHOTOS } from "@/lib/photoStorage";
+import { setCoverPhoto, countCoverPhotos, findPhotoById } from "@/lib/db/photos";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -52,6 +53,32 @@ export async function deletePhotoAction(formData: FormData): Promise<void> {
   const wedding = await requireOwnedWedding(weddingId);
 
   await removePhoto(wedding.id, photoId);
+  revalidatePath("/admin/gallery");
+  revalidatePath(`/${wedding.slug}`);
+  redirect(`/admin/gallery?weddingId=${weddingId}`);
+}
+
+/** Wybór zdjęć na rotujące tło "powitalne" strony głównej (patrz
+ * src/app/[slug]/page.tsx) - podzbiór zwykłej galerii, tylko zdjęcia
+ * dodane przez samą parę (nie gości - to jej wybór wizerunkowy). */
+export async function toggleCoverPhotoAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const photoId = readString(formData, "photoId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  const photo = findPhotoById(wedding.id, photoId);
+  if (!photo || photo.uploadedByGuestId !== null) redirect(`/admin/gallery?weddingId=${weddingId}`);
+
+  const isCurrentlyCover = photo.coverOrder !== null;
+  if (!isCurrentlyCover && countCoverPhotos(wedding.id) >= MAX_COVER_PHOTOS) {
+    redirect(
+      `/admin/gallery?weddingId=${weddingId}&error=${encodeURIComponent(
+        `Można wybrać maksymalnie ${MAX_COVER_PHOTOS} zdjęć powitalnych`
+      )}`
+    );
+  }
+
+  setCoverPhoto(wedding.id, photoId, !isCurrentlyCover);
   revalidatePath("/admin/gallery");
   revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/gallery?weddingId=${weddingId}`);

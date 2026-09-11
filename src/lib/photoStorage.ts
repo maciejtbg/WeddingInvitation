@@ -42,6 +42,9 @@ import {
 import type { WeddingPhoto } from "./db/types";
 
 export const MAX_PHOTOS_PER_WEDDING = 10;
+/** Ile spośród tych max. 10 zdjęć para może naraz wybrać jako rotujące tło
+ * "powitalne" na stronie głównej zaproszenia - patrz src/lib/db/photos.ts. */
+export const MAX_COVER_PHOTOS = 5;
 // Odrzucane PRZED przetwarzaniem - żeby nie próbować dekodować w pamięci
 // czegoś absurdalnie dużego.
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;

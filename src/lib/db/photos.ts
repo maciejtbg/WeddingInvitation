@@ -14,6 +14,7 @@ function rowToPhoto(row: SqliteRow): WeddingPhoto {
     uploadedByGuestId: row.uploaded_by_guest_id as string | null,
     fileName: row.file_name as string,
     byteSize: row.byte_size as number,
+    coverOrder: row.cover_order as number | null,
     createdAt: row.created_at as string,
   };
 }
@@ -77,4 +78,45 @@ export function deletePhoto(weddingId: string, photoId: string): WeddingPhoto | 
   if (!photo) return null;
   db.prepare("DELETE FROM wedding_photos WHERE id = ? AND wedding_id = ?").run(photoId, weddingId);
   return photo;
+}
+
+/** Zdjęcia wybrane przez parę jako pełnoekranowe tło "powitalne" na stronie
+ * głównej zaproszenia (patrz src/app/[slug]/page.tsx) - podzbiór zwykłej
+ * galerii, w kolejności rotacji. */
+export function listCoverPhotos(weddingId: string): WeddingPhoto[] {
+  const rows = db
+    .prepare(
+      "SELECT * FROM wedding_photos WHERE wedding_id = ? AND cover_order IS NOT NULL ORDER BY cover_order ASC"
+    )
+    .all(weddingId);
+  return rows.map(rowToPhoto);
+}
+
+export function countCoverPhotos(weddingId: string): number {
+  const row = db
+    .prepare("SELECT COUNT(*) as n FROM wedding_photos WHERE wedding_id = ? AND cover_order IS NOT NULL")
+    .get(weddingId) as { n: number };
+  return row.n;
+}
+
+/** Dodaje/usuwa zdjęcie z rotacji tła strony głównej. Kolejność to po
+ * prostu numer kolejnego wolnego miejsca (nie da się ręcznie przestawiać -
+ * przy najwyżej kilku zdjęciach na raz to niepotrzebny przerost formy). */
+export function setCoverPhoto(weddingId: string, photoId: string, isCover: boolean): void {
+  if (!isCover) {
+    db.prepare("UPDATE wedding_photos SET cover_order = NULL WHERE id = ? AND wedding_id = ?").run(
+      photoId,
+      weddingId
+    );
+    return;
+  }
+  const row = db
+    .prepare("SELECT MAX(cover_order) as maxOrder FROM wedding_photos WHERE wedding_id = ?")
+    .get(weddingId) as { maxOrder: number | null };
+  const nextOrder = (row.maxOrder ?? -1) + 1;
+  db.prepare("UPDATE wedding_photos SET cover_order = ? WHERE id = ? AND wedding_id = ?").run(
+    nextOrder,
+    photoId,
+    weddingId
+  );
 }

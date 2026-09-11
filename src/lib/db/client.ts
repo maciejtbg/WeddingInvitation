@@ -483,6 +483,16 @@ export function runMigrations() {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;
   }
+  // Zdjęcia "na powitanie" - do kilku zdjęć pary wybranych z galerii jako
+  // pełnoekranowe tło pod imionami na stronie głównej zaproszenia (patrz
+  // src/lib/db/photos.ts) - NULL = zwykłe zdjęcie w galerii, liczba =
+  // kolejność w rotacji tła.
+  try {
+    db.exec("ALTER TABLE wedding_photos ADD COLUMN cover_order INTEGER;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
 }
 
 runMigrations();

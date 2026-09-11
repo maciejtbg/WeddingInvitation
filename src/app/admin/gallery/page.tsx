@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { listPhotos } from "@/lib/db/photos";
-import { MAX_PHOTOS_PER_WEDDING } from "@/lib/photoStorage";
+import { MAX_PHOTOS_PER_WEDDING, MAX_COVER_PHOTOS } from "@/lib/photoStorage";
 import PhotoGallery from "@/components/PhotoGallery";
-import { adminUploadPhotoAction, deletePhotoAction } from "./actions";
+import { adminUploadPhotoAction, deletePhotoAction, toggleCoverPhotoAction } from "./actions";
 
 export default async function GalleryPage({
   searchParams,
@@ -37,6 +37,11 @@ export default async function GalleryPage({
         każde zdjęcie jest automatycznie zmniejszane i kompresowane po
         wgraniu, niezależnie od tego, ile ważyło na telefonie gościa. Widoczna
         dla wszystkich na Waszej publicznej stronie.
+      </p>
+      <p className="mb-6 text-sm text-zinc-500">
+        Spośród swoich zdjęć (nie gości) możecie wybrać do {MAX_COVER_PHOTOS}{" "}
+        jako rotujące tło pod Waszymi imionami na stronie głównej zaproszenia -
+        przycisk &bdquo;Ustaw jako powitalne&rdquo; pod miniaturką.
       </p>
 
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
@@ -78,7 +83,12 @@ export default async function GalleryPage({
         {photos.length === 0 ? (
           <p className="text-sm text-zinc-500">Galeria jest jeszcze pusta.</p>
         ) : (
-          <PhotoGallery weddingId={wedding.id} photos={photos} deleteAction={deletePhotoAction} />
+          <PhotoGallery
+            weddingId={wedding.id}
+            photos={photos}
+            deleteAction={deletePhotoAction}
+            coverAction={toggleCoverPhotoAction}
+          />
         )}
       </div>
     </div>

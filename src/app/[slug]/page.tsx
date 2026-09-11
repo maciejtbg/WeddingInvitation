@@ -9,7 +9,9 @@ import { ThemeOrnament } from "@/components/theme-ornaments";
 import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PhotoGallery from "@/components/PhotoGallery";
-import { listPhotos } from "@/lib/db/photos";
+import { HeroCoverPhotos } from "@/components/HeroCoverPhotos";
+import { listPhotos, listCoverPhotos } from "@/lib/db/photos";
+import { photoUrl } from "@/lib/photoStorage";
 import { listScheduleItems } from "@/lib/db/schedule";
 import { listFaqItems } from "@/lib/db/faq";
 import { googleCalendarUrl } from "@/lib/calendarInvite";
@@ -36,6 +38,9 @@ export default async function WeddingPublicPage({
   const theme = getTheme(wedding.theme);
   const locations = listLocations(wedding.id);
   const photos = listPhotos(wedding.id);
+  const coverPhotos = listCoverPhotos(wedding.id);
+  const coverUrls = coverPhotos.map((p) => photoUrl(wedding.id, p.fileName));
+  const hasHeroPhoto = coverUrls.length > 0;
   const scheduleItems = listScheduleItems(wedding.id);
   const faqItems = listFaqItems(wedding.id);
   const locale = await getLocale();
@@ -44,67 +49,104 @@ export default async function WeddingPublicPage({
 
   return (
     <div
-      className="flex flex-1 flex-col items-center px-6 py-20 font-[family-name:var(--wd-font-body)]"
+      className="flex flex-1 flex-col font-[family-name:var(--wd-font-body)]"
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
-      <div className="w-full max-w-xl text-center">
-        <LanguageSwitcher currentLocale={locale} returnTo={`/${wedding.slug}`} dict={dict} />
-        {deleted === "1" && (
-          <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
-            {dict.deleteMyDataDone}
-          </p>
-        )}
-        {!wedding.publishedAt && (
-          <p className="mb-6 inline-block rounded-full bg-amber-100 px-4 py-1 text-xs font-medium text-amber-800">
-            {dict.draftBadge}
-          </p>
-        )}
-        <ThemeOrnament
-          theme={theme.id}
-          className="mx-auto mb-6 h-8 w-40"
-          style={{ color: theme.colors.accent }}
-        />
-        <h1 className="mb-4 wd-heading-font text-4xl font-semibold text-[var(--wd-text)]">
-          {wedding.partner1Name} &amp; {wedding.partner2Name}
-        </h1>
-        {wedding.weddingDate && (
-          <>
-            <p className="mb-2 text-lg text-[var(--wd-text)]">
-              {formatWeddingDate(wedding.weddingDate, locale)}
+      {/* HERO - pełna szerokość, osobna sekcja od reszty treści (kart
+          poniżej). Bez zdjęcia powitalnego (patrz /admin/gallery) wygląda
+          dokładnie tak jak wcześniej - zwykłe kolorowe tło motywu, żeby
+          para, która jeszcze nic nie wgrała, nie została z pustym/dziwnym
+          hero. Ze zdjęciem: pełnoekranowe tło (rotacja, jeśli więcej niż
+          jedno) z ciemną nakładką i BIAŁYM tekstem - jak w prawdziwych
+          szablonach zaproszeń, gdzie tekst zawsze musi być czytelny
+          niezależnie od tego, co jest na zdjęciu. */}
+      <div
+        className="relative flex min-h-[65vh] flex-col items-center justify-center overflow-hidden px-6 py-16 text-center sm:min-h-[75vh]"
+        style={!hasHeroPhoto ? { background: theme.colors.background } : undefined}
+      >
+        {hasHeroPhoto && <HeroCoverPhotos urls={coverUrls} />}
+        <div className="relative z-10 w-full max-w-xl">
+          <LanguageSwitcher currentLocale={locale} returnTo={`/${wedding.slug}`} dict={dict} />
+          {deleted === "1" && (
+            <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
+              {dict.deleteMyDataDone}
             </p>
-            {days !== null && (
-              <p className="mb-3 wd-heading-font text-xl text-[var(--wd-accent)]">
-                {days === 0
-                  ? dict.todayIsWedding
-                  : days === 1
-                    ? dict.oneDayUntilWedding
-                    : t(dict.daysUntilWedding, { days: String(days) })}
+          )}
+          {!wedding.publishedAt && (
+            <p className="mb-6 inline-block rounded-full bg-amber-100 px-4 py-1 text-xs font-medium text-amber-800">
+              {dict.draftBadge}
+            </p>
+          )}
+          <ThemeOrnament
+            theme={theme.id}
+            className="mx-auto mb-6 h-8 w-40"
+            style={{ color: hasHeroPhoto ? "#ffffff" : theme.colors.accent }}
+          />
+          <h1
+            className={`mb-4 wd-heading-font text-4xl font-semibold sm:text-5xl ${
+              hasHeroPhoto ? "text-white drop-shadow-sm" : "text-[var(--wd-text)]"
+            }`}
+          >
+            {wedding.partner1Name} &amp; {wedding.partner2Name}
+          </h1>
+          {wedding.weddingDate && (
+            <>
+              <p className={`mb-2 text-lg ${hasHeroPhoto ? "text-white/90" : "text-[var(--wd-text)]"}`}>
+                {formatWeddingDate(wedding.weddingDate, locale)}
               </p>
-            )}
-            <div className="mb-6 flex items-center justify-center gap-3 text-xs">
-              <a
-                href={googleCalendarUrl({
-                  partner1Name: wedding.partner1Name,
-                  partner2Name: wedding.partner2Name,
-                  weddingDate: wedding.weddingDate,
-                  location: wedding.venueName,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+              {days !== null && (
+                <p
+                  className={`mb-3 wd-heading-font text-xl ${
+                    hasHeroPhoto ? "text-white" : "text-[var(--wd-accent)]"
+                  }`}
+                >
+                  {days === 0
+                    ? dict.todayIsWedding
+                    : days === 1
+                      ? dict.oneDayUntilWedding
+                      : t(dict.daysUntilWedding, { days: String(days) })}
+                </p>
+              )}
+              <div
+                className={`mb-2 flex items-center justify-center gap-3 text-xs ${
+                  hasHeroPhoto ? "text-white/80" : ""
+                }`}
               >
-                {dict.addToCalendar}
-              </a>
-              <span className="text-[var(--wd-border)]">·</span>
-              <a
-                href={`/${wedding.slug}/calendar`}
-                className="text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
-              >
-                {dict.downloadIcs}
-              </a>
-            </div>
-          </>
-        )}
+                <a
+                  href={googleCalendarUrl({
+                    partner1Name: wedding.partner1Name,
+                    partner2Name: wedding.partner2Name,
+                    weddingDate: wedding.weddingDate,
+                    location: wedding.venueName,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={
+                    hasHeroPhoto
+                      ? "underline hover:text-white"
+                      : "text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+                  }
+                >
+                  {dict.addToCalendar}
+                </a>
+                <span className={hasHeroPhoto ? "text-white/40" : "text-[var(--wd-border)]"}>·</span>
+                <a
+                  href={`/${wedding.slug}/calendar`}
+                  className={
+                    hasHeroPhoto
+                      ? "underline hover:text-white"
+                      : "text-[var(--wd-muted)] underline hover:text-[var(--wd-accent)]"
+                  }
+                >
+                  {dict.downloadIcs}
+                </a>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-xl px-6 py-16 text-center">
         {/* Stary, wolnotekstowy adres pokazujemy TYLKO dopóki para nie doda
             żadnego typowanego Miejsca (patrz sekcja "howToFindUs" niżej) -
             inaczej dwa opisy tego samego miejsca (jeden bez pinezki na
