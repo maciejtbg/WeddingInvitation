@@ -12,6 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Ellipse, Group, Layer, Rect, RegularPolygon, Stage, Text } from "react-konva";
+import type Konva from "konva";
 import type {
   Guest,
   SeatWithGuestName,
@@ -106,6 +107,108 @@ export default function TablePlanner({
   const [size, setSize] = useState({ width: 800, height: 600 });
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
+  // Przybliżanie/oddalanie i przesuwanie widoku - stoły na dużej sali nie
+  // mieszczą się na ekranie telefonu w skali 1:1. Stan widoku (skala,
+  // przesunięcie) jest CELOWO efemeryczny (nie zapisujemy go nigdzie) -
+  // to tylko sposób patrzenia na plan, nie część samego planu.
+  const stageRef = useRef<Konva.Stage | null>(null);
+  const [stageScale, setStageScale] = useState(1);
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  const MIN_SCALE = 0.3;
+  const MAX_SCALE = 3;
+  // Odległość/środek dwóch palców z POPRZEDNIEJ klatki gestu "uszczypnij, żeby
+  // przybliżyć" - referencja (nie stan), bo aktualizuje się wiele razy na
+  // sekundę w trakcie gestu i nie ma sensu przez to przerenderowywać komponentu.
+  const pinch = useRef<{ dist: number; center: { x: number; y: number } } | null>(null);
+
+  function zoomAroundCenter(factor: number) {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const oldScale = stage.scaleX();
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, oldScale * factor));
+    const center = { x: size.width / 2, y: size.height / 2 };
+    const pointTo = {
+      x: (center.x - stage.x()) / oldScale,
+      y: (center.y - stage.y()) / oldScale,
+    };
+    const newPos = {
+      x: center.x - pointTo.x * newScale,
+      y: center.y - pointTo.y * newScale,
+    };
+    setStageScale(newScale);
+    setStagePos(newPos);
+  }
+
+  function resetView() {
+    setStageScale(1);
+    setStagePos({ x: 0, y: 0 });
+  }
+
+  function handleWheel(e: Konva.KonvaEventObject<WheelEvent>) {
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    if (!stage) return;
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+    const oldScale = stage.scaleX();
+    const pointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    const factor = e.evt.deltaY > 0 ? 1 / 1.05 : 1.05;
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, oldScale * factor));
+    const newPos = {
+      x: pointer.x - pointTo.x * newScale,
+      y: pointer.y - pointTo.y * newScale,
+    };
+    setStageScale(newScale);
+    setStagePos(newPos);
+  }
+
+  function touchDistance(t1: Touch, t2: Touch): number {
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
+  function touchCenter(t1: Touch, t2: Touch): { x: number; y: number } {
+    return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+  }
+
+  function handleTouchMove(e: Konva.KonvaEventObject<TouchEvent>) {
+    const [t1, t2] = e.evt.touches;
+    if (!t1 || !t2) return; // jeden palec - to zwykłe przeciąganie stołu/kanwy, nie uszczypnięcie
+    e.evt.preventDefault();
+    const stage = stageRef.current;
+    if (!stage) return;
+    if (stage.isDragging()) stage.stopDrag();
+
+    const dist = touchDistance(t1, t2);
+    const center = touchCenter(t1, t2);
+    const prev = pinch.current;
+    if (!prev) {
+      pinch.current = { dist, center };
+      return;
+    }
+
+    const oldScale = stage.scaleX();
+    const pointTo = {
+      x: (center.x - stage.x()) / oldScale,
+      y: (center.y - stage.y()) / oldScale,
+    };
+    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, oldScale * (dist / prev.dist)));
+    const newPos = {
+      x: center.x - pointTo.x * newScale + (center.x - prev.center.x),
+      y: center.y - pointTo.y * newScale + (center.y - prev.center.y),
+    };
+    stage.scale({ x: newScale, y: newScale });
+    stage.position(newPos);
+    setStageScale(newScale);
+    setStagePos(newPos);
+    pinch.current = { dist, center };
+  }
+
+  function handleTouchEnd() {
+    pinch.current = null;
+  }
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -194,6 +297,16 @@ export default function TablePlanner({
     setSelectedLayoutItemId(null);
   }
 
+  /** Przybliżenie/przesunięcie widoku dobrane do jednej sali nie ma sensu w
+   * innej (np. wesele + poprawiny jako osobne "sale/plany") - przy zmianie
+   * wracamy do widoku domyślnego zamiast zostawiać kogoś zapatrzonego w
+   * pusty róg kanwy. */
+  function switchRoom(room: string) {
+    setActiveRoom(room);
+    setStageScale(1);
+    setStagePos({ x: 0, y: 0 });
+  }
+
   function scheduleServerSave(table: WeddingTable) {
     saveTableLocal(table).catch(() => {
       // Brak IndexedDB (np. tryb prywatny) nie powinien blokować pracy -
@@ -242,7 +355,7 @@ export default function TablePlanner({
     const trimmed = name?.trim();
     if (!trimmed) return;
     setRooms((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
-    setActiveRoom(trimmed);
+    switchRoom(trimmed);
     clearSelection();
   }
 
@@ -533,7 +646,7 @@ export default function TablePlanner({
               key={room}
               type="button"
               onClick={() => {
-                setActiveRoom(room);
+                switchRoom(room);
                 clearSelection();
               }}
               className={`rounded-full px-3 py-1 text-sm ${
@@ -600,8 +713,26 @@ export default function TablePlanner({
 
         <div ref={containerRef} className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-zinc-50">
           <Stage
+            ref={stageRef}
             width={size.width}
             height={size.height}
+            scaleX={stageScale}
+            scaleY={stageScale}
+            x={stagePos.x}
+            y={stagePos.y}
+            draggable
+            onDragEnd={(e) => {
+              // Tylko przeciągnięcie SAMEJ kanwy (przesuwanie widoku) - to
+              // zdarzenie wypływa też z przeciągnięcia stołu/elementu (Konva
+              // "bąbelkuje" w górę drzewa węzłów), które ma swój własny,
+              // osobny handler i nie powinno ruszać pozycji widoku.
+              if (e.target === e.target.getStage()) {
+                setStagePos({ x: e.target.x(), y: e.target.y() });
+              }
+            }}
+            onWheel={handleWheel}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             onMouseDown={(e) => {
               if (e.target === e.target.getStage()) clearSelection();
             }}
@@ -770,6 +901,39 @@ export default function TablePlanner({
               })}
             </Layer>
           </Stage>
+
+          {/* Pływające przyciski przybliżania - najbardziej niezawodny sposób
+              na telefonie (uszczypnięcie dwoma palcami działa obok, ale nie
+              każdy od razu je znajdzie/lubi). Nie w pasku narzędzi, żeby nie
+              wydłużać go jeszcze bardziej na wąskich ekranach. */}
+          <div className="absolute bottom-3 right-3 flex flex-col gap-1.5">
+            <button
+              type="button"
+              onClick={() => zoomAroundCenter(1.25)}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 bg-white text-lg text-zinc-700 shadow hover:border-zinc-400"
+              title="Przybliż"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => zoomAroundCenter(1 / 1.25)}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 bg-white text-lg text-zinc-700 shadow hover:border-zinc-400"
+              title="Oddal"
+            >
+              −
+            </button>
+            {(stageScale !== 1 || stagePos.x !== 0 || stagePos.y !== 0) && (
+              <button
+                type="button"
+                onClick={resetView}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 bg-white text-xs text-zinc-700 shadow hover:border-zinc-400"
+                title="Wyśrodkuj widok"
+              >
+                ⟲
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
