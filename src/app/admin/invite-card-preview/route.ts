@@ -8,6 +8,7 @@ import { getCoupleSession } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { getTheme } from "@/lib/themes";
 import { generateInviteCardPng, isInviteCardVariant, DEFAULT_INVITE_CARD_VARIANT } from "@/lib/inviteCard";
+import { externalOrigin } from "@/lib/externalOrigin";
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
   const variantParam = request.nextUrl.searchParams.get("variant");
   const variant = isInviteCardVariant(variantParam) ? variantParam : DEFAULT_INVITE_CARD_VARIANT;
 
+  const origin = externalOrigin(request);
   const png = await generateInviteCardPng({
     theme,
     variant,
@@ -43,8 +45,8 @@ export async function GET(request: NextRequest) {
     partner2Name: wedding.partner2Name,
     weddingDateLabel: formatDate(wedding.weddingDate),
     shortCode: "ABCD-1234",
-    siteHost: request.nextUrl.host,
-    inviteUrl: `${request.nextUrl.origin}/${wedding.slug}`,
+    siteHost: new URL(origin).host,
+    inviteUrl: `${origin}/${wedding.slug}`,
   });
 
   return new NextResponse(new Uint8Array(png), {

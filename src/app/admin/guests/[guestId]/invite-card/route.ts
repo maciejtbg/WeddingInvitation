@@ -8,6 +8,7 @@ import { findWeddingById } from "@/lib/db/weddings";
 import { adminFindGuestById } from "@/lib/db/guests";
 import { getTheme } from "@/lib/themes";
 import { generateInviteCardPng, isInviteCardVariant } from "@/lib/inviteCard";
+import { externalOrigin } from "@/lib/externalOrigin";
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -44,6 +45,10 @@ export async function GET(
   const theme = getTheme(wedding.theme);
   const variantParam = request.nextUrl.searchParams.get("variant");
   const variant = isInviteCardVariant(variantParam) ? variantParam : wedding.invitationCardVariant;
+  // request.nextUrl.host/origin odzwierciedlają adres, POD KTÓRYM Next.js
+  // faktycznie nasłuchuje (za nginx to "localhost:3000", nie publiczna
+  // domena) - stąd externalOrigin() zamiast tego, patrz komentarz przy niej.
+  const origin = externalOrigin(request);
   const png = await generateInviteCardPng({
     theme,
     variant,
@@ -51,8 +56,8 @@ export async function GET(
     partner2Name: wedding.partner2Name,
     weddingDateLabel: formatDate(wedding.weddingDate),
     shortCode: guest.shortCode,
-    siteHost: request.nextUrl.host,
-    inviteUrl: `${request.nextUrl.origin}/z/${guest.token}`,
+    siteHost: new URL(origin).host,
+    inviteUrl: `${origin}/z/${guest.token}`,
   });
 
   // ?preview=1 - do podglądu na żywo w <img> na stronie wyboru wariantu
