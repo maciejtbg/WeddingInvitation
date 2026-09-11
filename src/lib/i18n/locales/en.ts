@@ -66,6 +66,9 @@ export const en: Dictionary = {
   languageLabel: "Language",
   moreLanguages: "More languages...",
 
+  fetchingLanguageBanner: "Fetching your language ({language})...",
+  stayInEnglish: "Stay in English",
+
   privacyPolicyLinkLabel: "Privacy policy",
   consentTitle: "Before you continue",
   consentIntro:

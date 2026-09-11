@@ -12,6 +12,7 @@ import { findWeddingBySlug } from "@/lib/db/weddings";
 import { hasCurrentConsent } from "@/lib/db/consents";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
+import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { acceptGuestConsentAction } from "./actions";
@@ -41,10 +42,12 @@ export default async function GuestConsentPage({
   const dict = await getDictionary(locale);
 
   return (
-    <div
-      className="flex flex-1 items-center justify-center px-6 py-16 font-[family-name:var(--wd-font-body)]"
-      style={{ ...themeStyleVars(theme), background: theme.colors.background }}
-    >
+    <>
+      <PendingLocaleBanner returnTo={`/${wedding.slug}/zgoda`} dict={dict} />
+      <div
+        className="flex flex-1 items-center justify-center px-6 py-16 font-[family-name:var(--wd-font-body)]"
+        style={{ ...themeStyleVars(theme), background: theme.colors.background }}
+      >
       <div className="w-full max-w-md text-center">
         <ThemeOrnament
           theme={theme.id}
@@ -89,6 +92,7 @@ export default async function GuestConsentPage({
           </button>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -33,6 +33,13 @@ const CSP = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // fast-geoip (patrz src/proxy.ts) leniwie doczytuje swoje pliki z danymi
+  // geo z dysku przez ścieżki względem __dirname - zbundlowane przez
+  // Turbopack (domyślne zachowanie dla zależności używanych w kodzie
+  // serwerowym) te ścieżki się psują i lookup zawsze zwraca null. Bez tego
+  // wpisu wykrywanie kraju po IP milcząco nie działa (fallback na polski,
+  // złapane empirycznie przy testowaniu).
+  serverExternalPackages: ["fast-geoip"],
   // UWAGA: NIE włączaj tu `output: "standalone"`. Próbowaliśmy - przy
   // wdrożeniu, gdzie build robi się na INNEJ maszynie niż ta produkcyjna
   // (patrz deploy/DEPLOY.md, sekcja o buildzie lokalnym + transferze na

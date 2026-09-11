@@ -8,6 +8,7 @@ import { searchSongs } from "@/lib/musicSearch";
 import { getTheme, themeStyleVars } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import { LiveSearchInput } from "@/components/LiveSearchInput";
+import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { addSongRequestAction } from "../actions";
@@ -49,10 +50,12 @@ export default async function MusicPage({
   }
 
   return (
-    <div
-      className="flex-1 px-6 py-12 font-[family-name:var(--wd-font-body)]"
-      style={{ ...themeStyleVars(theme), background: theme.colors.background }}
-    >
+    <>
+      <PendingLocaleBanner returnTo={`/${wedding.slug}/moje-zaproszenie/muzyka`} dict={dict} />
+      <div
+        className="flex-1 px-6 py-12 font-[family-name:var(--wd-font-body)]"
+        style={{ ...themeStyleVars(theme), background: theme.colors.background }}
+      >
       <div className="mx-auto w-full max-w-xl">
         <ThemeOrnament
           theme={theme.id}
@@ -162,6 +165,7 @@ export default async function MusicPage({
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

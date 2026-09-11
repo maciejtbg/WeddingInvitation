@@ -9,6 +9,7 @@ import { ThemeOrnament } from "@/components/theme-ornaments";
 import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PhotoGallery from "@/components/PhotoGallery";
+import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { HeroCoverPhotos } from "@/components/HeroCoverPhotos";
 import { listPhotos, listCoverPhotos } from "@/lib/db/photos";
 import { photoUrl } from "@/lib/photoStorage";
@@ -48,10 +49,12 @@ export default async function WeddingPublicPage({
   const days = daysUntilWedding(wedding.weddingDate);
 
   return (
-    <div
-      className="flex flex-1 flex-col font-[family-name:var(--wd-font-body)]"
-      style={{ ...themeStyleVars(theme), background: theme.colors.background }}
-    >
+    <>
+      <PendingLocaleBanner returnTo={`/${wedding.slug}`} dict={dict} />
+      <div
+        className="flex flex-1 flex-col font-[family-name:var(--wd-font-body)]"
+        style={{ ...themeStyleVars(theme), background: theme.colors.background }}
+      >
       {/* HERO - pełna szerokość, osobna sekcja od reszty treści (kart
           poniżej). Bez zdjęcia powitalnego (patrz /admin/gallery) wygląda
           dokładnie tak jak wcześniej - zwykłe kolorowe tło motywu, żeby
@@ -302,6 +305,7 @@ export default async function WeddingPublicPage({
           style={{ color: theme.colors.accent }}
         />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

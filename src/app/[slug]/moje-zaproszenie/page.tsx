@@ -15,6 +15,7 @@ import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
 import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { PollingRefresher } from "@/components/PollingRefresher";
 import { HeroCoverPhotos } from "@/components/HeroCoverPhotos";
 import { listCoverPhotos } from "@/lib/db/photos";
@@ -77,10 +78,12 @@ export default async function MyInvitePage({
   const hasHeroPhoto = coverUrls.length > 0;
 
   return (
-    <div
-      className="flex-1 font-[family-name:var(--wd-font-body)]"
-      style={{ ...themeStyleVars(theme), background: theme.colors.background }}
-    >
+    <>
+      <PendingLocaleBanner returnTo={`/${wedding.slug}/moje-zaproszenie`} dict={dict} />
+      <div
+        className="flex-1 font-[family-name:var(--wd-font-body)]"
+        style={{ ...themeStyleVars(theme), background: theme.colors.background }}
+      >
       <PollingRefresher />
 
       {/* Ten sam hero co na stronie publicznej (patrz src/app/[slug]/page.tsx)
@@ -424,6 +427,7 @@ export default async function MyInvitePage({
           </Link>
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

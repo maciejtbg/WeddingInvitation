@@ -71,6 +71,9 @@ export const pl: Dictionary = {
   languageLabel: "Język",
   moreLanguages: "Więcej języków...",
 
+  fetchingLanguageBanner: "Pobieramy Wasz język ({language})...",
+  stayInEnglish: "Zostań przy angielskim",
+
   privacyPolicyLinkLabel: "Polityka prywatności",
   consentTitle: "Zanim przejdziesz dalej",
   consentIntro:

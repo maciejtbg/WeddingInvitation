@@ -83,6 +83,14 @@ export interface Dictionary {
   languageLabel: string;
   moreLanguages: string;
 
+  // Pasek "tłumaczymy Wasz język" - patrz PendingLocaleBanner, pokazywany
+  // tylko gdy język wykryty automatycznie z kraju gościa (proxy.ts) nie jest
+  // jeszcze przetłumaczony i buforowany. Widoczny wyłącznie w bazowym
+  // angielskim (patrz countryLocale.ts), ale trzymamy klucz w każdym
+  // słowniku jak resztę - spójnie z resztą Dictionary.
+  fetchingLanguageBanner: string;
+  stayInEnglish: string;
+
   // RODO - zgoda przy pierwszym wejściu i usunięcie danych (patrz
   // src/app/[slug]/zgoda i src/app/[slug]/usun-dane)
   privacyPolicyLinkLabel: string;
@@ -98,6 +106,12 @@ export interface Dictionary {
   deleteMyDataCancel: string;
   deleteMyDataDone: string;
 }
+
+/** Języki z ręcznie utrzymywanym słownikiem (locales/*.ts) - dostępne od
+ * razu, bez tłumaczenia na żądanie. Patrz getDictionary.ts (skąd dobierany
+ * jest słownik) i countryLocale.ts (który używa tej listy, żeby wiedzieć,
+ * czy wykryty z kraju gościa język wymaga baneru "tłumaczymy w tle"). */
+export const HAND_CURATED_LOCALES = ["pl", "en", "uk", "de"] as const;
 
 /** Podstawia {klucz} w szablonie wartościami z `vars`. Nieznany klucz
  * zostaje w tekście dosłownie zamiast wyrzucać błąd - lepsze to niż

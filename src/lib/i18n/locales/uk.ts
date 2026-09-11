@@ -66,6 +66,9 @@ export const uk: Dictionary = {
   languageLabel: "Мова",
   moreLanguages: "Більше мов...",
 
+  fetchingLanguageBanner: "Завантажуємо Вашу мову ({language})...",
+  stayInEnglish: "Залишитися з англійською",
+
   privacyPolicyLinkLabel: "Політика конфіденційності",
   consentTitle: "Перш ніж продовжити",
   consentIntro:

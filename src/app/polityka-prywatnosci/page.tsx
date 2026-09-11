@@ -8,6 +8,7 @@ import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { getPolicyContent } from "@/lib/i18n/translatePolicyContent";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { getTheme, themeStyleVars, DEFAULT_THEME } from "@/lib/themes";
 
 export default async function PrivacyPolicyPage() {
@@ -16,10 +17,12 @@ export default async function PrivacyPolicyPage() {
   const theme = getTheme(DEFAULT_THEME);
 
   return (
-    <div
-      className="flex-1 px-6 py-12"
-      style={{ ...themeStyleVars(theme), background: theme.colors.background }}
-    >
+    <>
+      <PendingLocaleBanner returnTo="/polityka-prywatnosci" dict={dict} />
+      <div
+        className="flex-1 px-6 py-12"
+        style={{ ...themeStyleVars(theme), background: theme.colors.background }}
+      >
       <div className="mx-auto w-full max-w-2xl">
         <LanguageSwitcher currentLocale={locale} returnTo="/polityka-prywatnosci" dict={dict} />
         <h1 className="mb-8 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
@@ -38,6 +41,7 @@ export default async function PrivacyPolicyPage() {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

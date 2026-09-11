@@ -13,6 +13,7 @@
     "smoke:invite-card": "node scripts/smoke-invite-card.mjs",
     "smoke:locations": "node scripts/smoke-locations.mjs",
     "smoke:i18n": "node scripts/smoke-i18n.mjs",
+    "smoke:geo-i18n": "node scripts/smoke-geo-i18n.mjs",
     "smoke:gallery": "node scripts/smoke-gallery.mjs",
     "smoke:extras": "node scripts/smoke-extras.mjs",
     "smoke:music": "node scripts/smoke-music.mjs",
@@ -22,6 +23,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "fast-geoip": "^1.1.88",
     "google-translate-api-x": "^10.7.3",
     "jose": "^6.2.12",
     "konva": "^10.3.3",
