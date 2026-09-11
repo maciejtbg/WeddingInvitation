@@ -247,6 +247,17 @@ export function getTheme(id: string | null | undefined): ThemeDefinition {
   return THEMES[isThemeId(id) ? id : DEFAULT_THEME];
 }
 
+/** Wyciąga ostatni kolor z tła motywu (często gradient, np.
+ * "linear-gradient(180deg, #fff 0%, #eee 100%)" -> "#eee") - do płynnego,
+ * bezszwowego przejścia między zdjęciem w hero a resztą strony pod spodem
+ * (patrz [slug]/page.tsx - nakładka gradientowa "przezroczysty -> ten
+ * kolor" na dole zdjęcia). Dla zwykłego, jednolitego koloru (bez przecinka)
+ * zwraca go bez zmian. */
+export function themeBackgroundEndColor(theme: ThemeDefinition): string {
+  const matches = theme.colors.background.match(/#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)/g);
+  return matches && matches.length > 0 ? matches[matches.length - 1] : theme.colors.background;
+}
+
 /** CSS custom properties do wpięcia w atrybut style kontenera strony -
  * reszta JSX używa ich przez klasy Tailwind w stylu bg-[var(--wd-bg)]. */
 export function themeStyleVars(theme: ThemeDefinition): CSSProperties {

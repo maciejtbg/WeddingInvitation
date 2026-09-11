@@ -4,7 +4,7 @@ import { findWeddingBySlug } from "@/lib/db/weddings";
 import { getGuestSession } from "@/lib/auth/guest";
 import { listLocations } from "@/lib/db/locations";
 import { getLocationKind } from "@/lib/locationKinds";
-import { getTheme, themeStyleVars } from "@/lib/themes";
+import { getTheme, themeStyleVars, themeBackgroundEndColor } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import LocationsMap from "@/components/LocationsMapLoader";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -78,6 +78,17 @@ export default async function WeddingPublicPage({
         style={!hasHeroPhoto ? { background: theme.colors.background } : undefined}
       >
         {hasHeroPhoto && <HeroCoverPhotos urls={coverUrls} />}
+        {hasHeroPhoto && (
+          // Płynne przejście do koloru tła sekcji pod spodem - bez tego
+          // zdjęcie ucinało się twardą, ostrą krawędzią (zgłoszone przez
+          // parę jako zbyt wyraziste).
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-28 sm:h-40"
+            style={{
+              background: `linear-gradient(to bottom, transparent, ${themeBackgroundEndColor(theme)})`,
+            }}
+          />
+        )}
         {usingDefaultCoverPhoto && theme.defaultCoverPhoto?.credit && (
           <p className="absolute bottom-1.5 right-2 z-10 text-[10px] text-white/50">
             {theme.defaultCoverPhoto.credit}

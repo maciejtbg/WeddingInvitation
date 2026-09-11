@@ -10,7 +10,7 @@ import { listLocations } from "@/lib/db/locations";
 import { getLocationKind } from "@/lib/locationKinds";
 import { listScheduleItems } from "@/lib/db/schedule";
 import { listFaqItems } from "@/lib/db/faq";
-import { getTheme, themeStyleVars } from "@/lib/themes";
+import { getTheme, themeStyleVars, themeBackgroundEndColor } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
 import LocationsMap from "@/components/LocationsMapLoader";
@@ -104,6 +104,14 @@ export default async function MyInvitePage({
         style={!hasHeroPhoto ? { background: theme.colors.background } : undefined}
       >
         {hasHeroPhoto && <HeroCoverPhotos urls={coverUrls} />}
+        {hasHeroPhoto && (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-24 sm:h-32"
+            style={{
+              background: `linear-gradient(to bottom, transparent, ${themeBackgroundEndColor(theme)})`,
+            }}
+          />
+        )}
         {usingDefaultCoverPhoto && theme.defaultCoverPhoto?.credit && (
           <p className="absolute bottom-1.5 right-2 z-10 text-[10px] text-white/50">
             {theme.defaultCoverPhoto.credit}
