@@ -4,8 +4,21 @@
 export type RsvpStatus = "PENDING" | "YES" | "NO";
 
 // Identyfikatory gotowych motywów graficznych strony wesela - patrz
-// src/lib/themes.ts (tam pełna definicja kolorów i grafik każdego z nich).
-export type ThemeId = "cream-gold" | "blush-black" | "burgundy-gold";
+// src/lib/themes.ts (tam pełna definicja kolorów, fontów i grafik każdego
+// z nich). Pierwsze trzy to oryginalny, prostszy zestaw - świadomie
+// zostają bez zmian jako "bezpieczny" wybór; reszta to bogatsze motywy
+// (własne fonty, bardziej dopracowany hero) dodane later.
+export type ThemeId =
+  | "cream-gold"
+  | "blush-black"
+  | "burgundy-gold"
+  | "botanical-elegance"
+  | "modern-minimal"
+  | "romantic-script"
+  | "rustic-boho"
+  | "art-deco-glam"
+  | "coastal-nautical"
+  | "winter-elegance";
 
 // Styl graficzny drukowanej karty zaproszenia (QR) - patrz src/lib/inviteCard.ts.
 // Kolory zawsze biorą się z ThemeId powyżej; wariant zmienia WYŁĄCZNIE

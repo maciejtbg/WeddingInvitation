@@ -316,7 +316,7 @@ export default async function AdminDashboardPage({
             <label className="mb-2 block text-sm font-medium text-zinc-700">
               Styl graficzny strony
             </label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {THEME_LIST.map((theme) => (
                 <label
                   key={theme.id}
@@ -330,12 +330,22 @@ export default async function AdminDashboardPage({
                     className="sr-only"
                   />
                   <div
-                    className="mb-2 flex h-10 items-center justify-center rounded-md"
+                    className="mb-2 flex h-14 items-center justify-center rounded-md"
                     style={{ background: theme.colors.background }}
                   >
+                    <span
+                      className="text-base"
+                      style={{
+                        color: theme.colors.text,
+                        fontFamily: theme.fonts.heading,
+                        fontWeight: theme.fonts.headingWeight,
+                      }}
+                    >
+                      Aa
+                    </span>
                     <ThemeOrnament
                       theme={theme.id}
-                      className="h-4 w-24"
+                      className="ml-2 h-4 w-12"
                       style={{ color: theme.colors.accent }}
                     />
                   </div>

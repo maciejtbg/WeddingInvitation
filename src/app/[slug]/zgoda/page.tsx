@@ -42,7 +42,7 @@ export default async function GuestConsentPage({
 
   return (
     <div
-      className="flex flex-1 items-center justify-center px-6 py-16"
+      className="flex flex-1 items-center justify-center px-6 py-16 font-[family-name:var(--wd-font-body)]"
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="w-full max-w-md text-center">
@@ -51,7 +51,7 @@ export default async function GuestConsentPage({
           className="mx-auto mb-6 h-8 w-40"
           style={{ color: theme.colors.accent }}
         />
-        <h1 className="mb-4 font-serif text-2xl font-semibold text-[var(--wd-text)]">
+        <h1 className="mb-4 wd-heading-font text-2xl font-semibold text-[var(--wd-text)]">
           {dict.consentTitle}
         </h1>
         <p className="mb-6 text-left text-sm leading-relaxed text-[var(--wd-muted)]">

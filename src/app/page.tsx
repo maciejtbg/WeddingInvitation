@@ -37,7 +37,7 @@ export default function Home() {
         <p className="mb-8 text-center text-sm font-medium uppercase tracking-wide text-rose-500">
           Gotowe style do wyboru
         </p>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {THEME_LIST.map((theme) => (
             <div
               key={theme.id}
@@ -51,8 +51,12 @@ export default function Home() {
                   style={{ color: theme.colors.accent }}
                 />
                 <p
-                  className="font-serif text-lg font-semibold"
-                  style={{ color: theme.colors.text }}
+                  className="text-lg"
+                  style={{
+                    color: theme.colors.text,
+                    fontFamily: theme.fonts.heading,
+                    fontWeight: theme.fonts.headingWeight,
+                  }}
                 >
                   Ala &amp; Kuba
                 </p>

@@ -50,7 +50,7 @@ export default async function MusicPage({
 
   return (
     <div
-      className="flex-1 px-6 py-12"
+      className="flex-1 px-6 py-12 font-[family-name:var(--wd-font-body)]"
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="mx-auto w-full max-w-xl">
@@ -59,7 +59,7 @@ export default async function MusicPage({
           className="mx-auto mb-6 h-8 w-40"
           style={{ color: theme.colors.accent }}
         />
-        <h1 className="mb-1 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
+        <h1 className="mb-1 text-center wd-heading-font text-3xl font-semibold text-[var(--wd-text)]">
           {dict.musicTitle}
         </h1>
         <p className="mb-6 text-center text-sm text-[var(--wd-muted)]">

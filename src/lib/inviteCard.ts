@@ -81,13 +81,29 @@ function escapeXml(text: string): string {
  * znaczników zamiast importu komponentu React, bo ten plik renderuje się
  * po stronie serwera do samego stringa SVG, nie przez React. viewBox
  * oryginału to 240x40 - `translate`/`scale` poniżej pozycjonuje go na karcie. */
+/** Karta zaproszenia ma własny, dużo prostszy zestaw ornamentów niż
+ * src/components/theme-ornaments.tsx (3 kształty, nie 10 - to osobny plik,
+ * bo renderuje się do gołego stringa SVG po stronie serwera, nie przez
+ * React). Nowsze motywy (patrz src/lib/themes.ts) mapują się na
+ * NAJBLIŻSZY klimatem z tych trzech zamiast dublować każdy z osobna. */
+const CARD_ORNAMENT_FALLBACK: Partial<Record<ThemeId, ThemeId>> = {
+  "botanical-elegance": "cream-gold",
+  "rustic-boho": "cream-gold",
+  "winter-elegance": "cream-gold",
+  "modern-minimal": "blush-black",
+  "art-deco-glam": "blush-black",
+  "coastal-nautical": "blush-black",
+  "romantic-script": "burgundy-gold",
+};
+
 function ornamentMarkup(
-  themeId: ThemeId,
+  rawThemeId: ThemeId,
   cx: number,
   cy: number,
   scale: number,
   color: string
 ): string {
+  const themeId = CARD_ORNAMENT_FALLBACK[rawThemeId] ?? rawThemeId;
   const t = `translate(${cx - 120 * scale} ${cy - 20 * scale}) scale(${scale})`;
   const leaf = (x: number, y: number, rotate: number, opacity = 0.85) =>
     `<ellipse cx="0" cy="0" rx="7" ry="2.6" transform="translate(${x} ${y}) rotate(${rotate})" fill="currentColor" opacity="${opacity}" />`;

@@ -44,7 +44,22 @@ if (await publishBtn.count()) {
   await Promise.all([page.waitForURL(/\/admin/), publishBtn.click()]);
 }
 
-for (const theme of ["cream-gold", "blush-black", "burgundy-gold"]) {
+const THEMES_TO_SHOOT = process.env.THEMES_TO_SHOOT
+  ? process.env.THEMES_TO_SHOOT.split(",")
+  : [
+      "cream-gold",
+      "blush-black",
+      "burgundy-gold",
+      "botanical-elegance",
+      "modern-minimal",
+      "romantic-script",
+      "rustic-boho",
+      "art-deco-glam",
+      "coastal-nautical",
+      "winter-elegance",
+    ];
+
+for (const theme of THEMES_TO_SHOOT) {
   await page.goto(`${BASE}/admin`, { waitUntil: "networkidle" });
   await page.locator(`input[name="theme"][value="${theme}"]`).click({ force: true });
   await Promise.all([

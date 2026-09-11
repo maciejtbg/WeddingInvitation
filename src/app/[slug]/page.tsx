@@ -44,7 +44,7 @@ export default async function WeddingPublicPage({
 
   return (
     <div
-      className="flex flex-1 flex-col items-center px-6 py-20"
+      className="flex flex-1 flex-col items-center px-6 py-20 font-[family-name:var(--wd-font-body)]"
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="w-full max-w-xl text-center">
@@ -64,7 +64,7 @@ export default async function WeddingPublicPage({
           className="mx-auto mb-6 h-8 w-40"
           style={{ color: theme.colors.accent }}
         />
-        <h1 className="mb-4 font-serif text-4xl font-semibold text-[var(--wd-text)]">
+        <h1 className="mb-4 wd-heading-font text-4xl font-semibold text-[var(--wd-text)]">
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
         {wedding.weddingDate && (
@@ -73,7 +73,7 @@ export default async function WeddingPublicPage({
               {formatWeddingDate(wedding.weddingDate, locale)}
             </p>
             {days !== null && (
-              <p className="mb-3 font-serif text-xl text-[var(--wd-accent)]">
+              <p className="mb-3 wd-heading-font text-xl text-[var(--wd-accent)]">
                 {days === 0
                   ? dict.todayIsWedding
                   : days === 1
@@ -156,7 +156,7 @@ export default async function WeddingPublicPage({
 
         {locations.length > 0 && (
           <div className="mb-8 text-left">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.howToFindUs}
             </h2>
             <LocationsMap locations={locations} />
@@ -182,7 +182,7 @@ export default async function WeddingPublicPage({
 
         {photos.length > 0 && (
           <div className="mb-8">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.galleryTitle}
             </h2>
             <PhotoGallery weddingId={wedding.id} photos={photos} />
@@ -191,7 +191,7 @@ export default async function WeddingPublicPage({
 
         {scheduleItems.length > 0 && (
           <div className="mb-8 text-left">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.scheduleTitle}
             </h2>
             <div className="space-y-3 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
@@ -225,7 +225,7 @@ export default async function WeddingPublicPage({
 
         {faqItems.length > 0 && (
           <div className="mb-8 text-left">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.faqTitle}
             </h2>
             <div className="space-y-2">

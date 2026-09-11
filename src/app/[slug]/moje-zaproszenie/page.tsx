@@ -73,7 +73,7 @@ export default async function MyInvitePage({
 
   return (
     <div
-      className="flex-1 px-6 py-12"
+      className="flex-1 px-6 py-12 font-[family-name:var(--wd-font-body)]"
       style={{ ...themeStyleVars(theme), background: theme.colors.background }}
     >
       <div className="mx-auto w-full max-w-xl">
@@ -91,7 +91,7 @@ export default async function MyInvitePage({
         <p className="mb-1 text-center text-sm text-[var(--wd-muted)]">
           {t(dict.greeting, { name: guest.firstName })}
         </p>
-        <h1 className="mb-2 text-center font-serif text-3xl font-semibold text-[var(--wd-text)]">
+        <h1 className="mb-2 text-center wd-heading-font text-3xl font-semibold text-[var(--wd-text)]">
           {wedding.partner1Name} &amp; {wedding.partner2Name}
         </h1>
         {wedding.weddingDate && (
@@ -100,7 +100,7 @@ export default async function MyInvitePage({
               {formatWeddingDate(wedding.weddingDate, locale)}
             </p>
             {days !== null && (
-              <p className="font-serif text-lg text-[var(--wd-accent)]">
+              <p className="wd-heading-font text-lg text-[var(--wd-accent)]">
                 {days === 0
                   ? dict.todayIsWedding
                   : days === 1
@@ -220,7 +220,7 @@ export default async function MyInvitePage({
 
         {locations.length > 0 && (
           <div className="mb-8">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.howToFindUs}
             </h2>
             <LocationsMap locations={locations} />
@@ -286,7 +286,7 @@ export default async function MyInvitePage({
 
         {scheduleItems.length > 0 && (
           <div className="mb-8">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.scheduleTitle}
             </h2>
             <div className="space-y-3 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
@@ -320,7 +320,7 @@ export default async function MyInvitePage({
 
         {faqItems.length > 0 && (
           <div className="mb-8">
-            <h2 className="mb-3 text-center font-serif text-xl text-[var(--wd-text)]">
+            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
               {dict.faqTitle}
             </h2>
             <div className="space-y-2">

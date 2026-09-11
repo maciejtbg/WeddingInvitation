@@ -30,6 +30,158 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Fonty dla motywów graficznych stron gości (src/lib/themes.ts) - własne
+   pliki w public/fonts/ (licencja SIL OFL, patrz public/fonts/OFL.txt)
+   zamiast wczytywania z Google Fonts: CSP tej aplikacji nie dopuszcza
+   zewnętrznych domen w font-src/style-src (patrz next.config.ts), a
+   trzymanie własnych plików jest tu już ustalonym wzorcem (ikony mapy,
+   fonty karty zaproszenia w src/lib/fonts.ts). Przeglądarka i tak pobiera
+   WYŁĄCZNIE te pliki, które faktycznie są użyte na danej stronie (leniwe
+   ładowanie @font-face jest wbudowane), więc zadeklarowanie tu wszystkich
+   naraz nie obciąża stron używających tylko części z nich. */
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/PlayfairDisplay-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/PlayfairDisplay-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/PlayfairDisplay-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/PlayfairDisplay-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/CormorantGaramond-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/CormorantGaramond-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/CormorantGaramond-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Montserrat-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/Montserrat-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Montserrat-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Montserrat-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Great Vibes";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/GreatVibes-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Cinzel-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Cinzel-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Cinzel-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Josefin Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/JosefinSans-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Josefin Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/JosefinSans-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Josefin Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/JosefinSans-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Josefin Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/JosefinSans-Bold.ttf") format("truetype");
+}
+
+/* Font nagłówków/imion pary wg wybranego motywu (--wd-font-heading, patrz
+   themeStyleVars w src/lib/themes.ts) - jedna klasa zamiast dopisywania
+   inline style w kilkunastu miejscach na stronach dla gości. Fallback na
+   zwykły serif, gdyby zmienna z jakiegoś powodu nie była ustawiona. */
+.wd-heading-font {
+  font-family: var(--wd-font-heading, Georgia, serif);
+  font-weight: var(--wd-font-heading-weight, 600);
+}
+
 /* Domyślne kolory pól formularzy w całej aplikacji - część stron (panel
    pary) nie ustawia tego jawnie na każdym polu z osobna, więc bez tego
    dziedziczą wygląd systemowy zamiast jasnego motywu appki. */
