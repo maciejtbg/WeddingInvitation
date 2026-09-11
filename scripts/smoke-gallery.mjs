@@ -54,6 +54,45 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
     .getAttribute("href");
   const weddingId = new URL(BASE + weddingIdMatch).searchParams.get("weddingId");
 
+  // --- Domyślny motyw (cream-gold) ma gotowe zdjęcie tła hero (patrz
+  //     theme.defaultCoverPhoto w src/lib/themes.ts) - widoczne od razu,
+  //     jeszcze zanim para cokolwiek wgra. Bez wymogu atrybucji (własny
+  //     plik, nie CC BY), więc nie ma widocznego podpisu. ---
+  await page.goto(`${BASE}/${slug}`);
+  assert(
+    (await page.locator("h1.text-white").count()) === 1,
+    "świeże wesele (domyślny motyw) ma gotowe zdjęcie hero, zanim para cokolwiek wgra"
+  );
+  assert(
+    (await page.locator("text=/Zdjęcie:.*CC BY/").count()) === 0,
+    "domyślne zdjęcie cream-gold nie wymaga atrybucji - brak podpisu"
+  );
+
+  // --- burgundy-gold ma domyślne zdjęcie na licencji CC BY - MUSI mieć
+  //     widoczną atrybucję (patrz public/demo-photos/CREDITS.md). ---
+  await page.goto(`${BASE}/admin`);
+  await page
+    .locator("label")
+    .filter({ has: page.locator('input[name="theme"][value="burgundy-gold"]') })
+    .click();
+  await page.locator('form:has(input[name="theme"]) button:has-text("Zapisz")').click();
+  await page.waitForURL(/saved=1/);
+  await page.goto(`${BASE}/${slug}`);
+  assert(
+    (await page.locator("text=/Zdjęcie:.*Pink Sherbet Photography.*CC BY 2.0/").count()) === 1,
+    "domyślne zdjęcie burgundy-gold (CC BY) ma widoczną atrybucję"
+  );
+
+  // Wracamy do domyślnego motywu - reszta tego testu nie zależy od koloru
+  // motywu, ale trzymajmy stan przewidywalny dla kolejnych kroków.
+  await page.goto(`${BASE}/admin`);
+  await page
+    .locator("label")
+    .filter({ has: page.locator('input[name="theme"][value="cream-gold"]') })
+    .click();
+  await page.locator('form:has(input[name="theme"]) button:has-text("Zapisz")').click();
+  await page.waitForURL(/saved=1/);
+
   // --- Para wgrywa zdjęcie z panelu ---
   await page.goto(`${BASE}/admin/gallery?weddingId=${weddingId}`);
   await page.setInputFiles('input[name="photo"]', SAMPLE_PHOTO);

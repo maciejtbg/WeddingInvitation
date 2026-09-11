@@ -74,7 +74,17 @@ export default async function MyInvitePage({
   const scheduleItems = listScheduleItems(wedding.id);
   const faqItems = listFaqItems(wedding.id);
   const days = daysUntilWedding(wedding.weddingDate);
-  const coverUrls = listCoverPhotos(wedding.id).map((p) => photoUrl(wedding.id, p.fileName));
+  const coverPhotos = listCoverPhotos(wedding.id);
+  // Dopóki para nie wgra własnego zdjęcia powitalnego, pokazujemy gotowe
+  // zdjęcie motywu (jeśli je ma, patrz src/lib/themes.ts) - spójnie ze
+  // stroną publiczną (src/app/[slug]/page.tsx).
+  const usingDefaultCoverPhoto = coverPhotos.length === 0 && !!theme.defaultCoverPhoto;
+  const coverUrls =
+    coverPhotos.length > 0
+      ? coverPhotos.map((p) => photoUrl(wedding.id, p.fileName))
+      : theme.defaultCoverPhoto
+        ? [theme.defaultCoverPhoto.url]
+        : [];
   const hasHeroPhoto = coverUrls.length > 0;
 
   return (
@@ -94,6 +104,11 @@ export default async function MyInvitePage({
         style={!hasHeroPhoto ? { background: theme.colors.background } : undefined}
       >
         {hasHeroPhoto && <HeroCoverPhotos urls={coverUrls} />}
+        {usingDefaultCoverPhoto && theme.defaultCoverPhoto?.credit && (
+          <p className="absolute bottom-1.5 right-2 z-10 text-[10px] text-white/50">
+            {theme.defaultCoverPhoto.credit}
+          </p>
+        )}
         <div className="relative z-10 w-full max-w-xl">
           <LanguageSwitcher
             currentLocale={locale}

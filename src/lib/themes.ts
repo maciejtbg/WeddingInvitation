@@ -3,9 +3,13 @@
 // Każdy motyw to kolory (CSS custom properties) + para fontów (własne pliki
 // w public/fonts/, licencja SIL OFL - patrz public/fonts/OFL.txt, wczytane
 // przez @font-face w src/app/globals.css) + oryginalna, odręcznie napisana
-// grafika ornamentu SVG (src/components/theme-ornaments) - żadnych
-// pobranych zdjęć, z tych samych powodów co reszta grafik w tej aplikacji
-// (licencja + waga strony).
+// grafika ornamentu SVG (src/components/theme-ornaments).
+//
+// Trzy motywy mają dodatkowo `defaultCoverPhoto` - gotowe zdjęcie tła hero
+// (patrz public/demo-photos/CREDITS.md, tam źródła i licencje), pokazywane
+// dopóki para nie wgra własnego zdjęcia powitalnego (patrz [slug]/page.tsx,
+// HeroCoverPhotos) - dzięki temu strona wygląda "gotowo" od razu, zamiast
+// płaskim tłem do czasu personalizacji.
 //
 // Pierwsze trzy motywy (cream-gold/blush-black/burgundy-gold) to oryginalny
 // zestaw - CELOWO zostają bez zmian jako prosty, "bezpieczny" wybór.
@@ -52,6 +56,14 @@ export interface ThemeDefinition {
   };
   /** Trzy próbki koloru do miniaturki w wyborze motywu (od tła do akcentu). */
   swatches: [string, string, string];
+  /** Gotowe zdjęcie tła hero, dopóki para nie wgra własnego (opcjonalne -
+   * patrz public/demo-photos/CREDITS.md). */
+  defaultCoverPhoto?: {
+    url: string;
+    /** Widoczna atrybucja, jeśli licencja zdjęcia tego wymaga (np. CC BY) -
+     * pomiń dla zdjęć bez takiego wymogu. */
+    credit?: string;
+  };
 }
 
 export const THEMES: Record<ThemeId, ThemeDefinition> = {
@@ -70,6 +82,7 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Georgia, serif", headingWeight: 400, body: "Arial, sans-serif" },
     swatches: ["#f7efdd", "#fffefb", "#b8933f"],
+    defaultCoverPhoto: { url: "/demo-photos/cream-gold-rings-bouquet.jpg" },
   },
   "blush-black": {
     id: "blush-black",
@@ -86,6 +99,7 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Georgia, serif", headingWeight: 400, body: "Arial, sans-serif" },
     swatches: ["#191416", "#e8a0b4", "#f6ecee"],
+    defaultCoverPhoto: { url: "/demo-photos/blush-black-sunset-sparkler.jpg" },
   },
   "burgundy-gold": {
     id: "burgundy-gold",
@@ -102,6 +116,10 @@ export const THEMES: Record<ThemeId, ThemeDefinition> = {
     },
     fonts: { heading: "Georgia, serif", headingWeight: 400, body: "Arial, sans-serif" },
     swatches: ["#4a1119", "#d4af6a", "#f6e9d8"],
+    defaultCoverPhoto: {
+      url: "/demo-photos/burgundy-gold-rose.jpg",
+      credit: "Zdjęcie: Pink Sherbet Photography, CC BY 2.0",
+    },
   },
   "botanical-elegance": {
     id: "botanical-elegance",

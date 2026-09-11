@@ -40,7 +40,16 @@ export default async function WeddingPublicPage({
   const locations = listLocations(wedding.id);
   const photos = listPhotos(wedding.id);
   const coverPhotos = listCoverPhotos(wedding.id);
-  const coverUrls = coverPhotos.map((p) => photoUrl(wedding.id, p.fileName));
+  // Dopóki para nie wgra własnego zdjęcia powitalnego, pokazujemy gotowe
+  // zdjęcie motywu (jeśli je ma, patrz src/lib/themes.ts) zamiast płaskiego
+  // tła - strona ma wyglądać "gotowo" od razu, nie dopiero po personalizacji.
+  const usingDefaultCoverPhoto = coverPhotos.length === 0 && !!theme.defaultCoverPhoto;
+  const coverUrls =
+    coverPhotos.length > 0
+      ? coverPhotos.map((p) => photoUrl(wedding.id, p.fileName))
+      : theme.defaultCoverPhoto
+        ? [theme.defaultCoverPhoto.url]
+        : [];
   const hasHeroPhoto = coverUrls.length > 0;
   const scheduleItems = listScheduleItems(wedding.id);
   const faqItems = listFaqItems(wedding.id);
@@ -56,10 +65,11 @@ export default async function WeddingPublicPage({
         style={{ ...themeStyleVars(theme), background: theme.colors.background }}
       >
       {/* HERO - pełna szerokość, osobna sekcja od reszty treści (kart
-          poniżej). Bez zdjęcia powitalnego (patrz /admin/gallery) wygląda
-          dokładnie tak jak wcześniej - zwykłe kolorowe tło motywu, żeby
-          para, która jeszcze nic nie wgrała, nie została z pustym/dziwnym
-          hero. Ze zdjęciem: pełnoekranowe tło (rotacja, jeśli więcej niż
+          poniżej). Zdjęcie tła to zdjęcie powitalne pary (patrz
+          /admin/gallery), albo - dopóki go nie dodadzą - gotowe zdjęcie
+          motywu, jeśli motyw je ma (patrz theme.defaultCoverPhoto w
+          src/lib/themes.ts). Bez żadnego z nich: zwykłe kolorowe tło
+          motywu. Ze zdjęciem: pełnoekranowe tło (rotacja, jeśli więcej niż
           jedno) z ciemną nakładką i BIAŁYM tekstem - jak w prawdziwych
           szablonach zaproszeń, gdzie tekst zawsze musi być czytelny
           niezależnie od tego, co jest na zdjęciu. */}
@@ -68,6 +78,11 @@ export default async function WeddingPublicPage({
         style={!hasHeroPhoto ? { background: theme.colors.background } : undefined}
       >
         {hasHeroPhoto && <HeroCoverPhotos urls={coverUrls} />}
+        {usingDefaultCoverPhoto && theme.defaultCoverPhoto?.credit && (
+          <p className="absolute bottom-1.5 right-2 z-10 text-[10px] text-white/50">
+            {theme.defaultCoverPhoto.credit}
+          </p>
+        )}
         <div className="relative z-10 w-full max-w-xl">
           <LanguageSwitcher currentLocale={locale} returnTo={`/${wedding.slug}`} dict={dict} />
           {deleted === "1" && (
