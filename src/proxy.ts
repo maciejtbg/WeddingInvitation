@@ -13,6 +13,11 @@
 // i nie wysyła adresu IP gościa do trzeciej strony, spójnie z resztą
 // podejścia RODO w tej aplikacji.
 //
+// Nagłówek Accept-Language jako drugi, korygujący sygnał (patrz
+// browserLanguage() niżej) - darmowa baza geoIP potrafi się mylić
+// (zaobserwowane: polski numer komórkowy rozpoznany jako Iran), a
+// przeglądarka/telefon deklaruje swój język świadomie i dużo pewniej.
+//
 // Proxy w Next.js 16 domyślnie działa w środowisku Node.js (nie edge), więc
 // zwykłe `await` na module z dostępem do dysku (fast-geoip) działa tu bez
 // dodatkowej konfiguracji - patrz node_modules/next/dist/docs (sekcja
@@ -23,6 +28,7 @@ import type { NextRequest } from "next/server";
 import geoip from "fast-geoip";
 import { LOCALE_COOKIE, PENDING_LOCALE_COOKIE } from "@/lib/i18n/locale";
 import { resolveCountryLocale } from "@/lib/i18n/countryLocale";
+import { HAND_CURATED_LOCALES } from "@/lib/i18n/dictionary";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 // Krótki czas życia - jeśli tłumaczenie w tle z jakiegoś powodu nie
@@ -45,12 +51,33 @@ function guestIp(request: NextRequest): string | null {
   return parts[parts.length - 1] || null;
 }
 
+// Darmowe bazy geoIP (fast-geoip nie jest wyjątkiem) potrafią się mylić,
+// zwłaszcza dla zakresów operatorów komórkowych (złapane empirycznie -
+// prawdziwy polski numer, baza uparcie zwracała Iran). Accept-Language to
+// znacznie pewniejszy sygnał, kiedy jest dostępny - przeglądarka/telefon
+// zgłasza go świadomie, więc traktujemy go jako "wygraną" nad zgadywaniem
+// po kraju, ale TYLKO dla języków, które mamy gotowe od ręki (pl/en/uk/de) -
+// dla reszty (tłumaczenie na żądanie) nagłówek bywa zbyt niestandardowy,
+// żeby mu ślepo ufać.
+function browserLanguage(request: NextRequest): string | null {
+  const header = request.headers.get("accept-language");
+  if (!header) return null;
+  const primary = header.split(",")[0]?.split(";")[0]?.trim().split("-")[0]?.toLowerCase();
+  return primary || null;
+}
+
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (request.cookies.has(LOCALE_COOKIE)) return NextResponse.next();
 
   const ip = guestIp(request);
   const geo = ip ? await geoip.lookup(ip) : null;
-  const { locale, pendingLocale } = resolveCountryLocale(geo?.country ?? null);
+  let { locale, pendingLocale } = resolveCountryLocale(geo?.country ?? null);
+
+  const browserLang = browserLanguage(request);
+  if (browserLang && browserLang !== locale && (HAND_CURATED_LOCALES as readonly string[]).includes(browserLang)) {
+    locale = browserLang;
+    pendingLocale = null;
+  }
 
   const response = NextResponse.next();
   response.cookies.set(LOCALE_COOKIE, locale, { path: "/", maxAge: ONE_YEAR, sameSite: "lax" });

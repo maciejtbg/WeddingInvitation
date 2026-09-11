@@ -105,6 +105,24 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
     await ctx.close();
   }
 
+  // --- Baza geoIP myli się (prawdziwy przypadek: polski numer rozpoznany
+  //     jako Iran) -> Accept-Language: pl wygrywa z błędnym krajem, bo
+  //     polski jest jednym z czterech gotowych od ręki języków ---
+  {
+    const ctx = await browser.newContext({
+      extraHTTPHeaders: { "X-Real-IP": "37.27.185.56", "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8" },
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/${slug}`);
+    const cookies = await ctx.cookies();
+    assert(
+      cookieVal(cookies, "guest_locale") === "pl",
+      "Błędny kraj z geoIP + Accept-Language: pl -> mimo to guest_locale=pl"
+    );
+    assert(!cookieVal(cookies, "guest_locale_pending"), "Accept-Language wygrywa -> brak pending");
+    await ctx.close();
+  }
+
   // --- Francja (212.27.48.10) -> angielska baza + pending=fr + baner, potem
   //     przełącza się samo na francuski po przetłumaczeniu w tle ---
   {
