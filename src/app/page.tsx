@@ -56,31 +56,40 @@ const FEATURES = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col" style={{ background: "#fafaf7" }}>
-      <h1 className="sr-only">Nasze Wesele - strony ślubne z RSVP, bez ujawniania danych gości</h1>
+      {/* Dwie kolumny na dużych ekranach - opis PRZY demie, nie osobno nad
+          nim, żeby demo czytało się jako "oto próbki stylów do wyboru", a
+          nie jako samo w sobie niezrozumiałe przesuwające się zdjęcie
+          (zgłoszone przez parę). Na telefonie: opis nad demem. */}
+      <div className="mx-auto grid w-full max-w-5xl gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center lg:gap-16">
+        <div className="text-center lg:text-left">
+          <p className="mb-3 text-sm font-medium uppercase tracking-wide text-rose-500">
+            Strona ślubna gotowa w kilka minut
+          </p>
+          <h1 className="mb-6 text-3xl font-semibold leading-tight text-zinc-900 sm:text-4xl">
+            Wasza strona ślubna, w jednym z 10 gotowych stylów
+          </h1>
+          <p className="mb-8 text-lg leading-8 text-zinc-600">
+            Załóżcie konto, dodajcie gości i wyślijcie każdemu jego własny, prywatny link. RSVP, lista
+            gości i miejsce przy stole - każdy gość widzi tylko swoje dane.
+          </p>
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
+            <Link
+              href="/admin/register"
+              className="rounded-full bg-zinc-900 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-700"
+            >
+              Załóż konto pary
+            </Link>
+            <Link
+              href="/admin/login"
+              className="rounded-full border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 transition-colors hover:border-zinc-400"
+            >
+              Mam już konto
+            </Link>
+          </div>
+        </div>
 
-      <HomeThemeShowcase themes={THEME_LIST} />
-
-      <div className="mx-auto w-full max-w-2xl px-6 py-16 text-center">
-        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-rose-500">
-          Strona ślubna gotowa w kilka minut
-        </p>
-        <p className="mb-10 text-lg leading-8 text-zinc-600">
-          Załóżcie konto, dodajcie gości i wyślijcie każdemu jego własny, prywatny link. RSVP, lista
-          gości i miejsce przy stole - każdy gość widzi tylko swoje dane.
-        </p>
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link
-            href="/admin/register"
-            className="rounded-full bg-zinc-900 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-700"
-          >
-            Załóż konto pary
-          </Link>
-          <Link
-            href="/admin/login"
-            className="rounded-full border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 transition-colors hover:border-zinc-400"
-          >
-            Mam już konto
-          </Link>
+        <div className="mx-auto w-full max-w-sm lg:max-w-none">
+          <HomeThemeShowcase themes={THEME_LIST} />
         </div>
       </div>
 

@@ -1,13 +1,20 @@
 "use client";
 
-// Hero strony głównej (/) - żywa "wizytówka" wszystkich stylów graficznych,
-// wygląda jak prawdziwe zaproszenie (patrz src/app/[slug]/page.tsx - ten sam
-// pomysł: zdjęcie/kolor tła motywu, ornament, imiona, data), tylko sam się
-// przełącza między wszystkimi motywami. Wszystkie warstwy są zamontowane
-// naraz i przełączają się WYŁĄCZNIE przez opacity (płynne krzyżowe
-// przenikanie, bez żadnych "skoków" - to była wyraźna prośba pary), zamiast
-// montować/odmontowywać - dzięki temu przejście jest zawsze płynne
-// niezależnie od tego, jak różne są dwa sąsiadujące motywy.
+// Żywa "wizytówka" wszystkich stylów graficznych - wygląda jak prawdziwe
+// zaproszenie (patrz src/app/[slug]/page.tsx - ten sam pomysł: zdjęcie/kolor
+// tła motywu, ornament, imiona, data), tylko sam się przełącza między
+// wszystkimi motywami. Wszystkie warstwy są zamontowane naraz i przełączają
+// się WYŁĄCZNIE przez opacity (płynne krzyżowe przenikanie, bez żadnych
+// "skoków" - to była wyraźna prośba pary), zamiast montować/odmontowywać -
+// dzięki temu przejście jest zawsze płynne niezależnie od tego, jak różne
+// są dwa sąsiadujące motywy.
+//
+// Świadomie OGRANICZONY, oprawiony w ramkę kafelek (nie pełnoekranowy hero)
+// - para zauważyła, że pełnoekranowe zdjęcie samo w sobie wygląda po prostu
+// jak "przesuwające się zdjęcia", bez czytelnego kontekstu "to jest DEMO
+// stylów do wyboru". Umieszczony w layoucie obok stałego opisu (patrz
+// src/app/page.tsx - dwie kolumny na dużych ekranach, opis nad demem na
+// telefonie) ten kontekst wraca.
 //
 // Ikony na dole to uproszczone "próbki koloru" (dwukolorowe kółka z
 // theme.swatches), nie pełne karty - para prosiła wyraźnie o coś małego.
@@ -21,11 +28,6 @@ import { ThemeOrnament } from "./theme-ornaments";
 
 const CYCLE_MS = 6000;
 const FADE_MS = 1800;
-// Kolor, w który przechodzi dół hero (żeby zdjęcie/kolor motywu nie urywał
-// się ostro nad resztą strony marketingowej) - stały, bo sekcje pod hero na
-// tej stronie NIE są kolorowane motywem (to strona marketingowa, nie
-// zaproszenie konkretnej pary).
-const PAGE_BG = "#fafaf7";
 
 interface Props {
   themes: ThemeDefinition[];
@@ -59,21 +61,17 @@ export function HomeThemeShowcase({ themes }: Props) {
   }
 
   return (
-    <div>
+    <div className="w-full">
       <div
-        className="relative flex min-h-[70vh] items-center justify-center overflow-hidden sm:min-h-[80vh]"
+        className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/5 sm:aspect-[3/4]"
         aria-hidden="true"
       >
         {themes.map((theme, i) => (
           <ShowcaseLayer key={theme.id} theme={theme} active={i === activeIndex} />
         ))}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 sm:h-40"
-          style={{ background: `linear-gradient(to bottom, transparent, ${PAGE_BG})` }}
-        />
       </div>
 
-      <div className="mx-auto -mt-2 flex max-w-md flex-col items-center gap-3 px-6">
+      <div className="mx-auto mt-5 flex flex-col items-center gap-3">
         <p className="text-xs text-zinc-500">
           {autoPlay ? "Style zmieniają się same" : "Zatrzymane - kliknij ponownie, żeby wznowić"}
         </p>
