@@ -44,6 +44,10 @@ async function registerCouple(page, { email, partner1, partner2, skipConsent = f
 
   // --- Polityka prywatności jest publiczna, bez żadnej sesji ---
   const anonCtx = await browser.newContext();
+  // Wymuszamy polski, żeby test nie zależał od tego, z jakiego kraju
+  // faktycznie łączy się maszyna uruchamiająca testy (patrz src/proxy.ts -
+  // automatyczne wykrywanie języka po adresie IP przy pierwszym wejściu).
+  await anonCtx.addCookies([{ name: "guest_locale", value: "pl", url: BASE }]);
   const anon = await anonCtx.newPage();
   await anon.goto(`${BASE}/polityka-prywatnosci`);
   const policyText = await anon.locator("body").innerText();
@@ -97,6 +101,10 @@ async function registerCouple(page, { email, partner1, partner2, skipConsent = f
 
   // --- Pierwsze wejście gościa: brama zgody, nie da się jej pominąć ---
   const guestCtx = await browser.newContext();
+  // Wymuszamy polski, żeby test nie zależał od tego, z jakiego kraju
+  // faktycznie łączy się maszyna uruchamiająca testy (patrz src/proxy.ts -
+  // automatyczne wykrywanie języka po adresie IP przy pierwszym wejściu).
+  await guestCtx.addCookies([{ name: "guest_locale", value: "pl", url: BASE }]);
   const guest = await guestCtx.newPage();
   await guest.goto(inviteUrl);
   await guest.waitForURL(/\/zgoda/);

@@ -16,6 +16,17 @@
 // -> angielski bez baneru, oraz że gość z już ustawionym ciasteczkiem NIE
 // jest nadpisywany (wykrywanie działa tylko przy pierwszym wejściu).
 //
+// UWAGA - działa tylko lokalnie, BEZPOŚREDNIO na aplikacji (`next start`),
+// NIE przez nginx na serwerze produkcyjnym: nginx świadomie NADPISUJE
+// nagłówek X-Real-IP prawdziwym adresem łączącego się klienta
+// ($remote_addr, patrz deploy/nginx.conf) - inaczej każdy odwiedzający
+// mógłby sam sobie ustawić dowolny "kraj". To poprawne, zamierzone
+// zachowanie nginx, nie błąd do naprawienia - spoofing nagłówka z tego
+// testu przechodzi więc TYLKO wtedy, gdy nic po drodze go nie nadpisuje.
+// Dlatego ten test pomijamy przy weryfikacji na żywym serwerze (patrz
+// deploy/DEPLOY.md) - tam wystarcza ręczne sprawdzenie, że zwykłe wejście
+// bez spoofingu dostaje jakiś sensowny język bez błędu 500.
+//
 // Uruchomienie:
 //   npm run build && npm run start -- -p 3100   (w jednym terminalu)
 //   SMOKE_BASE_URL=http://localhost:3100 npm run smoke:geo-i18n

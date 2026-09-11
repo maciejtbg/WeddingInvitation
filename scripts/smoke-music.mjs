@@ -22,6 +22,10 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
 (async () => {
   const browser = await chromium.launch(launchOptions);
   const context = await browser.newContext();
+  // Wymuszamy polski, żeby test nie zależał od tego, z jakiego kraju
+  // faktycznie łączy się maszyna uruchamiająca testy (patrz src/proxy.ts -
+  // automatyczne wykrywanie języka po adresie IP przy pierwszym wejściu).
+  await context.addCookies([{ name: "guest_locale", value: "pl", url: BASE }]);
   const page = await context.newPage();
 
   const email = `test-music-${Date.now()}@example.com`;

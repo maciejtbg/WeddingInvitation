@@ -31,6 +31,13 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
 (async () => {
   const browser = await chromium.launch(launchOptions);
   const context = await browser.newContext();
+  // Wymuszamy polski PRZED pierwszym wejściem na stronę gościa, żeby test
+  // "domyślny język to polski" nie zależał od tego, z jakiego kraju
+  // faktycznie łączy się maszyna uruchamiająca testy (patrz src/proxy.ts -
+  // automatyczne wykrywanie języka po adresie IP przy pierwszym wejściu,
+  // które inaczej mogłoby ustawić coś innego niż polski). Dalsza część
+  // testu i tak ręcznie przełącza język przez LanguageSwitcher.
+  await context.addCookies([{ name: "guest_locale", value: "pl", url: BASE }]);
   const page = await context.newPage();
 
   const email = `test-i18n-${Date.now()}@example.com`;

@@ -79,6 +79,10 @@ async function setSeatingMode(couplePage, mode) {
   assert(true, "ustawiono tryb GUEST_SELF_SELECT");
 
   const guestCtx = await browser.newContext();
+  // Wymuszamy polski, żeby test nie zależał od tego, z jakiego kraju
+  // faktycznie łączy się maszyna uruchamiająca testy (patrz src/proxy.ts -
+  // automatyczne wykrywanie języka po adresie IP przy pierwszym wejściu).
+  await guestCtx.addCookies([{ name: "guest_locale", value: "pl", url: BASE }]);
   const guest = await guestCtx.newPage();
   await guest.goto(inviteUrl);
   await guest.waitForURL(/\/(zgoda|moje-zaproszenie)/);
