@@ -88,6 +88,21 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.waitForSelector("text=Zofia Testowa");
   assert(true, "gość przypisany do miejsca przy stole");
 
+  // --- "Podedytor" miejsc - do stołów zsuniętych w nieregularny sposób,
+  //     gdzie część krawędzi fizycznie nie mieści krzesła (patrz
+  //     adminSetSeatDisabled w src/lib/db/tables.ts). Przycisk "Wyłącz"
+  //     jest tylko przy WOLNYCH miejscach (miejsce #1 ma już Zofię i
+  //     zamiast niego pokazuje "Usuń") - celujemy więc w pierwsze wolne. ---
+  const seatRows = couple.locator("div:has(> span.w-6)");
+  const freeSeatRow = seatRows.filter({ has: couple.getByRole("button", { name: "Wyłącz" }) }).first();
+  await freeSeatRow.getByRole("button", { name: "Wyłącz" }).click();
+  await couple.waitForSelector("text=wyłączone - brak krzesła");
+  assert(true, "wolne miejsce wyłączone - w panelu widać 'wyłączone - brak krzesła'");
+
+  await couple.getByRole("button", { name: "Przywróć" }).click();
+  await couple.waitForSelector("text=wyłączone - brak krzesła", { state: "detached" });
+  assert(true, "przywrócenie miejsca działa - dropdown przypisania wraca");
+
   // --- Gość: widzi WYŁĄCZNIE własny stolik, nigdy plan sali ---
   const guestCtx = await browser.newContext();
   // Wymuszamy polski, żeby test nie zależał od tego, z jakiego kraju

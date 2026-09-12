@@ -26,6 +26,16 @@ import {
   MIN_RECT_HEIGHT,
 } from "@/lib/tableGeometry";
 
+function parseDisabledSeats(value: unknown): number[] {
+  if (typeof value !== "string") return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((n) => Number.isInteger(n)) : [];
+  } catch {
+    return [];
+  }
+}
+
 function rowToTable(row: SqliteRow): WeddingTable {
   return {
     id: row.id as string,
@@ -40,6 +50,7 @@ function rowToTable(row: SqliteRow): WeddingTable {
     radius: row.radius as number,
     width: row.width as number,
     height: row.height as number,
+    disabledSeatIndexes: parseDisabledSeats(row.disabled_seats),
   };
 }
 
@@ -201,6 +212,10 @@ export function adminUpdateSeatsCount(
        AND table_id IN (SELECT id FROM tables_ WHERE id = ? AND wedding_id = ?)`
   ).run(tableId, seatsCount, tableId, weddingId);
 
+  // Wyłączone miejsca (patrz adminSetSeatDisabled) poza nowym zakresem
+  // przestają istnieć razem z miejscem, którego dotyczyły.
+  const disabledSeats = JSON.stringify(existing.disabledSeatIndexes.filter((i) => i < seatsCount));
+
   // Auto-powiększanie TYLKO w górę - im więcej krzeseł, tym większy stół
   // musi być, żeby się nie nakładały (patrz src/lib/tableGeometry.ts).
   // Zmniejszenie liczby miejsc świadomie NIE kurczy stołu z powrotem - para
@@ -209,14 +224,53 @@ export function adminUpdateSeatsCount(
   if (existing.shape === "ROUND") {
     const radius = Math.max(existing.radius, minRoundRadius(seatsCount));
     db.prepare(
-      "UPDATE tables_ SET seats_count = ?, radius = ? WHERE id = ? AND wedding_id = ?"
-    ).run(seatsCount, radius, tableId, weddingId);
+      "UPDATE tables_ SET seats_count = ?, radius = ?, disabled_seats = ? WHERE id = ? AND wedding_id = ?"
+    ).run(seatsCount, radius, disabledSeats, tableId, weddingId);
   } else {
     const width = Math.max(existing.width, minRectWidth(seatsCount, existing.height));
     db.prepare(
-      "UPDATE tables_ SET seats_count = ?, width = ? WHERE id = ? AND wedding_id = ?"
-    ).run(seatsCount, width, tableId, weddingId);
+      "UPDATE tables_ SET seats_count = ?, width = ?, disabled_seats = ? WHERE id = ? AND wedding_id = ?"
+    ).run(seatsCount, width, disabledSeats, tableId, weddingId);
   }
+  return adminFindTableById(weddingId, tableId);
+}
+
+/** "Podedytor" pojedynczego stołu - wyłącza albo przywraca jedno konkretne
+ * miejsce na jego obwodzie (patrz seatPositions() w TablePlanner.tsx dla
+ * numeracji). Do sytuacji, gdy stoły są zsunięte w nieregularny sposób i
+ * część krawędzi fizycznie nie może mieć krzesła. Nie pozwala wyłączyć
+ * miejsca z już przypisanym gościem - trzeba go najpierw ręcznie odpiąć,
+ * żeby para świadomie zauważyła, że traci tam gościa, zamiast żeby zniknął
+ * po cichu. */
+export function adminSetSeatDisabled(
+  weddingId: string,
+  tableId: string,
+  seatIndex: number,
+  disabled: boolean
+): WeddingTable | null {
+  const table = adminFindTableById(weddingId, tableId);
+  if (!table) return null;
+  if (!Number.isInteger(seatIndex) || seatIndex < 0 || seatIndex >= table.seatsCount) {
+    throw new Error("Nieprawidłowy numer miejsca");
+  }
+
+  if (disabled) {
+    const occupant = db
+      .prepare("SELECT guest_id FROM seat_assignments WHERE table_id = ? AND seat_index = ?")
+      .get(tableId, seatIndex);
+    if (occupant) {
+      throw new Error("Najpierw odepnij gościa z tego miejsca, dopiero potem możesz je wyłączyć.");
+    }
+  }
+
+  const next = disabled
+    ? [...table.disabledSeatIndexes, seatIndex].sort((a, b) => a - b)
+    : table.disabledSeatIndexes.filter((i) => i !== seatIndex);
+  db.prepare("UPDATE tables_ SET disabled_seats = ? WHERE id = ? AND wedding_id = ?").run(
+    JSON.stringify(next),
+    tableId,
+    weddingId
+  );
   return adminFindTableById(weddingId, tableId);
 }
 
@@ -269,6 +323,9 @@ export function adminAssignSeat(
   if (!table) throw new Error("Stół nie należy do tego wesela");
   if (params.seatIndex < 0 || params.seatIndex >= table.seatsCount) {
     throw new Error("Nieprawidłowy numer miejsca");
+  }
+  if (table.disabledSeatIndexes.includes(params.seatIndex)) {
+    throw new Error("To miejsce jest wyłączone");
   }
 
   const guestRow = db
@@ -366,14 +423,17 @@ export function guestListAvailableSeats(weddingId: string, guestId: string): Ava
 
   return tables.map((table) => {
     const occupied = seatsByTable.get(table.id) ?? [];
-    const seats: AvailableSeat[] = Array.from({ length: table.seatsCount }).map((_, i) => {
-      const seat = occupied.find((s) => s.seatIndex === i);
-      return {
-        seatIndex: i,
-        occupiedByFirstName: seat ? seat.guestFirstName : null,
-        isMe: seat?.guestId === guestId,
-      };
-    });
+    const seats: AvailableSeat[] = Array.from({ length: table.seatsCount })
+      .map((_, i) => i)
+      .filter((i) => !table.disabledSeatIndexes.includes(i))
+      .map((i) => {
+        const seat = occupied.find((s) => s.seatIndex === i);
+        return {
+          seatIndex: i,
+          occupiedByFirstName: seat ? seat.guestFirstName : null,
+          isMe: seat?.guestId === guestId,
+        };
+      });
     return { id: table.id, roomName: table.roomName, label: table.label, shape: table.shape, seats };
   });
 }
@@ -388,6 +448,9 @@ export function guestSelfAssignSeat(
   if (!table) throw new Error("Stół nie należy do tego wesela");
   if (seatIndex < 0 || seatIndex >= table.seatsCount) {
     throw new Error("Nieprawidłowy numer miejsca");
+  }
+  if (table.disabledSeatIndexes.includes(seatIndex)) {
+    throw new Error("To miejsce jest niedostępne - wybierz inne");
   }
 
   const allowedTableIds = allowedTableIdsForGuest(weddingId, guestId);

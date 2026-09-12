@@ -73,6 +73,18 @@ async function setSeatingMode(couplePage, mode) {
   await couple.waitForSelector("text=Miejsca (8)");
   assert(true, "dodano Stół 1");
 
+  // --- "Podedytor" miejsc (patrz smoke-tables.mjs dla pełniejszego pokrycia
+  //     panelu bocznego) - tu sprawdzamy, że wyłączone miejsce faktycznie
+  //     znika też z wyboru GOŚCIA w trybie GUEST_SELF_SELECT niżej, nie
+  //     tylko z panelu pary (patrz guestListAvailableSeats). ---
+  const freeSeatRow = couple
+    .locator("div:has(> span.w-6)")
+    .filter({ has: couple.getByRole("button", { name: "Wyłącz" }) })
+    .first();
+  await freeSeatRow.getByRole("button", { name: "Wyłącz" }).click();
+  await couple.waitForSelector("text=wyłączone - brak krzesła");
+  assert(true, "wyłączono jedno miejsce na Stole 1 przed testem GUEST_SELF_SELECT");
+
   // --- GUEST_SELF_SELECT ---
   await couple.goto(`${BASE}/admin`);
   await setSeatingMode(couple, "GUEST_SELF_SELECT");
@@ -103,6 +115,11 @@ async function setSeatingMode(couplePage, mode) {
   await guest.click('button:has-text("Zapisz odpowiedź")');
   await guest.waitForURL(/saved=1/);
   await guest.waitForSelector('input[name="seat"]');
+  const selectableSeats = await guest.locator('input[name="seat"]').count();
+  assert(
+    selectableSeats === 7,
+    `wyłączone miejsce nie jest wybieralne przez gościa (widoczne opcje: ${selectableSeats}, oczekiwano 7 z 8)`
+  );
   await guest.locator('input[name="seat"]').first().check({ force: true });
   await guest.click('button:has-text("Zapisz wybrane miejsce")');
   await guest.waitForURL(/seatSaved=1/);

@@ -31,6 +31,7 @@ import {
   adminAssignSeat,
   adminUnassignGuest,
   adminListSeats,
+  adminSetSeatDisabled,
 } from "@/lib/db/tables";
 import {
   adminCreateLayoutItem,
@@ -160,6 +161,24 @@ export async function assignSeatAction(
   const seats = adminAssignSeat(wedding.id, { tableId, guestId, seatIndex });
   revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
   return seats;
+}
+
+/** "Podedytor" stołu - wyłącza/przywraca jedno miejsce na jego obwodzie
+ * (patrz adminSetSeatDisabled). revalidatePath tu MA sens (w odróżnieniu od
+ * reszty akcji kanwy, patrz komentarz na górze pliku) - to jedyna akcja z
+ * tej grupy, która zmienia to, co widzi gość w trybie GUEST_SELF_SELECT na
+ * /moje-zaproszenie (guestListAvailableSeats pomija wyłączone miejsca). */
+export async function toggleSeatDisabledAction(
+  weddingId: string,
+  tableId: string,
+  seatIndex: number,
+  disabled: boolean
+): Promise<WeddingTable> {
+  const wedding = await requireOwnedWedding(weddingId);
+  const table = adminSetSeatDisabled(wedding.id, tableId, seatIndex, disabled);
+  if (!table) throw new Error("Nie znaleziono stołu");
+  revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
+  return table;
 }
 
 export async function unassignSeatAction(

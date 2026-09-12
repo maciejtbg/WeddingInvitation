@@ -11,7 +11,7 @@
 // Konva potrzebuje `window` już przy imporcie modułu.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Circle, Ellipse, Group, Layer, Rect, RegularPolygon, Stage, Text } from "react-konva";
+import { Circle, Ellipse, Group, Layer, Line, Rect, RegularPolygon, Stage, Text } from "react-konva";
 import type Konva from "konva";
 import type {
   Guest,
@@ -31,6 +31,7 @@ import {
   updateTableSizeAction,
   renameTableAction,
   updateSeatsCountAction,
+  toggleSeatDisabledAction,
   createLayoutItemAction,
   updateLayoutItemPositionAction,
   renameLayoutItemAction,
@@ -495,6 +496,23 @@ export default function TablePlanner({
     }
   }
 
+  // "Podedytor" pojedynczego stołu - wyłącza/przywraca jedno miejsce na
+  // jego obwodzie (np. krawędź, którą stół styka się z innym, zsuniętym
+  // stołem, więc fizycznie nie mieści tam krzesła). Serwer sam odrzuci
+  // próbę wyłączenia miejsca z przypisanym gościem (patrz
+  // adminSetSeatDisabled) - błąd wyląduje w reportError, spójnie z resztą
+  // akcji na tej kanwie.
+  async function handleToggleSeatDisabled(table: WeddingTable, seatIndex: number) {
+    const disabled = !table.disabledSeatIndexes.includes(seatIndex);
+    try {
+      const updated = await toggleSeatDisabledAction(weddingId, table.id, seatIndex, disabled);
+      setTables((prev) => prev.map((t) => (t.id === table.id ? updated : t)));
+      saveTableLocal(updated).catch(() => {});
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
   // --- Znaczniki (DJ, bufet, fotobudka...), ściany i bryły planu sali -
   // patrz src/lib/db/layoutItems.ts. Świadomie WOLNY TEKST zamiast
   // gotowego zestawu ikon dla znaczników - para najlepiej wie, jak nazwać
@@ -848,16 +866,34 @@ export default function TablePlanner({
                     )}
                     {seatPositions(table).map((pos, seatIndex) => {
                       const occupied = tableSeats.find((s) => s.seatIndex === seatIndex);
+                      const isDisabled = table.disabledSeatIndexes.includes(seatIndex);
+                      // Klikalne wyłącznie na WYBRANYM stole - "podedytor"
+                      // miejsc (patrz handleToggleSeatDisabled) ma sens
+                      // tylko dla stołu, który para właśnie edytuje w panelu
+                      // bocznym, żeby przypadkowe kliknięcie przy
+                      // przeciąganiu innego stołu nic nie zepsuło.
+                      const toggle = isSelected
+                        ? (e: Konva.KonvaEventObject<Event>) => {
+                            e.cancelBubble = true;
+                            handleToggleSeatDisabled(table, seatIndex);
+                          }
+                        : undefined;
                       return (
-                        <Circle
-                          key={seatIndex}
-                          x={pos.x}
-                          y={pos.y}
-                          radius={SEAT_RADIUS}
-                          fill={occupied ? "#16a34a" : "#ffffff"}
-                          stroke="#71717a"
-                          strokeWidth={1}
-                        />
+                        <Group key={seatIndex} x={pos.x} y={pos.y} onClick={toggle} onTap={toggle}>
+                          <Circle
+                            radius={SEAT_RADIUS}
+                            fill={isDisabled ? "#d4d4d8" : occupied ? "#16a34a" : "#ffffff"}
+                            stroke={isDisabled ? "#a1a1aa" : "#71717a"}
+                            strokeWidth={1}
+                            dash={isDisabled ? [2, 2] : undefined}
+                          />
+                          {isDisabled && (
+                            <>
+                              <Line points={[-4, -4, 4, 4]} stroke="#71717a" strokeWidth={1.5} />
+                              <Line points={[-4, 4, 4, -4]} stroke="#71717a" strokeWidth={1.5} />
+                            </>
+                          )}
+                        </Group>
                       );
                     })}
                   </Group>
@@ -1047,13 +1083,29 @@ export default function TablePlanner({
           <div className="space-y-2">
             {Array.from({ length: selectedTable.seatsCount }).map((_, seatIndex) => {
               const seat = selectedTableSeats.find((s) => s.seatIndex === seatIndex);
+              const isDisabled = selectedTable.disabledSeatIndexes.includes(seatIndex);
               return (
                 <div
                   key={seatIndex}
-                  className="flex items-center gap-2 rounded-md border border-zinc-200 p-2 text-xs"
+                  className={`flex items-center gap-2 rounded-md border p-2 text-xs ${
+                    isDisabled ? "border-zinc-200 bg-zinc-50" : "border-zinc-200"
+                  }`}
                 >
                   <span className="w-6 shrink-0 text-zinc-400">#{seatIndex + 1}</span>
-                  {seat ? (
+                  {isDisabled ? (
+                    <>
+                      <span className="flex-1 italic text-zinc-400">
+                        wyłączone - brak krzesła
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSeatDisabled(selectedTable, seatIndex)}
+                        className="text-zinc-600 hover:underline"
+                      >
+                        Przywróć
+                      </button>
+                    </>
+                  ) : seat ? (
                     <>
                       <span className="flex-1 truncate text-zinc-900">
                         {seat.guestFirstName} {seat.guestLastName ?? ""}
@@ -1067,22 +1119,32 @@ export default function TablePlanner({
                       </button>
                     </>
                   ) : (
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        if (e.target.value) handleAssign(selectedTable, seatIndex, e.target.value);
-                      }}
-                      className="flex-1 rounded border border-zinc-300 px-1 py-1 text-xs"
-                    >
-                      <option value="">— przypisz gościa —</option>
-                      {guests
-                        .filter((g) => !assignedGuestIds.has(g.id))
-                        .map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.firstName} {g.lastName ?? ""}
-                          </option>
-                        ))}
-                    </select>
+                    <>
+                      <select
+                        defaultValue=""
+                        onChange={(e) => {
+                          if (e.target.value) handleAssign(selectedTable, seatIndex, e.target.value);
+                        }}
+                        className="flex-1 rounded border border-zinc-300 px-1 py-1 text-xs"
+                      >
+                        <option value="">— przypisz gościa —</option>
+                        {guests
+                          .filter((g) => !assignedGuestIds.has(g.id))
+                          .map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.firstName} {g.lastName ?? ""}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSeatDisabled(selectedTable, seatIndex)}
+                        title="Wyłącz to miejsce (np. przy zsuniętym stole)"
+                        className="shrink-0 text-zinc-400 hover:text-zinc-600"
+                      >
+                        Wyłącz
+                      </button>
+                    </>
                   )}
                 </div>
               );

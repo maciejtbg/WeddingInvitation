@@ -493,6 +493,16 @@ export function runMigrations() {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;
   }
+  // Miejsca ręcznie wyłączone z obwodu stołu (JSON, tablica numerów miejsc) -
+  // np. krawędź, którą stół styka się z innym, zsuniętym stołem, więc nie da
+  // się tam wstawić krzesła. Patrz src/lib/db/tables.ts (adminSetSeatDisabled)
+  // i "podedytor" w src/components/TablePlanner.tsx.
+  try {
+    db.exec("ALTER TABLE tables_ ADD COLUMN disabled_seats TEXT NOT NULL DEFAULT '[]';");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
 }
 
 runMigrations();

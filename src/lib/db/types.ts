@@ -169,6 +169,10 @@ export interface WeddingTable {
   radius: number;
   width: number;
   height: number;
+  // Miejsca ręcznie wyłączone z obwodu (numery 0-indeksowane, patrz
+  // seatPositions() w TablePlanner.tsx) - np. krawędź, którą ten stół styka
+  // się z innym, zsuniętym stołem. Puste dla zwykłego, samodzielnego stołu.
+  disabledSeatIndexes: number[];
 }
 
 // Elementy planu sali inne niż stół - patrz src/lib/db/layoutItems.ts.
