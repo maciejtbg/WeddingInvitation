@@ -24,6 +24,7 @@ import {
   adminFindGuestById,
   adminSetGuestGroup,
   adminSetGuestContact,
+  adminSetGuestDietaryNotes,
 } from "@/lib/db/guests";
 import { sendMessage } from "@/lib/db/chat";
 import { isThemeId } from "@/lib/themes";
@@ -202,6 +203,24 @@ export async function setGuestContactAction(formData: FormData): Promise<void> {
     phone: readString(formData, "phone") || null,
     email: readString(formData, "email") || null,
   });
+
+  revalidatePath("/admin/guests");
+  redirect(`/admin/guests?weddingId=${weddingId}`);
+}
+
+/** Para dopisuje/poprawia alergie i preferencje żywieniowe ręcznie - np. po
+ * telefonie od gościa - niezależnie od tego, czy gość sam wpisał to przy
+ * RSVP na /moje-zaproszenie (patrz submitRsvpAction w
+ * src/app/[slug]/moje-zaproszenie/actions.ts, to samo pole). */
+export async function setGuestDietaryNotesAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const guestId = readString(formData, "guestId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  const guest = adminFindGuestById(wedding.id, guestId);
+  if (!guest) redirect(`/admin/guests?weddingId=${weddingId}`);
+
+  adminSetGuestDietaryNotes(wedding.id, guestId, readString(formData, "dietaryNotes") || null);
 
   revalidatePath("/admin/guests");
   redirect(`/admin/guests?weddingId=${weddingId}`);

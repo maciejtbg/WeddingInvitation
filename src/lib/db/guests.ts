@@ -128,6 +128,23 @@ export function adminSetGuestContact(
   );
 }
 
+/** Ręczne dopisanie/poprawienie alergii i preferencji żywieniowych przez
+ * parę - np. gość powiedział o tym telefonicznie/osobiście, zamiast (albo
+ * oprócz) wpisać to sam przy RSVP na /moje-zaproszenie (patrz
+ * guestSubmitRsvp niżej). To to samo pole - para widzi i może nadpisać to,
+ * co wpisał gość, i odwrotnie. */
+export function adminSetGuestDietaryNotes(
+  weddingId: string,
+  guestId: string,
+  dietaryNotes: string | null
+): void {
+  db.prepare("UPDATE guests SET dietary_notes = ? WHERE id = ? AND wedding_id = ?").run(
+    dietaryNotes,
+    guestId,
+    weddingId
+  );
+}
+
 /** Przypisanie gościa do grupy (rodzina/praca/przyjaciele) używanej do
  * uprawnień rozmieszczania w trybie GROUP_CONSTRAINED - patrz groups.ts.
  * groupId=null usuwa przypisanie. */

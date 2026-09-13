@@ -15,6 +15,12 @@ const FEATURES = [
     description: "Bez kont i haseł dla gości - jeden prywatny link wystarcza, żeby potwierdzić przybycie.",
   },
   {
+    icon: "🍽️",
+    title: "Alergie i preferencje żywieniowe",
+    description:
+      "Gość zaznacza je od razu przy potwierdzaniu przybycia - Wy widzicie komplet informacji w jednym miejscu w panelu, gotowy do przekazania cateringowi.",
+  },
+  {
     icon: "🪑",
     title: "Planer stołów",
     description:

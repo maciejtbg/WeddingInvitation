@@ -145,6 +145,19 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
     adminGuestsHtml.includes("otworzył(a) zaproszenie"),
     "raport: gość, który wszedł w link, ma teraz status 'otworzył(a) zaproszenie'"
   );
+  assert(
+    adminGuestsHtml.includes("bez laktozy"),
+    "panel pary widzi alergię/dietę wpisaną przez gościa przy RSVP"
+  );
+
+  // --- Para może ręcznie dopisać/poprawić alergię (np. gość powiedział
+  //     telefonicznie) - to samo pole co przy RSVP gościa wyżej. ---
+  await couple
+    .locator('input[name="dietaryNotes"]')
+    .fill("bez laktozy i orzechów");
+  await couple.locator('form:has(input[name="dietaryNotes"]) button:has-text("Zapisz")').click();
+  await couple.waitForSelector("text=bez laktozy i orzechów");
+  assert(true, "para ręcznie poprawiła alergię/dietę gościa w panelu");
 
   const chatLink = await couple.locator("a:has-text('Czat')").first().getAttribute("href");
   await couple.goto(BASE + chatLink);

@@ -10,6 +10,7 @@ import {
   deleteGuestAction,
   assignGuestGroupAction,
   setGuestContactAction,
+  setGuestDietaryNotesAction,
 } from "../actions";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import SendInviteButtons from "@/components/SendInviteButtons";
@@ -41,6 +42,7 @@ export default async function GuestsPage({
   const yesCount = guests.filter((g) => g.rsvpStatus === "YES").length;
   const noCount = guests.filter((g) => g.rsvpStatus === "NO").length;
   const pendingCount = guests.length - yesCount - noCount;
+  const dietaryCount = guests.filter((g) => g.dietaryNotes?.trim()).length;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -60,7 +62,7 @@ export default async function GuestsPage({
       </div>
 
       {guests.length > 0 && (
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           <div className="rounded-lg border border-zinc-200 bg-white p-3 text-center">
             <p className="text-lg font-semibold text-zinc-900">{guests.length}</p>
             <p className="text-xs text-zinc-500">gości</p>
@@ -81,6 +83,10 @@ export default async function GuestsPage({
             <p className="text-xs text-zinc-500">
               {noCount > 0 ? "oczekuje / nie przyjdzie" : "oczekuje"}
             </p>
+          </div>
+          <div className="rounded-lg border border-zinc-200 bg-white p-3 text-center">
+            <p className="text-lg font-semibold text-amber-700">{dietaryCount}</p>
+            <p className="text-xs text-zinc-500">z dietą / alergią</p>
           </div>
         </div>
       )}
@@ -233,6 +239,25 @@ export default async function GuestsPage({
                   defaultValue={guest.email ?? ""}
                   placeholder="e-mail"
                   className="w-32 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+                />
+                <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
+                  Zapisz
+                </button>
+              </form>
+              {guest.dietaryNotes?.trim() && (
+                <p className="mt-1 text-xs text-amber-700">🍽️ {guest.dietaryNotes}</p>
+              )}
+              <form
+                action={setGuestDietaryNotesAction}
+                className="mt-1 flex flex-wrap items-center gap-1"
+              >
+                <input type="hidden" name="weddingId" value={wedding.id} />
+                <input type="hidden" name="guestId" value={guest.id} />
+                <input
+                  name="dietaryNotes"
+                  defaultValue={guest.dietaryNotes ?? ""}
+                  placeholder="alergie / dieta (np. bez laktozy)"
+                  className="w-56 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
                 />
                 <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
                   Zapisz
