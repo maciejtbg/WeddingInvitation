@@ -23,6 +23,12 @@
 // kropek w tym samym rzędzie) wznawia/zatrzymuje pokaz - jawny, zawsze
 // widoczny, bez ukrytego "kliknij tę samą kropkę jeszcze raz" (to nie było
 // odkrywalne - zgłoszone przez parę).
+//
+// Przykładowe imiona pary (coupleName) dobiera SERVER Component wyżej
+// (src/app/page.tsx, sampleCoupleName() w src/lib/coupleNameSamples.ts) na
+// podstawie już wykrytego języka gościa (ten sam mechanizm co
+// automatyczne wykrywanie języka, patrz src/proxy.ts) - gość spoza Polski
+// widzi imiona "swojsko" brzmiące dla jego języka, nie zawsze "Ala i Kuba".
 
 import { useEffect, useRef, useState } from "react";
 import type { ThemeDefinition } from "@/lib/themes";
@@ -33,9 +39,10 @@ const FADE_MS = 1800;
 
 interface Props {
   themes: ThemeDefinition[];
+  coupleName: string;
 }
 
-export function HomeThemeShowcase({ themes }: Props) {
+export function HomeThemeShowcase({ themes, coupleName }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const reducedMotionRef = useRef(false);
@@ -65,7 +72,7 @@ export function HomeThemeShowcase({ themes }: Props) {
         aria-hidden="true"
       >
         {themes.map((theme, i) => (
-          <ShowcaseLayer key={theme.id} theme={theme} active={i === activeIndex} />
+          <ShowcaseLayer key={theme.id} theme={theme} active={i === activeIndex} coupleName={coupleName} />
         ))}
       </div>
 
@@ -109,7 +116,15 @@ export function HomeThemeShowcase({ themes }: Props) {
   );
 }
 
-function ShowcaseLayer({ theme, active }: { theme: ThemeDefinition; active: boolean }) {
+function ShowcaseLayer({
+  theme,
+  active,
+  coupleName,
+}: {
+  theme: ThemeDefinition;
+  active: boolean;
+  coupleName: string;
+}) {
   const hasPhoto = !!theme.defaultCoverPhoto;
   return (
     <div
@@ -145,7 +160,7 @@ function ShowcaseLayer({ theme, active }: { theme: ThemeDefinition; active: bool
             fontWeight: theme.fonts.headingWeight,
           }}
         >
-          Ala &amp; Kuba
+          {coupleName}
         </p>
         <p
           className={`mt-3 text-sm ${hasPhoto ? "text-white/85" : ""}`}

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { THEME_LIST } from "@/lib/themes";
 import { HomeThemeShowcase } from "@/components/HomeThemeShowcase";
+import { getLocale } from "@/lib/i18n/locale";
+import { sampleCoupleName } from "@/lib/coupleNameSamples";
 
 const FEATURES = [
   {
@@ -59,7 +61,14 @@ const FEATURES = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  // Ten sam mechanizm co wybór języka (proxy.ts wykrywa kraj/język gościa
+  // przy pierwszym wejściu) - tu tylko dobieramy pod niego przykładowe
+  // imiona pary w pokazie stylów, żeby gość spoza Polski widział coś
+  // "swojsko" brzmiącego, patrz src/lib/coupleNameSamples.ts.
+  const locale = await getLocale();
+  const coupleName = sampleCoupleName(locale);
+
   return (
     <div className="flex flex-1 flex-col" style={{ background: "#fafaf7" }}>
       {/* Dwie kolumny na dużych ekranach - opis PRZY demie, nie osobno nad
@@ -95,7 +104,7 @@ export default function Home() {
         </div>
 
         <div className="mx-auto w-full max-w-sm lg:max-w-none">
-          <HomeThemeShowcase themes={THEME_LIST} />
+          <HomeThemeShowcase themes={THEME_LIST} coupleName={coupleName} />
         </div>
       </div>
 
