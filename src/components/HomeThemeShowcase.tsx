@@ -18,9 +18,11 @@
 //
 // Ikony na dole to uproszczone "próbki koloru" (dwukolorowe kółka z
 // theme.swatches), nie pełne karty - para prosiła wyraźnie o coś małego.
-// Kliknięcie ikony zatrzymuje automatyczne przełączanie na wybranym
-// motywie; kliknięcie PONOWNIE tej samej (już aktywnej) ikony wznawia
-// autoplay - prosty przełącznik bez dodatkowych przycisków.
+// Kliknięcie kropki koloru zatrzymuje automatyczne przełączanie na
+// wybranym motywie. Osobny przycisk play/pauza (jak w YouTube, jedna z
+// kropek w tym samym rzędzie) wznawia/zatrzymuje pokaz - jawny, zawsze
+// widoczny, bez ukrytego "kliknij tę samą kropkę jeszcze raz" (to nie było
+// odkrywalne - zgłoszone przez parę).
 
 import { useEffect, useRef, useState } from "react";
 import type { ThemeDefinition } from "@/lib/themes";
@@ -52,12 +54,8 @@ export function HomeThemeShowcase({ themes }: Props) {
   }, [autoPlay, themes.length]);
 
   function handlePick(index: number) {
-    if (!autoPlay && index === activeIndex) {
-      setAutoPlay(true);
-    } else {
-      setActiveIndex(index);
-      setAutoPlay(false);
-    }
+    setActiveIndex(index);
+    setAutoPlay(false);
   }
 
   return (
@@ -71,28 +69,41 @@ export function HomeThemeShowcase({ themes }: Props) {
         ))}
       </div>
 
-      <div className="mx-auto mt-5 flex flex-col items-center gap-3">
-        <p className="text-xs text-zinc-500">
-          {autoPlay ? "Style zmieniają się same" : "Zatrzymane - kliknij ponownie, żeby wznowić"}
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {themes.map((theme, i) => (
-            <button
-              key={theme.id}
-              type="button"
-              onClick={() => handlePick(i)}
-              title={theme.label}
-              aria-label={theme.label}
-              aria-pressed={i === activeIndex}
-              className={`h-7 w-7 shrink-0 rounded-full transition-transform ${
-                i === activeIndex ? "scale-125 ring-2 ring-offset-2 ring-zinc-900" : "hover:scale-110"
-              }`}
-              style={{
-                background: `linear-gradient(135deg, ${theme.swatches[0]} 50%, ${theme.swatches[2]} 50%)`,
-              }}
-            />
-          ))}
-        </div>
+      <div className="mx-auto mt-5 flex flex-wrap items-center justify-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => setAutoPlay((p) => !p)}
+          title={autoPlay ? "Pauza" : "Odtwórz"}
+          aria-label={autoPlay ? "Pauza" : "Odtwórz"}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-white transition-transform hover:scale-110"
+        >
+          {autoPlay ? (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+              <rect x="0" y="0" width="3" height="10" />
+              <rect x="7" y="0" width="3" height="10" />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+              <path d="M0 0 L10 5 L0 10 Z" />
+            </svg>
+          )}
+        </button>
+        {themes.map((theme, i) => (
+          <button
+            key={theme.id}
+            type="button"
+            onClick={() => handlePick(i)}
+            title={theme.label}
+            aria-label={theme.label}
+            aria-pressed={i === activeIndex}
+            className={`h-7 w-7 shrink-0 rounded-full transition-transform ${
+              i === activeIndex ? "scale-125 ring-2 ring-offset-2 ring-zinc-900" : "hover:scale-110"
+            }`}
+            style={{
+              background: `linear-gradient(135deg, ${theme.swatches[0]} 50%, ${theme.swatches[2]} 50%)`,
+            }}
+          />
+        ))}
       </div>
     </div>
   );
