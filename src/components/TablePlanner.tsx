@@ -230,13 +230,21 @@ export default function TablePlanner({
   // Hydratacja z IndexedDB: jeśli poprzednia sesja skończyła się offline
   // z niezapisaną na serwerze zmianą pozycji, ta lokalna wersja jest
   // nowsza niż to, co przyszło z serwera przy załadowaniu strony.
+  //
+  // UWAGA - te wpisy mogą pochodzić z DOWOLNIE starej sesji w tej
+  // przeglądarce, sprzed dodania pól takich jak disabledSeatIndexes
+  // (podedytor miejsc) - bez normalizacji taki "z przeszłości" obiekt
+  // wchodził do stanu bez tego pola i wywalał całą kanwę na
+  // `.includes()` z undefined (złapane empirycznie na produkcji). Zamiast
+  // gonić każde nowe pole z osobna, normalizeLocalTable dopełnia braki
+  // wartościami "pusty/domyślny" - bezpieczne dla dowolnie starego wpisu.
   useEffect(() => {
     loadTablesLocal(weddingId).then((localTables) => {
       if (localTables.length === 0) return;
       setTables((prev) => {
         const byId = new Map(prev.map((t) => [t.id, t] as const));
         for (const local of localTables) {
-          if (byId.has(local.id)) byId.set(local.id, local);
+          if (byId.has(local.id)) byId.set(local.id, normalizeLocalTable(local));
         }
         return Array.from(byId.values());
       });
@@ -503,7 +511,7 @@ export default function TablePlanner({
   // adminSetSeatDisabled) - błąd wyląduje w reportError, spójnie z resztą
   // akcji na tej kanwie.
   async function handleToggleSeatDisabled(table: WeddingTable, seatIndex: number) {
-    const disabled = !table.disabledSeatIndexes.includes(seatIndex);
+    const disabled = !(table.disabledSeatIndexes ?? []).includes(seatIndex);
     try {
       const updated = await toggleSeatDisabledAction(weddingId, table.id, seatIndex, disabled);
       setTables((prev) => prev.map((t) => (t.id === table.id ? updated : t)));
@@ -866,7 +874,7 @@ export default function TablePlanner({
                     )}
                     {seatPositions(table).map((pos, seatIndex) => {
                       const occupied = tableSeats.find((s) => s.seatIndex === seatIndex);
-                      const isDisabled = table.disabledSeatIndexes.includes(seatIndex);
+                      const isDisabled = (table.disabledSeatIndexes ?? []).includes(seatIndex);
                       // Klikalne wyłącznie na WYBRANYM stole - "podedytor"
                       // miejsc (patrz handleToggleSeatDisabled) ma sens
                       // tylko dla stołu, który para właśnie edytuje w panelu
@@ -1083,7 +1091,7 @@ export default function TablePlanner({
           <div className="space-y-2">
             {Array.from({ length: selectedTable.seatsCount }).map((_, seatIndex) => {
               const seat = selectedTableSeats.find((s) => s.seatIndex === seatIndex);
-              const isDisabled = selectedTable.disabledSeatIndexes.includes(seatIndex);
+              const isDisabled = (selectedTable.disabledSeatIndexes ?? []).includes(seatIndex);
               return (
                 <div
                   key={seatIndex}
@@ -1342,6 +1350,15 @@ function ShapeBody({
       strokeWidth={strokeWidth / Math.max(width, height, 1) * BASE_POLYGON_RADIUS}
     />
   );
+}
+
+/** Dopełnia obiekt stołu wczytany z lokalnego IndexedDB (patrz
+ * tablePlannerLocalStore.ts) polami, których mógł nie mieć w chwili zapisu -
+ * ten cache przeżywa dowolnie długo w przeglądarce gościa, więc wpis sprzed
+ * dodania nowego pola do WeddingTable inaczej wchodziłby do stanu jako
+ * `undefined`, zamiast bezpiecznej wartości domyślnej. */
+function normalizeLocalTable(table: WeddingTable): WeddingTable {
+  return { ...table, disabledSeatIndexes: table.disabledSeatIndexes ?? [] };
 }
 
 /** Rozkłada krzesła dookoła stołu tak, żeby się nie nakładały (patrz

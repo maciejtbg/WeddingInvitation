@@ -83,6 +83,66 @@ if (process.env.PLAYWRIGHT_CHROMIUM) {
   await couple.waitForSelector("text=Miejsca (8)", { timeout: 10000 });
   assert(true, "dodano stół okrągły z 8 miejscami, panel boczny go pokazuje");
 
+  // --- Regresja: wpis w lokalnym IndexedDB (offline-autosave, patrz
+  //     tablePlannerLocalStore.ts) sprzed dodania jakiegoś pola do
+  //     WeddingTable NIE MOŻE wywalić całej kanwy przy przeładowaniu -
+  //     złapane na produkcji, gdy stary wpis bez disabledSeatIndexes
+  //     nadpisywał świeży stół z serwera i .includes() dostawało
+  //     undefined (patrz normalizeLocalTable w TablePlanner.tsx). ---
+  const jsErrors = [];
+  couple.on("pageerror", (err) => jsErrors.push(err.message));
+  const tableId = await couple.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const req = indexedDB.open("wedding-table-planner", 1);
+        req.onsuccess = () => {
+          req.result
+            .transaction("tables", "readonly")
+            .objectStore("tables")
+            .getAll().onsuccess = (e) => resolve(e.target.result[0]?.id);
+        };
+      })
+  );
+  await couple.evaluate(
+    (id) =>
+      new Promise((resolve, reject) => {
+        const req = indexedDB.open("wedding-table-planner", 1);
+        req.onsuccess = () => {
+          const tx = req.result.transaction("tables", "readwrite");
+          // Celowo BRAK disabledSeatIndexes - odtwarza kształt obiektu
+          // sprzed tej funkcji.
+          tx.objectStore("tables").put({
+            id,
+            roomName: "Główna sala",
+            label: "Stół 1",
+            shape: "ROUND",
+            x: 200,
+            y: 200,
+            rotation: 0,
+            seatsCount: 8,
+            radius: 56,
+            width: 130,
+            height: 64,
+          });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    tableId
+  );
+  await couple.reload();
+  await couple.waitForSelector("canvas", { state: "visible", timeout: 15000 });
+  await couple.waitForTimeout(1000);
+  assert(
+    jsErrors.length === 0,
+    `stary wpis w IndexedDB (bez disabledSeatIndexes) nie wywala kanwy po przeładowaniu${jsErrors.length ? " - błędy: " + jsErrors.join("; ") : ""}`
+  );
+
+  // Przeładowanie odznacza stół - zaznaczamy go ponownie, żeby dalsza
+  // część testu (panel boczny z listą miejsc) miała co pokazywać.
+  await couple.locator("canvas").first().click({ position: { x: 120, y: 120 } });
+  await couple.waitForSelector("text=Miejsca (8)", { timeout: 10000 });
+
   const select = couple.locator("select").first();
   await select.selectOption({ label: "Zofia Testowa" });
   await couple.waitForSelector("text=Zofia Testowa");
