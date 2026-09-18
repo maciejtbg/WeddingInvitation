@@ -83,4 +83,25 @@ export const uk: Dictionary = {
   deleteMyDataConfirmButton: "Так, видалити мої дані",
   deleteMyDataCancel: "Скасувати",
   deleteMyDataDone: "Ваші дані видалено. Дякуємо, що були з нами.",
+
+  groupPageIntro:
+    "Це спільне запрошення для кількох осіб. Підтвердіть присутність за кожну з них окремо нижче.",
+  groupMembersTitle: "Особи в цій групі",
+  groupConsentTitle: "Перш ніж продовжити",
+  groupConsentIntro:
+    "Щоб підтвердити присутність і користуватися цим сайтом від імені осіб, зазначених нижче, нам потрібна згода на обробку їхніх даних - імені та прізвища, відповіді RSVP, харчових побажань і місця за столом. Деталі в політиці конфіденційності.",
+  groupConsentAgree:
+    "Я прочитав(ла) політику конфіденційності та даю згоду, від їхнього імені, на обробку даних осіб, зазначених вище, в описаному обсязі.",
+  groupConsentAgreeButton: "Погоджуюсь, продовжити",
+  groupConsentRequiredError: "Щоб продовжити, потрібна згода.",
+  groupRsvpSectionTitle: "Підтвердіть присутність",
+  groupRsvpSavedThanks: "Дякуємо, ми зберегли відповіді всієї групи!",
+  groupSaveAllButton: "Зберегти відповіді",
+  groupSeatSectionTitle: "Місця за столами",
+  groupSeatIntro: "Ви можете одразу розсадити підтверджених осіб цієї групи на вільні місця.",
+  groupConfirmRsvpFirstForSeat: "Спочатку підтвердіть присутність цієї особи вище.",
+  groupSeatsSavedThanks: "Обрані місця збережено.",
+
+  menuTitle: "Меню",
+  menuAllergensPrefix: "Алергени:",
 };

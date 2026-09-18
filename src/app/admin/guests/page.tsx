@@ -14,6 +14,7 @@ import {
 } from "../actions";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import SendInviteButtons from "@/components/SendInviteButtons";
+import RemindGuestButtons from "@/components/RemindGuestButtons";
 
 const RSVP_LABELS: Record<string, string> = {
   PENDING: "Oczekuje",
@@ -277,6 +278,24 @@ export default async function GuestsPage({
                 partner2Name={wedding.partner2Name}
                 guestFirstName={guest.firstName}
               />
+              {(guest.phone || guest.email) && (
+                <details className="w-full sm:w-auto">
+                  <summary className="inline-block cursor-pointer rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400">
+                    🔔 Przypomnij
+                  </summary>
+                  <div className="mt-1.5">
+                    <RemindGuestButtons
+                      path={`/z/${guest.token}`}
+                      phone={guest.phone}
+                      email={guest.email}
+                      partner1Name={wedding.partner1Name}
+                      partner2Name={wedding.partner2Name}
+                      guestFirstName={guest.firstName}
+                      rsvpPending={guest.rsvpStatus === "PENDING"}
+                    />
+                  </div>
+                </details>
+              )}
               {guest.shortCode && (
                 <a
                   href={`/admin/guests/${guest.id}/invite-card?weddingId=${wedding.id}`}

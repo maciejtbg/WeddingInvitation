@@ -130,6 +130,18 @@ export default async function AdminDashboardPage({
           FAQ
         </Link>
         <Link
+          href={`/admin/menu?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Menu i alergeny
+        </Link>
+        <Link
+          href={`/admin/report?weddingId=${wedding.id}`}
+          className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
+        >
+          Raport
+        </Link>
+        <Link
           href={`/admin/music?weddingId=${wedding.id}`}
           className="rounded-full border border-zinc-300 px-4 py-1.5 text-sm text-zinc-700 hover:border-zinc-400"
         >

@@ -306,6 +306,22 @@ export function runMigrations() {
     );
     CREATE INDEX IF NOT EXISTS idx_songs_wedding ON song_requests(wedding_id);
 
+    -- Menu wesela - dania i alergeny w nich (patrz src/lib/allergens.ts i
+    -- src/lib/db/menu.ts) - żeby gość mógł sam sprawdzić, czy dane danie mu
+    -- podejdzie, obok własnych uwag w guests.dietary_notes. allergens to JSON
+    -- (tablica id-ków alergenów), jak disabled_seats w tables_.
+    CREATE TABLE IF NOT EXISTS wedding_menu_items (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      category TEXT,
+      name TEXT NOT NULL,
+      description TEXT,
+      allergens TEXT NOT NULL DEFAULT '[]',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_menu_items_wedding ON wedding_menu_items(wedding_id);
+
     -- Cache przetłumaczonych słowników dla języków spoza ręcznie
     -- utrzymywanych (pl/en/uk/de) - patrz src/lib/i18n/getDictionary.ts.
     -- Tłumaczenie całego słownika kosztuje jedno zapytanie do darmowego,
@@ -499,6 +515,34 @@ export function runMigrations() {
   // i "podedytor" w src/components/TablePlanner.tsx.
   try {
     db.exec("ALTER TABLE tables_ ADD COLUMN disabled_seats TEXT NOT NULL DEFAULT '[]';");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  // Zaproszenia grupowe - jeden wspólny link (patrz src/app/zg/[token]/route.ts),
+  // którym przedstawiciel grupy (np. rodzina) potwierdza obecność selektywnie
+  // za kilka osób naraz. NULL dopóki para go nie wygeneruje (patrz
+  // adminGenerateGroupInviteToken w src/lib/db/groups.ts) - grupa nie musi
+  // mieć takiego linku, jeśli para woli wysyłać wyłącznie pojedyncze zaproszenia.
+  try {
+    db.exec("ALTER TABLE guest_groups ADD COLUMN invite_token TEXT;");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  try {
+    db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_guest_groups_invite_token ON guest_groups(invite_token);"
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("duplicate column")) throw err;
+  }
+  // Zgoda pary na to, żeby przedstawiciel grupy (patrz wyżej) mógł też
+  // usadzić swoich ludzi przy stołach z tego samego wspólnego linku -
+  // domyślnie wyłączone, para włącza świadomie na stronie Grupy gości.
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN allow_group_seating INTEGER NOT NULL DEFAULT 0;");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("duplicate column")) throw err;

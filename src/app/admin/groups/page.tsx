@@ -4,11 +4,17 @@ import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGroups, adminListAllowancesByGroup } from "@/lib/db/groups";
 import { adminListTables } from "@/lib/db/tables";
+import { groupListMemberViews } from "@/lib/db/guests";
+import { allowsGuestSelfSelect } from "@/lib/seatingModes";
+import CopyLinkButton from "@/components/CopyLinkButton";
 import {
   createGroupAction,
   deleteGroupAction,
   renameGroupAction,
   toggleGroupTableAllowanceAction,
+  generateGroupInviteLinkAction,
+  regenerateGroupInviteLinkAction,
+  setAllowGroupSeatingAction,
 } from "./actions";
 
 export default async function GroupsPage({
@@ -45,8 +51,41 @@ export default async function GroupsPage({
         <Link href={`/admin/guests?weddingId=${wedding.id}`} className="underline">
           Goście
         </Link>
-        .
+        . Możecie też wygenerować dla grupy jeden wspólny link zaproszenia -
+        osoba, która go otworzy, potwierdzi obecność selektywnie za wszystkich
+        członków grupy naraz.
       </p>
+
+      <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
+        <h2 className="mb-2 text-lg font-medium text-zinc-900">Usadzanie przez grupę</h2>
+        <p className="mb-3 text-sm text-zinc-500">
+          Jeśli włączone, osoba korzystająca ze wspólnego linku grupowego może
+          też od razu usadzić potwierdzonych członków swojej grupy przy
+          stołach (w ramach dozwolonych dla grupy stołów, patrz niżej) -
+          wymaga trybu rozmieszczania pozwalającego na samodzielny wybór.
+        </p>
+        <form action={setAllowGroupSeatingAction}>
+          <input type="hidden" name="weddingId" value={wedding.id} />
+          <input type="hidden" name="allow" value={wedding.allowGroupSeating ? "0" : "1"} />
+          <button
+            type="submit"
+            disabled={!allowsGuestSelfSelect(wedding.seatingMode)}
+            className={`rounded-full px-4 py-2 text-sm font-medium ${
+              wedding.allowGroupSeating
+                ? "bg-zinc-900 text-white"
+                : "border border-zinc-300 text-zinc-700 hover:border-zinc-400"
+            } disabled:cursor-not-allowed disabled:opacity-40`}
+          >
+            {wedding.allowGroupSeating ? "Włączone - wyłącz" : "Wyłączone - włącz"}
+          </button>
+          {!allowsGuestSelfSelect(wedding.seatingMode) && (
+            <p className="mt-2 text-xs text-zinc-400">
+              Obecny tryb rozmieszczania nie pozwala gościom samodzielnie
+              wybierać miejsc, więc tej opcji nie da się włączyć.
+            </p>
+          )}
+        </form>
+      </div>
 
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-medium text-zinc-900">Nowa grupa</h2>
@@ -78,6 +117,7 @@ export default async function GroupsPage({
         <div className="space-y-6">
           {groups.map((group) => {
             const allowed = new Set(allowancesByGroup[group.id] ?? []);
+            const members = groupListMemberViews(wedding.id, group.id);
             return (
               <div key={group.id} className="rounded-lg border border-zinc-200 bg-white p-4">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -135,6 +175,59 @@ export default async function GroupsPage({
                     })}
                   </div>
                 )}
+
+                <div className="mt-4 border-t border-zinc-100 pt-4">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
+                    Wspólny link zaproszenia grupowego
+                  </p>
+                  {group.inviteToken ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CopyLinkButton path={`/zg/${group.inviteToken}`} label="Skopiuj link grupowy" />
+                      <form action={regenerateGroupInviteLinkAction}>
+                        <input type="hidden" name="weddingId" value={wedding.id} />
+                        <input type="hidden" name="groupId" value={group.id} />
+                        <button
+                          type="submit"
+                          className="rounded-full border border-amber-300 px-3 py-1 text-xs font-medium text-amber-700 hover:border-amber-400"
+                          title="Stary link przestanie działać"
+                        >
+                          Wygeneruj nowy (unieważni poprzedni)
+                        </button>
+                      </form>
+                    </div>
+                  ) : (
+                    <form action={generateGroupInviteLinkAction}>
+                      <input type="hidden" name="weddingId" value={wedding.id} />
+                      <input type="hidden" name="groupId" value={group.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-700"
+                      >
+                        Wygeneruj link grupowy
+                      </button>
+                    </form>
+                  )}
+
+                  {members.length === 0 ? (
+                    <p className="mt-3 text-xs text-zinc-400">
+                      Ta grupa nie ma jeszcze żadnego gościa - przypiszcie gości do niej na stronie{" "}
+                      <Link href={`/admin/guests?weddingId=${wedding.id}`} className="underline">
+                        Goście
+                      </Link>
+                      .
+                    </p>
+                  ) : (
+                    <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+                      {members.map((m) => (
+                        <li key={m.id}>
+                          {m.firstName} {m.lastName ?? ""}
+                          {m.rsvpStatus === "YES" && <span className="ml-1 text-green-600">✓</span>}
+                          {m.rsvpStatus === "NO" && <span className="ml-1 text-red-500">✕</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             );
           })}

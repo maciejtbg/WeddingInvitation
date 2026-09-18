@@ -42,6 +42,7 @@ function rowToWedding(row: Record<string, unknown>): Wedding {
     invitationCardVariant: row.invitation_card_variant as Wedding["invitationCardVariant"],
     seatingMode: row.seating_mode as Wedding["seatingMode"],
     giftNote: row.gift_note as string | null,
+    allowGroupSeating: !!row.allow_group_seating,
     dataRetentionDays: row.data_retention_days as number,
     purgedAt: row.purged_at as string | null,
     publishedAt: row.published_at as string | null,

@@ -75,6 +75,10 @@ export interface Dictionary {
   scheduleTitle: string;
   faqTitle: string;
 
+  // Menu i alergeny (patrz src/lib/allergens.ts)
+  menuTitle: string;
+  menuAllergensPrefix: string;
+
   // Kalendarz
   addToCalendar: string;
   downloadIcs: string;
@@ -105,6 +109,22 @@ export interface Dictionary {
   deleteMyDataConfirmButton: string;
   deleteMyDataCancel: string;
   deleteMyDataDone: string;
+
+  // Zaproszenie grupowe - /grupa (patrz src/app/[slug]/grupa)
+  groupPageIntro: string;
+  groupMembersTitle: string;
+  groupConsentTitle: string;
+  groupConsentIntro: string;
+  groupConsentAgree: string;
+  groupConsentAgreeButton: string;
+  groupConsentRequiredError: string;
+  groupRsvpSectionTitle: string;
+  groupRsvpSavedThanks: string;
+  groupSaveAllButton: string;
+  groupSeatSectionTitle: string;
+  groupSeatIntro: string;
+  groupConfirmRsvpFirstForSeat: string;
+  groupSeatsSavedThanks: string;
 }
 
 /** Języki z ręcznie utrzymywanym słownikiem (locales/*.ts) - dostępne od

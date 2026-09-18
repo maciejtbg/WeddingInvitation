@@ -83,4 +83,25 @@ export const en: Dictionary = {
   deleteMyDataConfirmButton: "Yes, delete my data",
   deleteMyDataCancel: "Cancel",
   deleteMyDataDone: "Your data has been deleted. Thank you for being with us.",
+
+  groupPageIntro:
+    "This is a shared invitation for several people. Confirm attendance for each of them separately below.",
+  groupMembersTitle: "People in this group",
+  groupConsentTitle: "Before you continue",
+  groupConsentIntro:
+    "To confirm attendance and use this site on behalf of the people listed below, we need consent to process their data - their names, RSVP answers, any dietary notes, and their table seat. See the privacy policy for details.",
+  groupConsentAgree:
+    "I've read the privacy policy and I consent, on their behalf, to the data of the people listed above being processed as described.",
+  groupConsentAgreeButton: "I agree, continue",
+  groupConsentRequiredError: "Consent is required to continue.",
+  groupRsvpSectionTitle: "Confirm attendance",
+  groupRsvpSavedThanks: "Thanks, we've saved the whole group's answers!",
+  groupSaveAllButton: "Save answers",
+  groupSeatSectionTitle: "Table seats",
+  groupSeatIntro: "You can seat the confirmed people from this group at free seats right away.",
+  groupConfirmRsvpFirstForSeat: "Confirm this person's attendance above first.",
+  groupSeatsSavedThanks: "The selected seats have been saved.",
+
+  menuTitle: "Menu",
+  menuAllergensPrefix: "Allergens:",
 };

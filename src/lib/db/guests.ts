@@ -160,6 +160,25 @@ export function adminSetGuestGroup(
   );
 }
 
+// --- Dostęp przedstawiciela grupy (sesja ograniczona do jednej grupy,
+//     patrz src/lib/auth/groupGuest.ts) - podobnie jak `guest*`, ale zamiast
+//     jednego guestId dotyczy wszystkich gości NALEŻĄCYCH do groupId z sesji.
+//     weddingId dodatkowo w WHERE jako obrona w głąb, choć groupId i tak
+//     jednoznacznie należy do jednego wesela. ---
+
+/** Dane wszystkich członków grupy w zakresie, jaki wolno zobaczyć/edytować
+ * przedstawicielowi grupy z jej wspólnego linku (patrz app/[slug]/grupa) -
+ * ten sam okrojony kształt co GuestSelfView pojedynczego gościa, nigdy
+ * groupLabel czy dane spoza tej grupy. */
+export function groupListMemberViews(weddingId: string, groupId: string): GuestSelfView[] {
+  const rows = db
+    .prepare(
+      "SELECT * FROM guests WHERE wedding_id = ? AND group_id = ? ORDER BY created_at ASC"
+    )
+    .all(weddingId, groupId);
+  return rows.map((row) => toSelfView(rowToGuest(row as SqliteRow)));
+}
+
 // --- Dostęp gościa (sesja ograniczona do jego własnego guestId) ---
 
 /** Używane wyłącznie przy pierwszym wejściu przez unikalny link - żeby

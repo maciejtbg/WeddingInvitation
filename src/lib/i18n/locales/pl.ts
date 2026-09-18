@@ -88,4 +88,25 @@ export const pl: Dictionary = {
   deleteMyDataConfirmButton: "Tak, usuń moje dane",
   deleteMyDataCancel: "Anuluj",
   deleteMyDataDone: "Twoje dane zostały usunięte. Dziękujemy, że byłeś/aś z nami.",
+
+  groupPageIntro:
+    "To wspólne zaproszenie dla kilku osób. Potwierdź obecność za każdą z nich osobno poniżej.",
+  groupMembersTitle: "Osoby w tej grupie",
+  groupConsentTitle: "Zanim przejdziecie dalej",
+  groupConsentIntro:
+    "Żeby potwierdzić obecność i korzystać z tej strony w imieniu osób wymienionych poniżej, potrzebujemy zgody na przetwarzanie ich danych - imion i nazwisk, odpowiedzi RSVP, ewentualnych uwag dietetycznych i miejsca przy stole. Szczegóły w polityce prywatności.",
+  groupConsentAgree:
+    "Przeczytałem/am politykę prywatności i wyrażam zgodę na przetwarzanie danych osób wymienionych powyżej w opisanym zakresie, w ich imieniu.",
+  groupConsentAgreeButton: "Zgadzam się, przejdź dalej",
+  groupConsentRequiredError: "Zgoda jest wymagana, żeby przejść dalej.",
+  groupRsvpSectionTitle: "Potwierdźcie obecność",
+  groupRsvpSavedThanks: "Dziękujemy, zapisaliśmy odpowiedzi całej grupy!",
+  groupSaveAllButton: "Zapisz odpowiedzi",
+  groupSeatSectionTitle: "Miejsca przy stołach",
+  groupSeatIntro: "Możecie od razu usadzić potwierdzone osoby z tej grupy przy wolnych miejscach.",
+  groupConfirmRsvpFirstForSeat: "Najpierw potwierdź obecność tej osoby powyżej.",
+  groupSeatsSavedThanks: "Zapisaliśmy wybrane miejsca.",
+
+  menuTitle: "Menu",
+  menuAllergensPrefix: "Alergeny:",
 };

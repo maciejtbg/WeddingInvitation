@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export default function CopyLinkButton({ path }: { path: string }) {
+export default function CopyLinkButton({
+  path,
+  label = "Skopiuj link dla gościa",
+}: {
+  path: string;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -23,7 +29,7 @@ export default function CopyLinkButton({ path }: { path: string }) {
       onClick={handleCopy}
       className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
     >
-      {copied ? "Skopiowano!" : "Skopiuj link dla gościa"}
+      {copied ? "Skopiowano!" : label}
     </button>
   );
 }

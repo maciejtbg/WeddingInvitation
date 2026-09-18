@@ -59,6 +59,12 @@ export interface Wedding {
   invitationCardVariant: InviteCardVariant;
   seatingMode: SeatingMode;
   giftNote: string | null;
+  // Zaproszenia grupowe - czy przedstawiciel grupy (patrz GuestGroup niżej)
+  // wolno mu, oprócz selektywnego RSVP za resztę grupy, też usadzić ich przy
+  // stołach z tego samego wspólnego linku. Ma znaczenie tylko wtedy, gdy
+  // seatingMode w ogóle pozwala na samodzielny wybór (patrz
+  // allowsGuestSelfSelect w src/lib/seatingModes.ts).
+  allowGroupSeating: boolean;
   // RODO - liczba dni po dacie ślubu, po której dane osobowe gości są
   // automatycznie usuwane (patrz src/lib/dataRetention.ts). purgedAt to
   // znacznik "już wyczyszczone", null dopóki nie nastąpiło.
@@ -107,6 +113,9 @@ export interface GuestGroup {
   id: string;
   weddingId: string;
   name: string;
+  // Token wspólnego linku zaproszenia grupowego (patrz src/app/zg/[token]/
+  // route.ts) - NULL dopóki para go nie wygeneruje na stronie Grupy gości.
+  inviteToken: string | null;
   createdAt: string;
 }
 
@@ -279,6 +288,20 @@ export interface SongRequest {
   artworkUrl: string | null;
   previewUrl: string | null;
   externalUrl: string | null;
+  createdAt: string;
+}
+
+// Menu wesela - patrz src/lib/db/menu.ts i src/lib/allergens.ts. category to
+// wolny tekst (np. "Przystawki"/"Danie główne"/"Deser") do grupowania na
+// stronie gościa, tak samo jak dayLabel w ScheduleItem.
+export interface MenuItem {
+  id: string;
+  weddingId: string;
+  category: string | null;
+  name: string;
+  description: string | null;
+  allergens: string[];
+  sortOrder: number;
   createdAt: string;
 }
 

@@ -60,6 +60,17 @@ export function listGuestIdsWithMessages(weddingId: string): string[] {
  * src/app/admin/page.tsx) - czat jest schowany pod "Czat" przy każdym
  * gościu z osobna (patrz model prywatności w README), więc bez takiej
  * odznaki para łatwo przeoczy, że ktoś napisał. */
+/** Do raportu dla pary (patrz src/app/admin/report) - łączna liczba
+ * wiadomości i ilu gości w ogóle napisało, bez ujawniania treści rozmów. */
+export function countMessagesForWedding(weddingId: string): { total: number; guestsWithMessages: number } {
+  const row = db
+    .prepare(
+      "SELECT COUNT(*) as total, COUNT(DISTINCT guest_id) as guests FROM chat_messages WHERE wedding_id = ?"
+    )
+    .get(weddingId) as { total: number; guests: number };
+  return { total: row.total, guestsWithMessages: row.guests };
+}
+
 export function listGuestIdsAwaitingReply(weddingId: string): string[] {
   const rows = db
     .prepare(

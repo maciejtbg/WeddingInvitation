@@ -27,6 +27,7 @@ function rowToWedding(row: SqliteRow): Wedding {
       : DEFAULT_INVITE_CARD_VARIANT,
     seatingMode: isSeatingMode(rawSeatingMode) ? rawSeatingMode : DEFAULT_SEATING_MODE,
     giftNote: row.gift_note as string | null,
+    allowGroupSeating: !!row.allow_group_seating,
     dataRetentionDays: row.data_retention_days as number,
     purgedAt: row.purged_at as string | null,
     publishedAt: row.published_at as string | null,
@@ -81,6 +82,7 @@ const RESERVED_SLUGS = new Set([
   "uploads",
   "w",
   "z",
+  "zg",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
@@ -182,6 +184,15 @@ export function updateWeddingDetails(
  * mógł to pokazać. */
 export function markWeddingPurged(id: string): void {
   db.prepare("UPDATE weddings SET purged_at = datetime('now') WHERE id = ?").run(id);
+}
+
+/** Osobna, dedykowana funkcja (nie część updateWeddingDetails) - to jedyne
+ * pole logiczne (boolean) na Wedding, więc wymaga własnej konwersji na
+ * 0/1 zamiast przechodzić przez generyczną mapę kolumn string-owych. */
+export function setAllowGroupSeating(id: string, allow: boolean): void {
+  db.prepare(
+    "UPDATE weddings SET allow_group_seating = ?, updated_at = datetime('now') WHERE id = ?"
+  ).run(allow ? 1 : 0, id);
 }
 
 export function publishWedding(id: string): void {

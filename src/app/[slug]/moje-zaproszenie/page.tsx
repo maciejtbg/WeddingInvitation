@@ -7,13 +7,13 @@ import { hasCurrentConsent } from "@/lib/db/consents";
 import { guestFindMySeat } from "@/lib/db/tables";
 import { listMessagesForGuest } from "@/lib/db/chat";
 import { listLocations } from "@/lib/db/locations";
-import { getLocationKind } from "@/lib/locationKinds";
 import { listScheduleItems } from "@/lib/db/schedule";
 import { listFaqItems } from "@/lib/db/faq";
+import { listMenuItems } from "@/lib/db/menu";
 import { getTheme, themeStyleVars, themeBackgroundEndColor } from "@/lib/themes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import GuestSeatSection from "@/components/GuestSeatSection";
-import LocationsMap from "@/components/LocationsMapLoader";
+import WeddingInfoSections from "@/components/WeddingInfoSections";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { PollingRefresher } from "@/components/PollingRefresher";
@@ -24,7 +24,6 @@ import { getLocale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { t } from "@/lib/i18n/dictionary";
 import { googleCalendarUrl } from "@/lib/calendarInvite";
-import { toEmbedUrl } from "@/lib/videoEmbed";
 import { formatWeddingDate, daysUntilWedding } from "@/lib/weddingCountdown";
 import { submitRsvpAction, sendGuestMessageAction } from "./actions";
 
@@ -73,6 +72,7 @@ export default async function MyInvitePage({
   const locations = listLocations(wedding.id);
   const scheduleItems = listScheduleItems(wedding.id);
   const faqItems = listFaqItems(wedding.id);
+  const menuItems = listMenuItems(wedding.id);
   const days = daysUntilWedding(wedding.weddingDate);
   const coverPhotos = listCoverPhotos(wedding.id);
   // Dopóki para nie wgra własnego zdjęcia powitalnego, pokazujemy gotowe
@@ -281,126 +281,14 @@ export default async function MyInvitePage({
           </form>
         </div>
 
-        {locations.length > 0 && (
-          <div className="mb-8">
-            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
-              {dict.howToFindUs}
-            </h2>
-            <LocationsMap locations={locations} />
-            <div className="mt-3 space-y-1">
-              {locations.map((loc) => {
-                const kind = getLocationKind(loc.kind);
-                return (
-                  <p key={loc.id} className="text-xs text-[var(--wd-muted)]">
-                    <span
-                      className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle"
-                      style={{ background: kind.color }}
-                    />
-                    <strong className="text-[var(--wd-text)]">{loc.label}</strong>
-                    {" - "}
-                    {kind.label}
-                    {loc.address ? `, ${loc.address}` : ""}
-                  </p>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {wedding.story && (
-          <p className="mb-8 whitespace-pre-line text-center text-[var(--wd-text)]">
-            {wedding.story}
-          </p>
-        )}
-
-        {wedding.videoUrl && (
-          <div className="mb-8">
-            {(() => {
-              const embedUrl = toEmbedUrl(wedding.videoUrl);
-              return embedUrl ? (
-                <div className="aspect-video overflow-hidden rounded-lg border border-[var(--wd-border)]">
-                  <iframe
-                    src={embedUrl}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="Film"
-                  />
-                </div>
-              ) : (
-                <a
-                  href={wedding.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[var(--wd-accent)] underline"
-                >
-                  🎬 Zobacz film
-                </a>
-              );
-            })()}
-          </div>
-        )}
-
-        {wedding.giftNote && (
-          <p className="mb-8 whitespace-pre-line rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 py-3 text-sm text-[var(--wd-muted)]">
-            {wedding.giftNote}
-          </p>
-        )}
-
-        {scheduleItems.length > 0 && (
-          <div className="mb-8">
-            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
-              {dict.scheduleTitle}
-            </h2>
-            <div className="space-y-3 rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
-              {scheduleItems.map((item, index) => {
-                const prevDay = index > 0 ? scheduleItems[index - 1].dayLabel : undefined;
-                const showDayHeader = item.dayLabel && item.dayLabel !== prevDay;
-                return (
-                  <div key={item.id}>
-                    {showDayHeader && (
-                      <p className="mb-1 mt-2 text-xs font-semibold uppercase tracking-wide text-[var(--wd-accent)]">
-                        {item.dayLabel}
-                      </p>
-                    )}
-                    <div className="flex gap-3">
-                      <span className="w-16 shrink-0 text-sm font-medium text-[var(--wd-accent)]">
-                        {item.timeLabel}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-[var(--wd-text)]">{item.title}</p>
-                        {item.description && (
-                          <p className="text-xs text-[var(--wd-muted)]">{item.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {faqItems.length > 0 && (
-          <div className="mb-8">
-            <h2 className="mb-3 text-center wd-heading-font text-xl text-[var(--wd-text)]">
-              {dict.faqTitle}
-            </h2>
-            <div className="space-y-2">
-              {faqItems.map((item) => (
-                <details
-                  key={item.id}
-                  className="rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-3"
-                >
-                  <summary className="cursor-pointer text-sm font-medium text-[var(--wd-text)]">
-                    {item.question}
-                  </summary>
-                  <p className="mt-2 text-sm text-[var(--wd-muted)]">{item.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        )}
+        <WeddingInfoSections
+          wedding={wedding}
+          locations={locations}
+          scheduleItems={scheduleItems}
+          faqItems={faqItems}
+          menuItems={menuItems}
+          dict={dict}
+        />
 
         <div className="rounded-lg border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6">
           <h2 className="mb-4 text-lg font-medium text-[var(--wd-text)]">

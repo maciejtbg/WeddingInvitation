@@ -7,13 +7,15 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCoupleSession } from "@/lib/auth/couple";
-import { findWeddingById } from "@/lib/db/weddings";
+import { findWeddingById, setAllowGroupSeating } from "@/lib/db/weddings";
 import {
   adminCreateGroup,
   adminDeleteGroup,
   adminFindGroupById,
   adminRenameGroup,
   adminSetGroupTableAllowance,
+  adminGenerateGroupInviteToken,
+  adminRegenerateGroupInviteToken,
 } from "@/lib/db/groups";
 
 function readString(formData: FormData, key: string): string {
@@ -64,6 +66,35 @@ export async function deleteGroupAction(formData: FormData): Promise<void> {
   const wedding = await requireOwnedWedding(weddingId);
 
   adminDeleteGroup(wedding.id, groupId);
+  revalidatePath("/admin/groups");
+  redirect(`/admin/groups?weddingId=${weddingId}`);
+}
+
+export async function generateGroupInviteLinkAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const groupId = readString(formData, "groupId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  adminGenerateGroupInviteToken(wedding.id, groupId);
+  revalidatePath("/admin/groups");
+  redirect(`/admin/groups?weddingId=${weddingId}`);
+}
+
+export async function regenerateGroupInviteLinkAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const groupId = readString(formData, "groupId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  adminRegenerateGroupInviteToken(wedding.id, groupId);
+  revalidatePath("/admin/groups");
+  redirect(`/admin/groups?weddingId=${weddingId}`);
+}
+
+export async function setAllowGroupSeatingAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const wedding = await requireOwnedWedding(weddingId);
+
+  setAllowGroupSeating(wedding.id, readString(formData, "allow") === "1");
   revalidatePath("/admin/groups");
   redirect(`/admin/groups?weddingId=${weddingId}`);
 }

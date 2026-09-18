@@ -6,7 +6,7 @@
 // ograniczeń dla grup, którym ufa bez zastrzeżeń. Dopiero dodanie choć
 // jednego zezwolenia zawęża wybór wyłącznie do wskazanych stołów.
 
-import { db, newId } from "./client";
+import { db, newId, newGuestToken } from "./client";
 import type { GuestGroup, SqliteRow } from "./types";
 
 function rowToGroup(row: SqliteRow): GuestGroup {
@@ -14,6 +14,7 @@ function rowToGroup(row: SqliteRow): GuestGroup {
     id: row.id as string,
     weddingId: row.wedding_id as string,
     name: row.name as string,
+    inviteToken: row.invite_token as string | null,
     createdAt: row.created_at as string,
   };
 }
@@ -102,6 +103,38 @@ export function adminListGroupNamesByTable(weddingId: string): Record<string, st
     (map[row.table_id] ??= []).push(row.name);
   }
   return map;
+}
+
+/** Znajduje grupę po tokenie wspólnego linku zaproszenia grupowego - jedyne
+ * miejsce, gdzie wolno wyszukiwać po tym tokenie (patrz
+ * src/app/zg/[token]/route.ts), analogicznie do findGuestByTokenForLogin. */
+export function findGroupByInviteToken(token: string): GuestGroup | null {
+  const row = db.prepare("SELECT * FROM guest_groups WHERE invite_token = ?").get(token);
+  return row ? rowToGroup(row) : null;
+}
+
+/** Generuje token wspólnego linku grupowego, jeśli grupa jeszcze go nie ma -
+ * zwraca istniejący bez zmian, żeby ponowne kliknięcie w panelu pary nie
+ * unieważniało linku już wysłanego przedstawicielowi grupy. */
+export function adminGenerateGroupInviteToken(weddingId: string, groupId: string): string {
+  const group = adminFindGroupById(weddingId, groupId);
+  if (!group) throw new Error("Grupa nie należy do tego wesela");
+  if (group.inviteToken) return group.inviteToken;
+
+  const token = newGuestToken();
+  db.prepare("UPDATE guest_groups SET invite_token = ? WHERE id = ?").run(token, groupId);
+  return token;
+}
+
+/** Świadome unieważnienie starego linku (np. wysłany niewłaściwej osobie) -
+ * w odróżnieniu od adminGenerateGroupInviteToken, ZAWSZE nadpisuje token. */
+export function adminRegenerateGroupInviteToken(weddingId: string, groupId: string): string {
+  const group = adminFindGroupById(weddingId, groupId);
+  if (!group) throw new Error("Grupa nie należy do tego wesela");
+
+  const token = newGuestToken();
+  db.prepare("UPDATE guest_groups SET invite_token = ? WHERE id = ?").run(token, groupId);
+  return token;
 }
 
 export function adminSetGroupTableAllowance(
