@@ -6,6 +6,11 @@ import { getCoupleSession } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { uploadPhoto, removePhoto, MAX_COVER_PHOTOS } from "@/lib/photoStorage";
 import { setCoverPhoto, countCoverPhotos, findPhotoById } from "@/lib/db/photos";
+import { findActiveDiscountCodeByCode } from "@/lib/db/discountCodes";
+import { createPendingPurchase, createFreePurchaseFromDiscountCode } from "@/lib/db/photoPackPurchases";
+import { PHOTOS_PER_PACK, PACK_CURRENCY, computeDiscountedAmount } from "@/lib/photoPack";
+import { getStripeClient } from "@/lib/stripeClient";
+import { externalOriginFromHeaders } from "@/lib/externalOrigin";
 
 function readString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -82,4 +87,74 @@ export async function toggleCoverPhotoAction(formData: FormData): Promise<void> 
   revalidatePath("/admin/gallery");
   revalidatePath(`/${wedding.slug}`);
   redirect(`/admin/gallery?weddingId=${weddingId}`);
+}
+
+/** Zakup pakietu +50 zdjęć (patrz src/lib/photoPack.ts) - opcjonalny kod
+ * rabatowy. Rabat 100% (finalCents === 0) NIGDY nie tworzy sesji Stripe -
+ * Stripe Checkout w trybie "payment" nie obsługuje kwoty 0, więc pakiet
+ * jest po prostu od razu przyznawany (patrz createFreePurchaseFromDiscountCode).
+ * W przeciwnym razie tworzymy sesję Checkout i przekierowujemy tam gościa -
+ * FAKTYCZNE przyznanie zdjęć dzieje się dopiero po opłaceniu, przez webhook
+ * (patrz app/api/stripe-webhook) albo stronę powrotną (ten sam gallery/page.tsx). */
+export async function buyPhotoPackAction(formData: FormData): Promise<void> {
+  const weddingId = readString(formData, "weddingId");
+  const wedding = await requireOwnedWedding(weddingId);
+  const galleryUrl = `/admin/gallery?weddingId=${weddingId}`;
+
+  const rawCode = readString(formData, "discountCode");
+  const discountCode = rawCode ? findActiveDiscountCodeByCode(rawCode) : null;
+  if (rawCode && !discountCode) {
+    redirect(`${galleryUrl}&error=${encodeURIComponent("Nieprawidłowy lub nieaktywny kod rabatowy")}`);
+  }
+
+  const { finalCents, isFree } = computeDiscountedAmount(discountCode);
+
+  if (isFree) {
+    // discountCode na pewno nie jest null tutaj - isFree tylko gdy kod
+    // istnieje i dał 100% rabatu (patrz computeDiscountedAmount).
+    createFreePurchaseFromDiscountCode({
+      weddingId: wedding.id,
+      photosGranted: PHOTOS_PER_PACK,
+      discountCodeId: discountCode!.id,
+    });
+    revalidatePath("/admin/gallery");
+    redirect(`${galleryUrl}&purchase=free`);
+  }
+
+  const origin = await externalOriginFromHeaders();
+  let session;
+  try {
+    session = await getStripeClient().checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: PACK_CURRENCY,
+            product_data: { name: `Dodatkowe ${PHOTOS_PER_PACK} zdjęć - galeria wesela` },
+            unit_amount: finalCents,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${origin}${galleryUrl}&purchase=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}${galleryUrl}&purchase=cancelled`,
+      metadata: { weddingId: wedding.id, photosGranted: String(PHOTOS_PER_PACK) },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Nie udało się rozpocząć płatności";
+    redirect(`${galleryUrl}&error=${encodeURIComponent(message)}`);
+  }
+  if (!session.url) {
+    redirect(`${galleryUrl}&error=${encodeURIComponent("Nie udało się rozpocząć płatności")}`);
+  }
+
+  createPendingPurchase({
+    weddingId: wedding.id,
+    stripeSessionId: session.id,
+    photosGranted: PHOTOS_PER_PACK,
+    amountPaidCents: finalCents,
+    discountCodeId: discountCode?.id ?? null,
+  });
+
+  redirect(session.url);
 }

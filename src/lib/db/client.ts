@@ -248,8 +248,9 @@ export function runMigrations() {
     -- Galeria zdjęć - placeholder do czasu podłączenia Cloudflare R2 (patrz
     -- README). Celowo NIE trzymamy zdjęć w tej bazie - pliki lądują w
     -- public/uploads/<weddingId>/ (patrz src/lib/photoStorage.ts), tu tylko
-    -- metadane. Twardy limit MAX_PHOTOS_PER_WEDDING (patrz photoStorage.ts)
-    -- pilnuje, żeby to zostało małym dodatkiem do hostingu, nie studnią bez dna.
+    -- metadane. Limit zdjęć (darmowy start + opłacone pakiety, patrz
+    -- effectivePhotoLimit w src/lib/photoPack.ts) pilnuje, żeby to zostało
+    -- małym dodatkiem do hostingu, nie studnią bez dna.
     CREATE TABLE IF NOT EXISTS wedding_photos (
       id TEXT PRIMARY KEY,
       wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
@@ -368,6 +369,47 @@ export function runMigrations() {
       sections_json TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    -- Kody rabatowe generowane w panelu super-admina (/super-admin/discount-codes,
+    -- patrz src/lib/db/discountCodes.ts) - NIE konto pary, osobna rola
+    -- (patrz src/lib/auth/platformAdmin.ts). max_uses NULL = bez limitu
+    -- użyć. discount_type/discount_value: PERCENT (1-100) albo FIXED
+    -- (złotówki odejmowane od ceny pakietu) - patrz computeDiscountedAmount
+    -- w src/lib/photoPack.ts.
+    CREATE TABLE IF NOT EXISTS discount_codes (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      discount_type TEXT NOT NULL, -- PERCENT | FIXED
+      discount_value REAL NOT NULL,
+      max_uses INTEGER,
+      used_count INTEGER NOT NULL DEFAULT 0,
+      valid_from TEXT,
+      valid_until TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Płatności - patrz src/lib/photoPack.ts (cennik) i src/lib/db/photoPackPurchases.ts.
+    -- Konto pary jest darmowe, dopóki galeria mieści się w darmowym limicie
+    -- (FREE_PHOTOS_LIMIT w photoStorage.ts) - każdy OPŁACONY wiersz tutaj
+    -- dokłada photos_granted do tego limitu (patrz effectivePhotoLimit).
+    -- status='PENDING' to wiersz utworzony PRZED przekierowaniem na Stripe
+    -- Checkout - dopiero webhook (albo strona powrotna, jako szybszy,
+    -- nieautorytatywny podgląd) zmienia go na 'PAID' i dolicza zdjęcia,
+    -- nigdy odwrotnie. stripe_session_id jest UNIQUE, żeby powtórzone
+    -- dostarczenie tego samego webhooka (Stripe potrafi wysłać event kilka
+    -- razy) nie doliczyło zdjęć dwa razy - patrz confirmPhotoPackPurchase.
+    CREATE TABLE IF NOT EXISTS photo_pack_purchases (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+      stripe_session_id TEXT UNIQUE,
+      photos_granted INTEGER NOT NULL,
+      amount_paid_cents INTEGER NOT NULL,
+      discount_code_id TEXT REFERENCES discount_codes(id) ON DELETE SET NULL,
+      status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING | PAID
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      paid_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_purchases_wedding ON photo_pack_purchases(wedding_id);
   `);
 
   // CREATE TABLE IF NOT EXISTS nie dokłada kolumn do już istniejącej tabeli,

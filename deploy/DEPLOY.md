@@ -74,17 +74,31 @@ indziej.
 
 ### 4. Zmienne środowiskowe
 
+**WAŻNE - plik z sekretami dla systemd NIE MOŻE nazywać się `.env`** (ani
+`.env.local`/`.env.production`) - Next.js sam automatycznie wczytuje pliki
+o tych dokładnych nazwach z katalogu roboczego i przepuszcza każdą wartość
+przez `dotenv-expand` (interpolacja `$ZMIENNA`). Każdy sekret zawierający
+dosłowny znak `$` po którym idą znaki słowa - a hash bcrypt (patrz
+`PLATFORM_ADMIN_PASSWORD_HASH` w README, sekcja "Płatności") ZAWSZE tak
+wygląda (`$2b$12$...`) - zostaje przez to po cichu PRZYCIĘTY (Next.js
+próbuje potraktować `$2b`, `$12` itd. jako odwołania do nieistniejących
+zmiennych i zamienia je na puste stringi), mimo że systemd sam w sobie
+wczytuje tę samą wartość poprawnie. Złapane empirycznie przy wdrażaniu
+płatności - panel operatora nie chciał przyjąć poprawnego hasła. Dlatego
+plik nazywa się `env.systemd-only`, nie `.env` (patrz
+`deploy/wedding-app.service`, komentarz przy `EnvironmentFile=`).
+
 ```bash
 su - wedding -s /bin/bash
 cd /srv/wedding-app
-cp .env.example .env
-openssl rand -base64 32   # skopiuj wynik jako SESSION_SECRET w .env
-nano .env                 # wklej SESSION_SECRET, ewentualnie RETENTION_PURGE_SECRET
-npm run build             # jeśli jeszcze nie zbudowane / po zmianie .env
+cp .env.example env.systemd-only
+openssl rand -base64 32   # skopiuj wynik jako SESSION_SECRET w env.systemd-only
+nano env.systemd-only     # wklej SESSION_SECRET, ewentualnie resztę (patrz niżej)
+npm run build             # jeśli jeszcze nie zbudowane / po zmianie env.systemd-only
 exit
 ```
 
-Minimalny wymagany wpis w `.env`:
+Minimalny wymagany wpis w `env.systemd-only`:
 
 ```
 SESSION_SECRET=<wynik openssl rand -base64 32>
@@ -99,6 +113,11 @@ RETENTION_PURGE_SECRET=<inny losowy ciąg, np. openssl rand -hex 24>
 
 Bez `RETENTION_PURGE_SECRET` wszystko działa normalnie - czyszczenie
 retencyjne trzeba wtedy odpalać ręcznie, przyciskiem w `/admin/privacy`.
+
+Do włączenia płatności (patrz README, sekcja "Płatności") dopisz też
+`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PLATFORM_ADMIN_EMAIL` i
+`PLATFORM_ADMIN_PASSWORD_HASH` (hash generuje
+`node scripts/hash-password.mjs "haslo"`) - wszystkie z `.env.example`.
 
 ### 5. Proces w tle (systemd)
 
@@ -153,7 +172,7 @@ crontab -u wedding -e
 Dodaj (czyszczenie raz dziennie o 4:00):
 
 ```
-0 4 * * * RETENTION_PURGE_SECRET=<ten sam co w .env> PURGE_BASE_URL=https://TWOJA-DOMENA node /srv/wedding-app/scripts/purge-expired-data.mjs >> /var/log/wedding-purge.log 2>&1
+0 4 * * * RETENTION_PURGE_SECRET=<ten sam co w env.systemd-only> PURGE_BASE_URL=https://TWOJA-DOMENA node /srv/wedding-app/scripts/purge-expired-data.mjs >> /var/log/wedding-purge.log 2>&1
 ```
 
 ### 9. Weryfikacja i aktualizacje

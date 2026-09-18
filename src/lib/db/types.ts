@@ -316,3 +316,36 @@ export interface Consent {
   policyVersion: string;
   grantedAt: string;
 }
+
+// Płatności - patrz src/lib/photoPack.ts (cennik, wyliczanie efektywnego
+// limitu zdjęć) i src/lib/db/photoPackPurchases.ts.
+export type PhotoPackPurchaseStatus = "PENDING" | "PAID";
+
+export interface PhotoPackPurchase {
+  id: string;
+  weddingId: string;
+  stripeSessionId: string | null;
+  photosGranted: number;
+  amountPaidCents: number;
+  discountCodeId: string | null;
+  status: PhotoPackPurchaseStatus;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+// Kody rabatowe - generowane w panelu super-admina (src/lib/auth/platformAdmin.ts),
+// nie przez parę. Patrz src/lib/db/discountCodes.ts.
+export type DiscountType = "PERCENT" | "FIXED";
+
+export interface DiscountCode {
+  id: string;
+  code: string;
+  discountType: DiscountType;
+  // PERCENT: 1-100 (procent rabatu). FIXED: złotówki odejmowane od ceny pakietu.
+  discountValue: number;
+  maxUses: number | null;
+  usedCount: number;
+  validFrom: string | null;
+  validUntil: string | null;
+  createdAt: string;
+}

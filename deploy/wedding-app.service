@@ -21,7 +21,21 @@ Type=simple
 User=wedding
 Group=wedding
 WorkingDirectory=/srv/wedding-app
-EnvironmentFile=/srv/wedding-app/.env
+# CELOWO NIE ".env" - Next.js SAM WCZYTUJE .env/.env.local/.env.production
+# z katalogu roboczego (patrz node_modules/@next/env) i przepuszcza KAŻDĄ
+# wartość przez dotenv-expand (interpolacja $ZMIENNA). Sekrety zawierające
+# dosłowny znak "$" po którym idą znaki słowa - a hash bcrypt (np.
+# PLATFORM_ADMIN_PASSWORD_HASH, patrz README "Płatności") ZAWSZE tak
+# wygląda ("$2b$12$...") - zostają przez to PRZYCIĘTE: dotenv-expand próbuje
+# potraktować "$2b", "$12" itd. jako odwołania do (nieistniejących) zmiennych
+# i zamienia je na puste stringi. systemd sam w sobie wczytuje tę wartość
+# poprawnie (EnvironmentFile NIE robi ekspansji $) - błąd pojawia się
+# DOPIERO gdy Next.js wczytuje TEN SAM plik drugi raz pod nazwą ".env".
+# Rozwiązanie: plik z sekretami dla systemd ma inną nazwę niż jakikolwiek
+# wzorzec, którego szuka Next.js, więc Next.js go po prostu nie znajduje
+# i nie dotyka. Złapane empirycznie przy wdrażaniu płatności (super-admin
+# nie mógł się zalogować mimo poprawnego hasła) - patrz git log.
+EnvironmentFile=/srv/wedding-app/env.systemd-only
 # -H 127.0.0.1 - Next.js słucha WYŁĄCZNIE na localhost, nie jest wystawiony
 # bezpośrednio do internetu (to robi nginx jako reverse proxy, patrz
 # deploy/nginx.conf) - dodatkowa warstwa, nie trzeba ufać samemu Next.js

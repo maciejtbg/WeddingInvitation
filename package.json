@@ -19,6 +19,7 @@
     "smoke:music": "node scripts/smoke-music.mjs",
     "smoke:gdpr": "node scripts/smoke-gdpr.mjs",
     "smoke:new-features": "node scripts/smoke-new-features.mjs",
+    "smoke:payments": "node scripts/smoke-payments.mjs",
     "purge-expired-data": "node scripts/purge-expired-data.mjs",
     "seed:demo": "node scripts/seed-demo.mjs"
   },
@@ -34,6 +35,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-konva": "^19.2.6",
+    "stripe": "^22.6.2",
     "zod": "^4.5.4"
   },
   "devDependencies": {

@@ -59,9 +59,10 @@ FAQ) i `npm run smoke:music` (wyszukiwanie i lista muzyczna).
 Świadomie NIE R2 - żeby nie zwiększać kosztów hostingu, zanim będzie na to
 konto Cloudflare. Zamiast tego zwykły dysk serwera, z twardymi limitami:
 
-- **`MAX_PHOTOS_PER_WEDDING = 10`** zdjęć na wesele (`src/lib/photoStorage.ts`)
+- **`FREE_PHOTOS_LIMIT = 10`** zdjęć na wesele za darmo (`src/lib/photoPack.ts`)
   - to jedna wspólna galeria (para + goście razem), nie osobny limit na
-  każdego. Formularz dodawania znika, gdy limit jest osiągnięty.
+  każdego. Formularz dodawania znika, gdy limit jest osiągnięty - patrz
+  sekcja "Płatności" niżej, jak para dokupuje więcej miejsca.
 - Każde zdjęcie jest **zawsze** przeskalowane (maks. 1600 px dłuższego boku)
   i przekompresowane do JPEG po stronie serwera (`sharp`), niezależnie od
   tego, ile ważyło na wejściu (telefon potrafi wrzucić 10-15 MB) - kilka
@@ -87,6 +88,62 @@ funkcji (`uploadPhoto`, `removePhoto`, `photoUrl`) - ten sam wzorzec co
 migracja SQLite → Postgres.
 
 Test end-to-end: `npm run smoke:gallery`.
+
+## Płatności
+
+Konto pary jest **darmowe od początku** - zakładanie strony, RSVP, planer
+stołów, czat, wszystko poza samą pojemnością galerii nie wymaga żadnej
+płatności. Dopiero galeria ma darmowy limit (`FREE_PHOTOS_LIMIT = 10` w
+`src/lib/photoPack.ts`), bo to jedyna rzecz w tej aplikacji, która realnie
+zajmuje miejsce na dysku hostingu.
+
+- **Pakiet**: `+50` zdjęć za `29,00 zł`, jednorazowa płatność (nie
+  abonament) - para może dokupić dowolną liczbę pakietów, każdy dolicza się
+  do limitu (`effectivePhotoLimit()` = darmowy limit + suma opłaconych
+  pakietów, patrz `src/lib/db/photoPackPurchases.ts`).
+- **Stripe Checkout** (`src/app/admin/gallery/actions.ts`, `buyPhotoPackAction`)
+  - para klika "Kup pakiet" w `/admin/gallery`, trafia na hostowaną stronę
+  płatności Stripe (karta/BLIK/Przelewy24 zależnie od konfiguracji konta
+  Stripe), wraca z powrotem na `/admin/gallery`.
+- **Potwierdzenie płatności jest DWUTOROWE** (obie ścieżki idempotentne,
+  patrz `confirmPhotoPackPurchase` w `photoPackPurchases.ts`):
+  1. Webhook `POST /api/stripe-webhook` (źródło prawdy, patrz ten route) -
+     wymaga skonfigurowania adresu w panelu Stripe.
+  2. Strona powrotna w galerii sama dopytuje Stripe o status sesji - szybszy
+     podgląd, na wypadek gdyby webhook jeszcze nie dotarł.
+- **Kody rabatowe** (`discount_codes`, patrz "Panel operatora" niżej) -
+  procentowe albo kwotowe, opcjonalny limit użyć i okno ważności. Kod ze
+  100% rabatem pomija Stripe całkowicie - pakiet jest przyznawany od razu
+  (Stripe Checkout w trybie płatności nie obsługuje kwoty 0).
+
+### Uruchomienie płatności (wymagane zmienne środowiskowe)
+
+1. Załóż konto na [stripe.com](https://stripe.com), w trybie testowym
+   skopiuj klucz z **Developers → API keys** do `STRIPE_SECRET_KEY`
+   (`sk_test_...` do testów, `sk_live_...` na produkcję).
+2. **Developers → Webhooks → Add endpoint**, adres
+   `https://TWOJA-DOMENA/api/stripe-webhook`, zdarzenie
+   `checkout.session.completed` - skopiuj "Signing secret" do
+   `STRIPE_WEBHOOK_SECRET`.
+3. Bez tych dwóch zmiennych sekcja zakupu w galerii pokazuje komunikat
+   "płatności nie są jeszcze skonfigurowane" zamiast przycisku - reszta
+   aplikacji (w tym darmowy limit) działa normalnie.
+
+### Panel operatora (`/super-admin`)
+
+Osobna rola od konta pary - **jeden, jedyny operator** (Ty), dane logowania
+NIE są w bazie danych, tylko w zmiennych środowiskowych
+(`PLATFORM_ADMIN_EMAIL` + `PLATFORM_ADMIN_PASSWORD_HASH`, patrz
+`src/lib/auth/platformAdmin.ts`). Hash hasła:
+
+```bash
+node scripts/hash-password.mjs "twoje-haslo"
+```
+
+`/super-admin/discount-codes` - generowanie kodów: kod (albo losowy, jeśli
+zostawisz puste), typ rabatu (procentowy/kwotowy), wartość, limit użyć
+(puste = bez limitu) i okno ważności (`valid_from`/`valid_until`,
+opcjonalne).
 
 ## Wielojęzyczność stron dla gości
 

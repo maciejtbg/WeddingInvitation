@@ -47,7 +47,7 @@ export const PRIVACY_POLICY_PL: PolicySection[] = [
   {
     heading: "Komu udostępniamy dane",
     paragraphs: [
-      "Dane nie są sprzedawane ani udostępniane firmom trzecim w celach marketingowych. Strona korzysta z zewnętrznych, bezpłatnych usług wyłącznie do konkretnych funkcji, które sam/a uruchamiasz: wyszukiwarki utworów muzycznych (iTunes Search API - wyłącznie zapytanie o nazwę szukanej piosenki), map (OpenStreetMap - wyłącznie wyświetlenie mapy) oraz - jeśli strona jest w innym języku niż wyświetlany domyślnie - tłumacza tekstu interfejsu.",
+      "Dane nie są sprzedawane ani udostępniane firmom trzecim w celach marketingowych. Strona korzysta z zewnętrznych, bezpłatnych usług wyłącznie do konkretnych funkcji, które sam/a uruchamiasz: wyszukiwarki utworów muzycznych (iTunes Search API - wyłącznie zapytanie o nazwę szukanej piosenki), map (OpenStreetMap - wyłącznie wyświetlenie mapy) oraz - jeśli strona jest w innym języku niż wyświetlany domyślnie - tłumacza tekstu interfejsu. Jeśli para młoda decyduje się dokupić dodatkowe miejsce w galerii zdjęć, płatność obsługuje Stripe (dane karty/BLIK trafiają wyłącznie do Stripe, nigdy na nasz serwer) - to dotyczy wyłącznie płatności pary, nie danych gości.",
       "Dane są przechowywane na serwerze, na którym para młoda uruchomiła tę stronę.",
     ],
   },

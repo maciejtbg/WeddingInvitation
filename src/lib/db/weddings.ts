@@ -83,6 +83,7 @@ const RESERVED_SLUGS = new Set([
   "w",
   "z",
   "zg",
+  "super-admin",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",

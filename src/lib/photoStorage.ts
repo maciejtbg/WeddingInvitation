@@ -2,8 +2,9 @@
 // README, sekcja "Galeria zdjęć"). Świadome decyzje, żeby to NIE zapchało
 // taniego hostingu (mikr.us) ani nie podbiło kosztów:
 //
-//  - twardy limit MAX_PHOTOS_PER_WEDDING zdjęć na wesele (globalnie, nie na
-//    gościa - to jedna wspólna galeria),
+//  - limit zdjęć na wesele (globalnie, nie na gościa - to jedna wspólna
+//    galeria) - darmowy start (FREE_PHOTOS_LIMIT), rozszerzany zakupem
+//    pakietów (patrz src/lib/photoPack.ts - effectivePhotoLimit, cennik),
 //  - każde zdjęcie jest przeskalowane i przekompresowane po stronie
 //    serwera, niezależnie od tego, ile ważyło na wejściu (telefon potrafi
 //    wrzucić zdjęcie 8-15 MB) - docelowo mieści się w kilkuset KB,
@@ -40,10 +41,13 @@ import {
   listPhotosByGuest,
 } from "./db/photos";
 import type { WeddingPhoto } from "./db/types";
+import { effectivePhotoLimit } from "./photoPack";
 
-export const MAX_PHOTOS_PER_WEDDING = 10;
-/** Ile spośród tych max. 10 zdjęć para może naraz wybrać jako rotujące tło
- * "powitalne" na stronie głównej zaproszenia - patrz src/lib/db/photos.ts. */
+/** Ile spośród WSZYSTKICH zdjęć w galerii (niezależnie od tego, ile miejsca
+ * para dokupiła - patrz effectivePhotoLimit) może naraz być wybranych jako
+ * rotujące tło "powitalne" na stronie głównej zaproszenia - patrz
+ * src/lib/db/photos.ts. Niezależne od limitu liczby zdjęć, nie rośnie razem
+ * z nim - 5 rotujących teł to i tak więcej niż potrzeba. */
 export const MAX_COVER_PHOTOS = 5;
 // Odrzucane PRZED przetwarzaniem - żeby nie próbować dekodować w pamięci
 // czegoś absurdalnie dużego.
@@ -110,8 +114,9 @@ export async function uploadPhoto(params: {
   if (params.originalByteSize > MAX_UPLOAD_BYTES) {
     throw new Error(`Plik jest za duży (maks. ${Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)} MB)`);
   }
-  if (countPhotos(params.weddingId) >= MAX_PHOTOS_PER_WEDDING) {
-    throw new Error(`Galeria jest już pełna (maks. ${MAX_PHOTOS_PER_WEDDING} zdjęć)`);
+  const limit = effectivePhotoLimit(params.weddingId);
+  if (countPhotos(params.weddingId) >= limit) {
+    throw new Error(`Galeria jest już pełna (maks. ${limit} zdjęć) - dokupcie więcej miejsca w Galerii`);
   }
 
   let compressed: Buffer;
