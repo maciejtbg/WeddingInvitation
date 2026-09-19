@@ -8,6 +8,7 @@ import type { GuestSeatView } from "@/lib/db/tables";
 import { guestListAvailableSeats } from "@/lib/db/tables";
 import { guestListMyRequests } from "@/lib/db/seatRequests";
 import { guestSelfAssignSeatAction, guestRequestSeatChangeAction } from "@/app/[slug]/moje-zaproszenie/actions";
+import TableSeatDiagram from "./TableSeatDiagram";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { t } from "@/lib/i18n/dictionary";
 
@@ -134,40 +135,15 @@ export default async function GuestSeatSection({
       {!hasAnyFreeSeat ? (
         <p className="text-sm text-[var(--wd-muted)]">{dict.allSeatsTaken}</p>
       ) : (
-        <form action={guestSelfAssignSeatAction} className="space-y-4">
+        <form action={guestSelfAssignSeatAction} className="space-y-6">
           {tables.map((table) => (
-            <div key={table.id}>
-              <p className="mb-1.5 text-sm font-medium text-[var(--wd-text)]">
-                {table.label}{" "}
-                <span className="font-normal text-[var(--wd-muted)]">({table.roomName})</span>
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {table.seats.map((seat) => {
-                  const taken = !!seat.occupiedByFirstName && !seat.isMe;
-                  return (
-                    <label
-                      key={seat.seatIndex}
-                      className={`rounded-full border px-3 py-1 text-xs ${
-                        taken
-                          ? "cursor-not-allowed border-[var(--wd-border)] text-[var(--wd-muted)] opacity-50"
-                          : "cursor-pointer border-[var(--wd-border)] text-[var(--wd-text)] has-[:checked]:border-[var(--wd-accent)] has-[:checked]:bg-[var(--wd-accent)] has-[:checked]:text-[var(--wd-accent-text)]"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="seat"
-                        value={`${table.id}:${seat.seatIndex}`}
-                        disabled={taken}
-                        defaultChecked={seat.isMe}
-                        className="sr-only"
-                      />
-                      #{seat.seatIndex + 1}
-                      {taken ? dict.seatTakenSuffix : seat.isMe ? dict.seatIsYouSuffix : ""}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            <TableSeatDiagram
+              key={table.id}
+              table={table}
+              name="seat"
+              seatTakenSuffix={dict.seatTakenSuffix}
+              seatIsYouSuffix={dict.seatIsYouSuffix}
+            />
           ))}
           <button
             type="submit"

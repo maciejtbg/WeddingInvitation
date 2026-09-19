@@ -91,6 +91,23 @@ Test end-to-end: `npm run smoke:gallery`.
 
 ## Płatności
 
+**Status: obszar płatny jest CAŁKOWICIE WYŁĄCZONY** (`PAYMENTS_ENABLED`
+domyślnie `false`, patrz niżej) - świadoma decyzja, żeby strona najpierw
+"rozkręciła się" bez sprzedaży, zanim padnie decyzja o bramce płatniczej i
+zanim para prowadząca serwis zarejestruje JDG pod sprzedaż zagraniczną
+(bez tego formalnie nie da się legalnie przyjmować płatności od klientów
+spoza Polski). Kod jest gotowy i przetestowany - reaktywacja to jedna
+zmienna środowiskowa + restart, bez zmian w kodzie.
+
+**Stripe vs Paddle - jeszcze nie zdecydowane ostatecznie.** Kod poniżej
+zakłada Stripe (BLIK/Przelewy24/karta dla polskich klientów, ale to Ty
+formalnie pozostajesz sprzedawcą i musisz sam pilnować VAT-u za granicą).
+Rozważana alternatywa: Paddle działa jako *Merchant of Record* - to Paddle
+jest formalnie sprzedawcą i sam rozlicza podatek w każdym kraju klienta
+(wygodne przy sprzedaży globalnej, np. Afryka/Azja), kosztem wyższej
+prowizji i braku natywnego BLIK-a. Decyzja czeka na wybór modelu sprzedaży
+zagranicznej razem z rejestracją JDG.
+
 Konto pary jest **darmowe od początku** - zakładanie strony, RSVP, planer
 stołów, czat, wszystko poza samą pojemnością galerii nie wymaga żadnej
 płatności. Dopiero galeria ma darmowy limit (`FREE_PHOTOS_LIMIT = 10` w
@@ -118,6 +135,12 @@ zajmuje miejsce na dysku hostingu.
 
 ### Uruchomienie płatności (wymagane zmienne środowiskowe)
 
+0. **`PAYMENTS_ENABLED=true`** - bez tego cały obszar płatny (formularz
+   zakupu w Galerii, użycie kodów rabatowych, zakup przez kod 100%) jest
+   wyłączony niezależnie od reszty zmiennych poniżej - patrz
+   `isPaymentsEnabled` w `src/lib/photoPack.ts`. To jedyny krok, którego
+   NIE rób, dopóki para prowadząca serwis nie zdecyduje "teraz włączamy
+   sprzedaż" (patrz status na górze tej sekcji).
 1. Załóż konto na [stripe.com](https://stripe.com), w trybie testowym
    skopiuj klucz z **Developers → API keys** do `STRIPE_SECRET_KEY`
    (`sk_test_...` do testów, `sk_live_...` na produkcję).
@@ -125,9 +148,11 @@ zajmuje miejsce na dysku hostingu.
    `https://TWOJA-DOMENA/api/stripe-webhook`, zdarzenie
    `checkout.session.completed` - skopiuj "Signing secret" do
    `STRIPE_WEBHOOK_SECRET`.
-3. Bez tych dwóch zmiennych sekcja zakupu w galerii pokazuje komunikat
-   "płatności nie są jeszcze skonfigurowane" zamiast przycisku - reszta
-   aplikacji (w tym darmowy limit) działa normalnie.
+3. Bez `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` (ale z
+   `PAYMENTS_ENABLED=true`) sekcja zakupu w galerii nadal się pokazuje,
+   ale działa wyłącznie kod rabatowy dający 100% zniżki (pomija Stripe
+   całkowicie) - reszta aplikacji (w tym darmowy limit) działa normalnie
+   niezależnie od wszystkich powyższych zmiennych.
 
 ### Panel operatora (`/super-admin`)
 

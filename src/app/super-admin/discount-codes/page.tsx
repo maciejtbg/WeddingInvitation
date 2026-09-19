@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePlatformAdminSessionOrRedirect } from "@/lib/auth/platformAdmin";
 import { adminListDiscountCodes, isDiscountCodeActive } from "@/lib/db/discountCodes";
+import { isPaymentsEnabled } from "@/lib/photoPack";
 import { logoutPlatformAdminAction } from "../actions";
 import { createDiscountCodeAction, deleteDiscountCodeAction } from "./actions";
 
@@ -35,6 +36,14 @@ export default async function DiscountCodesPage({
         wpisuje go przy zakupie w swojej Galerii. Rabat 100% (procentowy) daje pakiet całkowicie za
         darmo, bez żadnej płatności kartą.
       </p>
+
+      {!isPaymentsEnabled() && (
+        <p className="mb-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Cały obszar płatny jest teraz wyłączony (brak <code>PAYMENTS_ENABLED=true</code> w
+          zmiennych środowiskowych) - możecie przygotować kody z wyprzedzeniem, ale nikt nie będzie
+          mógł ich jeszcze użyć, dopóki nie włączycie płatności.
+        </p>
+      )}
 
       {created === "1" && (
         <p className="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">

@@ -10,6 +10,7 @@ import {
   PACK_PRICE_CENTS,
   effectivePhotoLimit,
   formatPln,
+  isPaymentsEnabled,
 } from "@/lib/photoPack";
 import { confirmPhotoPackPurchase } from "@/lib/db/photoPackPurchases";
 import { isStripeConfigured, getStripeClient } from "@/lib/stripeClient";
@@ -47,7 +48,8 @@ export default async function GalleryPage({
   const wedding = findWeddingById(weddingId);
   if (!wedding || wedding.coupleId !== session.coupleId) redirect("/admin");
 
-  if (purchase === "success") {
+  const paymentsEnabled = isPaymentsEnabled();
+  if (purchase === "success" && paymentsEnabled) {
     await confirmIfNeeded(session_id);
   }
 
@@ -105,7 +107,8 @@ export default async function GalleryPage({
         )}
         {isFull ? (
           <p className="mb-4 text-sm text-amber-700">
-            Galeria jest pełna - usuńcie jakieś zdjęcie albo dokupcie więcej miejsca poniżej.
+            Galeria jest pełna - usuńcie jakieś zdjęcie
+            {paymentsEnabled ? " albo dokupcie więcej miejsca poniżej." : "."}
           </p>
         ) : (
           <form
@@ -144,41 +147,54 @@ export default async function GalleryPage({
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6">
         <h2 className="mb-1 text-lg font-medium text-zinc-900">Więcej miejsca w galerii</h2>
-        <p className="mb-4 text-sm text-zinc-500">
-          {FREE_PHOTOS_LIMIT} zdjęć macie za darmo
-          {purchasedExtra > 0 ? `, dokupione dotychczas: +${purchasedExtra}` : ""}. Każdy pakiet to +
-          {PHOTOS_PER_PACK} zdjęć za {formatPln(PACK_PRICE_CENTS)}, jednorazowo - możecie dokupić
-          kolejne w dowolnej chwili.
-        </p>
-        {/* Formularz jest widoczny zawsze, nawet gdy Stripe nie jest
-            skonfigurowany - kod rabatowy na 100% nie wymaga Stripe wcale
-            (patrz buyPhotoPackAction), więc para/operator promocyjny może z
-            niego skorzystać, zanim klucze API w ogóle trafią na serwer.
-            Dopiero próba realnej płatności bez skonfigurowanego Stripe
-            kończy się czytelnym błędem z samej akcji. */}
-        <form action={buyPhotoPackAction} className="flex flex-wrap items-end gap-2">
-          <input type="hidden" name="weddingId" value={wedding.id} />
-          <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-700">
-              Kod rabatowy (opcjonalnie)
-            </label>
-            <input
-              name="discountCode"
-              placeholder="np. LATO2026"
-              className="w-40 rounded-md border border-zinc-300 px-3 py-2 text-sm uppercase"
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-          >
-            Kup pakiet +{PHOTOS_PER_PACK} zdjęć
-          </button>
-        </form>
-        {!isStripeConfigured() && (
-          <p className="mt-2 text-xs text-zinc-400">
-            Płatności kartą/BLIK-iem nie są jeszcze skonfigurowane po stronie serwera - zadziała
-            wyłącznie kod rabatowy dający 100% zniżki.
+        {paymentsEnabled ? (
+          <>
+            <p className="mb-4 text-sm text-zinc-500">
+              {FREE_PHOTOS_LIMIT} zdjęć macie za darmo
+              {purchasedExtra > 0 ? `, dokupione dotychczas: +${purchasedExtra}` : ""}. Każdy pakiet to +
+              {PHOTOS_PER_PACK} zdjęć za {formatPln(PACK_PRICE_CENTS)}, jednorazowo - możecie dokupić
+              kolejne w dowolnej chwili.
+            </p>
+            {/* Formularz jest widoczny zawsze, gdy płatności są włączone,
+                nawet jeśli Stripe akurat nie jest skonfigurowany - kod
+                rabatowy na 100% nie wymaga Stripe wcale (patrz
+                buyPhotoPackAction). Dopiero próba realnej płatności bez
+                skonfigurowanego Stripe kończy się czytelnym błędem z samej
+                akcji. */}
+            <form action={buyPhotoPackAction} className="flex flex-wrap items-end gap-2">
+              <input type="hidden" name="weddingId" value={wedding.id} />
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                  Kod rabatowy (opcjonalnie)
+                </label>
+                <input
+                  name="discountCode"
+                  placeholder="np. LATO2026"
+                  className="w-40 rounded-md border border-zinc-300 px-3 py-2 text-sm uppercase"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+              >
+                Kup pakiet +{PHOTOS_PER_PACK} zdjęć
+              </button>
+            </form>
+            {!isStripeConfigured() && (
+              <p className="mt-2 text-xs text-zinc-400">
+                Płatności kartą/BLIK-iem nie są jeszcze skonfigurowane po stronie serwera - zadziała
+                wyłącznie kod rabatowy dający 100% zniżki.
+              </p>
+            )}
+          </>
+        ) : (
+          // Wyłącznik całego obszaru płatnego (patrz isPaymentsEnabled w
+          // src/lib/photoPack.ts) - świadoma decyzja, żeby strona najpierw
+          // "rozkręciła się" bez sprzedaży. Reaktywacja to jedna zmienna
+          // środowiskowa (PAYMENTS_ENABLED=true) + restart serwera.
+          <p className="text-sm text-zinc-400">
+            Dokupowanie dodatkowego miejsca będzie dostępne wkrótce - na razie {FREE_PHOTOS_LIMIT}{" "}
+            darmowych zdjęć wystarczy na start.
           </p>
         )}
       </div>

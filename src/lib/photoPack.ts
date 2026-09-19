@@ -66,3 +66,19 @@ export function computeDiscountedAmount(code: DiscountCode | null): DiscountedAm
 export function formatPln(cents: number): string {
   return (cents / 100).toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " zł";
 }
+
+/** Główny wyłącznik całego obszaru płatnego (kupno pakietów, w tym przez
+ * kod rabatowy ze 100% zniżką) - świadoma decyzja: strona ma się najpierw
+ * "rozkręcić" bez sprzedaży, dopóki para prowadząca serwis nie założy JDG
+ * pod sprzedaż zagraniczną i bramki płatniczej (Stripe/Paddle - patrz
+ * README, sekcja "Płatności"). Domyślnie WYŁĄCZONE (brak
+ * PAYMENTS_ENABLED=true w env) - ten sam wzorzec "bezpieczny domyślny stan"
+ * co RETENTION_PURGE_SECRET w src/app/api/purge-expired-data/route.ts.
+ * Reaktywacja to jedna zmienna środowiskowa + restart, bez zmian w kodzie -
+ * patrz buyPhotoPackAction (src/app/admin/gallery/actions.ts) i
+ * GalleryPage (src/app/admin/gallery/page.tsx), jedyne dwa miejsca, które
+ * to sprawdzają. Panel /super-admin/discount-codes zostaje dostępny mimo
+ * wyłącznika - para prowadząca serwis może przygotować kody z wyprzedzeniem. */
+export function isPaymentsEnabled(): boolean {
+  return process.env.PAYMENTS_ENABLED === "true";
+}

@@ -11,8 +11,13 @@
 // nie dotyka Stripe, patrz buyPhotoPackAction - dokładnie to nam pozwala
 // przetestować doliczanie limitu i zużycia kodu bez prawdziwych pieniędzy).
 //
+// Zakłada, że serwer wystartował z PAYMENTS_ENABLED=true (testuje ścieżkę
+// reaktywacji po włączeniu wyłącznika) - stan DOMYŚLNY/produkcyjny (wyłączony)
+// pokrywa osobny, dużo krótszy scripts/smoke-payments-disabled.mjs.
+//
 // Wymaga zmiennych środowiskowych ustawionych PRZY BUDOWANIU/URUCHAMIANIU
 // serwera (patrz .env.example):
+//   PAYMENTS_ENABLED=true
 //   PLATFORM_ADMIN_EMAIL=test-admin@example.com
 //   PLATFORM_ADMIN_PASSWORD_HASH=<node scripts/hash-password.mjs "supertajnehaslo">
 //

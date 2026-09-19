@@ -40,7 +40,7 @@ import {
   deleteLayoutItemAction,
 } from "@/app/admin/tables/actions";
 import { deleteTableLocal, loadTablesLocal, saveTableLocal } from "@/lib/tablePlannerLocalStore";
-import { SEAT_RADIUS, MAX_TABLE_DIMENSION } from "@/lib/tableGeometry";
+import { SEAT_RADIUS, MAX_TABLE_DIMENSION, seatPositions as sharedSeatPositions } from "@/lib/tableGeometry";
 
 interface Props {
   weddingId: string;
@@ -1361,50 +1361,17 @@ function normalizeLocalTable(table: WeddingTable): WeddingTable {
   return { ...table, disabledSeatIndexes: table.disabledSeatIndexes ?? [] };
 }
 
-/** Rozkłada krzesła dookoła stołu tak, żeby się nie nakładały (patrz
- * src/lib/tableGeometry.ts - to samo źródło minimalnych rozmiarów, którego
- * pilnuje repozytorium przy auto-powiększaniu). Dla stołu prostokątnego
- * krzesła idą po CAŁYM obwodzie (wszystkie 4 boki), proporcjonalnie do
- * długości boku - dawniej tylko dwa dłuższe boki miały miejsca, więc przy
- * kwadratowym/krótkim stole nikt nie mógł "siadać od czoła"; ten sposób
- * automatycznie zajmuje też krótsze boki, kiedy jest ich sporo. Pełny
- * ręczny wybór "to krzesło na tym konkretnym boku" to już osobna, większa
- * funkcja (przeciąganie pojedynczych miejsc) - nie ma jej tutaj. */
+/** Rozkłada krzesła dookoła stołu tak, żeby się nie nakładały - cienki
+ * wrapper nad współdzieloną geometrią (patrz seatPositions w
+ * src/lib/tableGeometry.ts, ta sama funkcja rysuje mapkę miejsc dla gościa,
+ * src/components/TableSeatDiagram.tsx, żeby oba miejsca pokazywały
+ * DOKŁADNIE to samo rozmieszczenie). Dla stołu prostokątnego krzesła idą po
+ * CAŁYM obwodzie (wszystkie 4 boki), proporcjonalnie do długości boku -
+ * dawniej tylko dwa dłuższe boki miały miejsca, więc przy kwadratowym/
+ * krótkim stole nikt nie mógł "siadać od czoła"; ten sposób automatycznie
+ * zajmuje też krótsze boki, kiedy jest ich sporo. Pełny ręczny wybór "to
+ * krzesło na tym konkretnym boku" to już osobna, większa funkcja
+ * (przeciąganie pojedynczych miejsc) - nie ma jej tutaj. */
 function seatPositions(table: WeddingTable): { x: number; y: number }[] {
-  const n = table.seatsCount;
-  const positions: { x: number; y: number }[] = [];
-  const margin = SEAT_RADIUS + 10;
-
-  if (table.shape === "ROUND") {
-    const radius = table.radius + margin;
-    for (let i = 0; i < n; i++) {
-      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
-      positions.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
-    }
-    return positions;
-  }
-
-  const W = table.width;
-  const H = table.height;
-  const perimeter = 2 * (W + H);
-  for (let i = 0; i < n; i++) {
-    let dist = (i / n) * perimeter;
-    if (dist < W) {
-      positions.push({ x: -W / 2 + dist, y: -(H / 2 + margin) });
-      continue;
-    }
-    dist -= W;
-    if (dist < H) {
-      positions.push({ x: W / 2 + margin, y: -H / 2 + dist });
-      continue;
-    }
-    dist -= H;
-    if (dist < W) {
-      positions.push({ x: W / 2 - dist, y: H / 2 + margin });
-      continue;
-    }
-    dist -= W;
-    positions.push({ x: -(W / 2 + margin), y: H / 2 - dist });
-  }
-  return positions;
+  return sharedSeatPositions(table, SEAT_RADIUS + 10);
 }

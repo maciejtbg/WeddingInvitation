@@ -8,7 +8,7 @@ import { uploadPhoto, removePhoto, MAX_COVER_PHOTOS } from "@/lib/photoStorage";
 import { setCoverPhoto, countCoverPhotos, findPhotoById } from "@/lib/db/photos";
 import { findActiveDiscountCodeByCode } from "@/lib/db/discountCodes";
 import { createPendingPurchase, createFreePurchaseFromDiscountCode } from "@/lib/db/photoPackPurchases";
-import { PHOTOS_PER_PACK, PACK_CURRENCY, computeDiscountedAmount } from "@/lib/photoPack";
+import { PHOTOS_PER_PACK, PACK_CURRENCY, computeDiscountedAmount, isPaymentsEnabled } from "@/lib/photoPack";
 import { getStripeClient } from "@/lib/stripeClient";
 import { externalOriginFromHeaders } from "@/lib/externalOrigin";
 
@@ -100,6 +100,14 @@ export async function buyPhotoPackAction(formData: FormData): Promise<void> {
   const weddingId = readString(formData, "weddingId");
   const wedding = await requireOwnedWedding(weddingId);
   const galleryUrl = `/admin/gallery?weddingId=${weddingId}`;
+
+  // Wyłącznik całego obszaru płatnego (patrz isPaymentsEnabled) - UI go już
+  // nie pokazuje, ale to sprawdzenie zostaje jako obrona w głąb na wypadek
+  // bezpośredniego POST-a albo starej, zbuforowanej strony z widocznym
+  // jeszcze formularzem.
+  if (!isPaymentsEnabled()) {
+    redirect(`${galleryUrl}&error=${encodeURIComponent("Zakup dodatkowego miejsca nie jest jeszcze dostępny.")}`);
+  }
 
   const rawCode = readString(formData, "discountCode");
   const discountCode = rawCode ? findActiveDiscountCodeByCode(rawCode) : null;

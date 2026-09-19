@@ -14,6 +14,7 @@ import { getTheme, themeStyleVars } from "@/lib/themes";
 import { allowsGuestSelfSelect } from "@/lib/seatingModes";
 import { ThemeOrnament } from "@/components/theme-ornaments";
 import WeddingInfoSections from "@/components/WeddingInfoSections";
+import TableSeatDiagram from "@/components/TableSeatDiagram";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import PendingLocaleBanner from "@/components/PendingLocaleBanner";
 import { getLocale } from "@/lib/i18n/locale";
@@ -267,39 +268,15 @@ export default async function GroupInvitePage({
                           </span>
                         )}
                       </p>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {tables.map((tbl) => (
-                          <div key={tbl.id}>
-                            <p className="mb-1 text-xs text-[var(--wd-muted)]">
-                              {tbl.label} ({tbl.roomName})
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {tbl.seats.map((seat) => {
-                                const taken = !!seat.occupiedByFirstName && !seat.isMe;
-                                return (
-                                  <label
-                                    key={seat.seatIndex}
-                                    className={`rounded-full border px-3 py-1 text-xs ${
-                                      taken
-                                        ? "cursor-not-allowed border-[var(--wd-border)] text-[var(--wd-muted)] opacity-50"
-                                        : "cursor-pointer border-[var(--wd-border)] text-[var(--wd-text)] has-[:checked]:border-[var(--wd-accent)] has-[:checked]:bg-[var(--wd-accent)] has-[:checked]:text-[var(--wd-accent-text)]"
-                                    }`}
-                                  >
-                                    <input
-                                      type="radio"
-                                      name={`seat_${member.id}`}
-                                      value={`${tbl.id}:${seat.seatIndex}`}
-                                      disabled={taken}
-                                      defaultChecked={seat.isMe}
-                                      className="sr-only"
-                                    />
-                                    #{seat.seatIndex + 1}
-                                    {taken ? dict.seatTakenSuffix : seat.isMe ? dict.seatIsYouSuffix : ""}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
+                          <TableSeatDiagram
+                            key={tbl.id}
+                            table={tbl}
+                            name={`seat_${member.id}`}
+                            seatTakenSuffix={dict.seatTakenSuffix}
+                            seatIsYouSuffix={dict.seatIsYouSuffix}
+                          />
                         ))}
                       </div>
                     </div>

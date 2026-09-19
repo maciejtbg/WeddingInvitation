@@ -5,6 +5,7 @@ import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
 import { adminListGroups } from "@/lib/db/groups";
 import { listGuestIdsAwaitingReply } from "@/lib/db/chat";
+import type { Guest, GuestGroup, Wedding } from "@/lib/db/types";
 import {
   addGuestAction,
   deleteGuestAction,
@@ -175,156 +176,248 @@ export default async function GuestsPage({
         </form>
       </div>
 
+      {guests.length === 0 ? (
+        <p className="text-sm text-zinc-500">Nie dodaliście jeszcze żadnego gościa.</p>
+      ) : (
+        <GroupedGuestList wedding={wedding} guests={guests} groups={groups} awaitingReply={awaitingReply} />
+      )}
+    </div>
+  );
+}
+
+/** Drzewo gości pogrupowane wg grupy (patrz Grupy gości) - każda grupa jako
+ * osobna, zwijalna sekcja (<details>, bez JS), na końcu "Bez grupy". Jedna
+ * grupa to jeden poziom, nie prawdziwe zagnieżdżone drzewo - grupy same w
+ * sobie nie mają podgrup, więc płaskie sekcje wystarczają i są czytelniejsze
+ * niż udawanie głębszej hierarchii, której dane nie mają. */
+function GroupedGuestList({
+  wedding,
+  guests,
+  groups,
+  awaitingReply,
+}: {
+  wedding: Wedding;
+  guests: Guest[];
+  groups: GuestGroup[];
+  awaitingReply: Set<string>;
+}) {
+  const byGroup = new Map<string, Guest[]>();
+  const ungrouped: Guest[] = [];
+  for (const guest of guests) {
+    if (guest.groupId) {
+      const list = byGroup.get(guest.groupId) ?? [];
+      list.push(guest);
+      byGroup.set(guest.groupId, list);
+    } else {
+      ungrouped.push(guest);
+    }
+  }
+
+  const sections: { key: string; label: string; members: Guest[] }[] = [];
+  for (const group of groups) {
+    const members = byGroup.get(group.id);
+    if (members && members.length > 0) {
+      sections.push({ key: group.id, label: group.name, members });
+    }
+  }
+  if (ungrouped.length > 0) {
+    sections.push({ key: "ungrouped", label: "Bez grupy", members: ungrouped });
+  }
+
+  // Brak zdefiniowanych grup wcale (typowy start) - nie pokazuj pojedynczej,
+  // zbędnej sekcji "Bez grupy" obejmującej wszystkich, tylko zwykłą listę.
+  if (groups.length === 0) {
+    return (
       <div className="space-y-3">
-        {guests.length === 0 && (
-          <p className="text-sm text-zinc-500">Nie dodaliście jeszcze żadnego gościa.</p>
-        )}
         {guests.map((guest) => (
-          <div
+          <GuestCard
             key={guest.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white p-4"
-          >
-            <div>
-              <p className="font-medium text-zinc-900">
-                {guest.firstName} {guest.lastName ?? ""}
-              </p>
-              <p className="text-xs text-zinc-500">
-                {guest.groupLabel ?? "bez grupy"}
-                {guest.allowPlusOne ? " · z osobą towarzyszącą" : ""}
-                {guest.shortCode && (
-                  <>
-                    {" · kod: "}
-                    <span className="font-mono">{guest.shortCode}</span>
-                  </>
-                )}
-              </p>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                {guest.firstVisitedAt
-                  ? `✓ otworzył(a) zaproszenie ${guest.firstVisitedAt.slice(0, 10)}`
-                  : "jeszcze nie otworzył(a) zaproszenia"}
-              </p>
-              {groups.length > 0 && (
-                <form action={assignGuestGroupAction} className="mt-1 flex items-center gap-1">
-                  <input type="hidden" name="weddingId" value={wedding.id} />
-                  <input type="hidden" name="guestId" value={guest.id} />
-                  <select
-                    name="groupId"
-                    defaultValue={guest.groupId ?? ""}
-                    className="rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
-                  >
-                    <option value="">bez grupy (rozmieszczanie)</option>
-                    {groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
-                    Zapisz
-                  </button>
-                </form>
-              )}
-              <form action={setGuestContactAction} className="mt-1 flex flex-wrap items-center gap-1">
-                <input type="hidden" name="weddingId" value={wedding.id} />
-                <input type="hidden" name="guestId" value={guest.id} />
-                <input
-                  name="phone"
-                  type="tel"
-                  defaultValue={guest.phone ?? ""}
-                  placeholder="telefon"
-                  className="w-24 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
-                />
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={guest.email ?? ""}
-                  placeholder="e-mail"
-                  className="w-32 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
-                />
-                <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
-                  Zapisz
-                </button>
-              </form>
-              {guest.dietaryNotes?.trim() && (
-                <p className="mt-1 text-xs text-amber-700">🍽️ {guest.dietaryNotes}</p>
-              )}
-              <form
-                action={setGuestDietaryNotesAction}
-                className="mt-1 flex flex-wrap items-center gap-1"
-              >
-                <input type="hidden" name="weddingId" value={wedding.id} />
-                <input type="hidden" name="guestId" value={guest.id} />
-                <input
-                  name="dietaryNotes"
-                  defaultValue={guest.dietaryNotes ?? ""}
-                  placeholder="alergie / dieta (np. bez laktozy)"
-                  className="w-56 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
-                />
-                <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
-                  Zapisz
-                </button>
-              </form>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                {RSVP_LABELS[guest.rsvpStatus]}
-              </span>
-              <CopyLinkButton path={`/z/${guest.token}`} />
-              <SendInviteButtons
+            wedding={wedding}
+            guest={guest}
+            groups={groups}
+            awaitingReply={awaitingReply}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {sections.map((section) => (
+        <details key={section.key} className="group" open>
+          <summary className="mb-2 flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-zinc-700">
+            <span className="text-zinc-400 transition-transform group-open:rotate-90">▶</span>
+            {section.label}
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-normal text-zinc-500">
+              {section.members.length}
+            </span>
+          </summary>
+          <div className="space-y-3 pl-5">
+            {section.members.map((guest) => (
+              <GuestCard
+                key={guest.id}
+                wedding={wedding}
+                guest={guest}
+                groups={groups}
+                awaitingReply={awaitingReply}
+              />
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+  );
+}
+
+function GuestCard({
+  wedding,
+  guest,
+  groups,
+  awaitingReply,
+}: {
+  wedding: Wedding;
+  guest: Guest;
+  groups: GuestGroup[];
+  awaitingReply: Set<string>;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white p-4">
+      <div>
+        <p className="font-medium text-zinc-900">
+          {guest.firstName} {guest.lastName ?? ""}
+        </p>
+        <p className="text-xs text-zinc-500">
+          {guest.groupLabel ?? "bez grupy"}
+          {guest.allowPlusOne ? " · z osobą towarzyszącą" : ""}
+          {guest.shortCode && (
+            <>
+              {" · kod: "}
+              <span className="font-mono">{guest.shortCode}</span>
+            </>
+          )}
+        </p>
+        <p className="mt-0.5 text-xs text-zinc-400">
+          {guest.firstVisitedAt
+            ? `✓ otworzył(a) zaproszenie ${guest.firstVisitedAt.slice(0, 10)}`
+            : "jeszcze nie otworzył(a) zaproszenia"}
+        </p>
+        {groups.length > 0 && (
+          <form action={assignGuestGroupAction} className="mt-1 flex items-center gap-1">
+            <input type="hidden" name="weddingId" value={wedding.id} />
+            <input type="hidden" name="guestId" value={guest.id} />
+            <select
+              name="groupId"
+              defaultValue={guest.groupId ?? ""}
+              className="rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+            >
+              <option value="">bez grupy (rozmieszczanie)</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+            <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
+              Zapisz
+            </button>
+          </form>
+        )}
+        <form action={setGuestContactAction} className="mt-1 flex flex-wrap items-center gap-1">
+          <input type="hidden" name="weddingId" value={wedding.id} />
+          <input type="hidden" name="guestId" value={guest.id} />
+          <input
+            name="phone"
+            type="tel"
+            defaultValue={guest.phone ?? ""}
+            placeholder="telefon"
+            className="w-24 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+          />
+          <input
+            name="email"
+            type="email"
+            defaultValue={guest.email ?? ""}
+            placeholder="e-mail"
+            className="w-32 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+          />
+          <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
+            Zapisz
+          </button>
+        </form>
+        {guest.dietaryNotes?.trim() && (
+          <p className="mt-1 text-xs text-amber-700">🍽️ {guest.dietaryNotes}</p>
+        )}
+        <form action={setGuestDietaryNotesAction} className="mt-1 flex flex-wrap items-center gap-1">
+          <input type="hidden" name="weddingId" value={wedding.id} />
+          <input type="hidden" name="guestId" value={guest.id} />
+          <input
+            name="dietaryNotes"
+            defaultValue={guest.dietaryNotes ?? ""}
+            placeholder="alergie / dieta (np. bez laktozy)"
+            className="w-56 rounded border border-zinc-300 px-1 py-0.5 text-xs text-zinc-700"
+          />
+          <button className="rounded-full border border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-600 hover:border-zinc-400">
+            Zapisz
+          </button>
+        </form>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
+          {RSVP_LABELS[guest.rsvpStatus]}
+        </span>
+        <CopyLinkButton path={`/z/${guest.token}`} />
+        <SendInviteButtons
+          path={`/z/${guest.token}`}
+          phone={guest.phone}
+          email={guest.email}
+          partner1Name={wedding.partner1Name}
+          partner2Name={wedding.partner2Name}
+          guestFirstName={guest.firstName}
+        />
+        {(guest.phone || guest.email) && (
+          <details className="w-full sm:w-auto">
+            <summary className="inline-block cursor-pointer rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400">
+              🔔 Przypomnij
+            </summary>
+            <div className="mt-1.5">
+              <RemindGuestButtons
                 path={`/z/${guest.token}`}
                 phone={guest.phone}
                 email={guest.email}
                 partner1Name={wedding.partner1Name}
                 partner2Name={wedding.partner2Name}
                 guestFirstName={guest.firstName}
+                rsvpPending={guest.rsvpStatus === "PENDING"}
               />
-              {(guest.phone || guest.email) && (
-                <details className="w-full sm:w-auto">
-                  <summary className="inline-block cursor-pointer rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400">
-                    🔔 Przypomnij
-                  </summary>
-                  <div className="mt-1.5">
-                    <RemindGuestButtons
-                      path={`/z/${guest.token}`}
-                      phone={guest.phone}
-                      email={guest.email}
-                      partner1Name={wedding.partner1Name}
-                      partner2Name={wedding.partner2Name}
-                      guestFirstName={guest.firstName}
-                      rsvpPending={guest.rsvpStatus === "PENDING"}
-                    />
-                  </div>
-                </details>
-              )}
-              {guest.shortCode && (
-                <a
-                  href={`/admin/guests/${guest.id}/invite-card?weddingId=${wedding.id}`}
-                  className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
-                  title={`Kod ręczny: ${guest.shortCode}`}
-                >
-                  Pobierz zaproszenie (QR)
-                </a>
-              )}
-              <Link
-                href={`/admin/guests/${guest.id}?weddingId=${wedding.id}`}
-                className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                  awaitingReply.has(guest.id)
-                    ? "border-amber-400 bg-amber-100 text-amber-900 hover:border-amber-500"
-                    : "border-zinc-300 text-zinc-700 hover:border-zinc-400"
-                }`}
-              >
-                Czat{awaitingReply.has(guest.id) ? " 💬" : ""}
-              </Link>
-              <form action={deleteGuestAction}>
-                <input type="hidden" name="weddingId" value={wedding.id} />
-                <input type="hidden" name="guestId" value={guest.id} />
-                <button className="rounded-full border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:border-red-400">
-                  Usuń
-                </button>
-              </form>
             </div>
-          </div>
-        ))}
+          </details>
+        )}
+        {guest.shortCode && (
+          <a
+            href={`/admin/guests/${guest.id}/invite-card?weddingId=${wedding.id}`}
+            className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400"
+            title={`Kod ręczny: ${guest.shortCode}`}
+          >
+            Pobierz zaproszenie (QR)
+          </a>
+        )}
+        <Link
+          href={`/admin/guests/${guest.id}?weddingId=${wedding.id}`}
+          className={`rounded-full border px-3 py-1 text-xs font-medium ${
+            awaitingReply.has(guest.id)
+              ? "border-amber-400 bg-amber-100 text-amber-900 hover:border-amber-500"
+              : "border-zinc-300 text-zinc-700 hover:border-zinc-400"
+          }`}
+        >
+          Czat{awaitingReply.has(guest.id) ? " 💬" : ""}
+        </Link>
+        <form action={deleteGuestAction}>
+          <input type="hidden" name="weddingId" value={wedding.id} />
+          <input type="hidden" name="guestId" value={guest.id} />
+          <button className="rounded-full border border-red-200 px-3 py-1 text-xs font-medium text-red-600 hover:border-red-400">
+            Usuń
+          </button>
+        </form>
       </div>
     </div>
   );

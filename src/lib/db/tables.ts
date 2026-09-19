@@ -391,6 +391,19 @@ export interface AvailableTable {
   roomName: string;
   label: string;
   shape: TableShape;
+  // Geometria do narysowania graficznej mapki miejsc (patrz
+  // src/components/TableSeatDiagram.tsx, src/lib/tableGeometry.ts) - te same
+  // pola co WeddingTable, oddzielnie tutaj, bo AvailableTable to okrojony,
+  // gościowi bezpieczny widok (bez np. x/y/rotation - pozycja stołu w sali
+  // nie jest gościowi potrzebna, każdy stół rysowany jest osobno).
+  radius: number;
+  width: number;
+  height: number;
+  // WSZYSTKIE miejsca łącznie z wyłączonymi (do poprawnego rozstawienia
+  // przez seatPositions - wyłączone miejsca są mimo to pomijane w tablicy
+  // `seats` niżej, ale geometria musi znać pełną liczbę, żeby odstępy się
+  // zgadzały z tym, co widać w planerze pary).
+  seatsCount: number;
   seats: AvailableSeat[];
 }
 
@@ -434,7 +447,17 @@ export function guestListAvailableSeats(weddingId: string, guestId: string): Ava
           isMe: seat?.guestId === guestId,
         };
       });
-    return { id: table.id, roomName: table.roomName, label: table.label, shape: table.shape, seats };
+    return {
+      id: table.id,
+      roomName: table.roomName,
+      label: table.label,
+      shape: table.shape,
+      radius: table.radius,
+      width: table.width,
+      height: table.height,
+      seatsCount: table.seatsCount,
+      seats,
+    };
   });
 }
 
