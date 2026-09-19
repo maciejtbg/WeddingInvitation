@@ -32,7 +32,9 @@ import {
   adminUnassignGuest,
   adminListSeats,
   adminSetSeatDisabled,
+  adminFindTableById,
 } from "@/lib/db/tables";
+import { adminFindGroupById, adminSetGroupTableAllowance } from "@/lib/db/groups";
 import {
   adminCreateLayoutItem,
   adminUpdateLayoutItemPosition,
@@ -179,6 +181,26 @@ export async function toggleSeatDisabledAction(
   if (!table) throw new Error("Nie znaleziono stołu");
   revalidatePath(`/${wedding.slug}/moje-zaproszenie`);
   return table;
+}
+
+/** Przypisanie/odpięcie stołu od grupy WPROST z planera (ten sam efekt co
+ * przyciski na stronie Grupy gości, patrz adminSetGroupTableAllowance) -
+ * dodane tutaj, żeby para nie musiała przełączać się na osobną stronę, gdy
+ * właśnie patrzy na konkretny stół w kanwie. Klient sam aktualizuje swój
+ * lokalny stan optymistycznie (zna `allowed`, które właśnie wysłał) -
+ * zwracanie czegokolwiek stąd nie jest potrzebne. */
+export async function toggleTableGroupAllowanceAction(
+  weddingId: string,
+  tableId: string,
+  groupId: string,
+  allowed: boolean
+): Promise<void> {
+  const wedding = await requireOwnedWedding(weddingId);
+  const table = adminFindTableById(wedding.id, tableId);
+  if (!table) throw new Error("Nie znaleziono stołu");
+  const group = adminFindGroupById(wedding.id, groupId);
+  if (!group) throw new Error("Nie znaleziono grupy");
+  adminSetGroupTableAllowance(groupId, tableId, allowed);
 }
 
 export async function unassignSeatAction(

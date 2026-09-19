@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGroups, adminListAllowancesByGroup } from "@/lib/db/groups";
-import { adminListTables } from "@/lib/db/tables";
-import { groupListMemberViews } from "@/lib/db/guests";
+import { adminListTables, adminListSeats } from "@/lib/db/tables";
+import { groupListMemberViews, adminListGuests } from "@/lib/db/guests";
 import { allowsGuestSelfSelect } from "@/lib/seatingModes";
+import { computeSeatingWarnings } from "@/lib/seatingWarnings";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import {
   createGroupAction,
@@ -32,6 +33,13 @@ export default async function GroupsPage({
   const groups = adminListGroups(wedding.id);
   const tables = adminListTables(wedding.id);
   const allowancesByGroup = adminListAllowancesByGroup(wedding.id);
+  const warnings = computeSeatingWarnings({
+    guests: adminListGuests(wedding.id),
+    groups,
+    allowancesByGroup,
+    tables,
+    seats: adminListSeats(wedding.id),
+  });
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -55,6 +63,19 @@ export default async function GroupsPage({
         osoba, która go otworzy, potwierdzi obecność selektywnie za wszystkich
         członków grupy naraz.
       </p>
+
+      {warnings.length > 0 && (
+        <div className="mb-8 rounded-lg border border-amber-300 bg-amber-50 p-4">
+          <p className="mb-2 text-sm font-medium text-amber-900">
+            ⚠️ {warnings.length} {warnings.length === 1 ? "rzecz warta sprawdzenia" : "rzeczy wartych sprawdzenia"}
+          </p>
+          <ul className="space-y-1 text-sm text-amber-800">
+            {warnings.map((w, i) => (
+              <li key={i}>• {w.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6">
         <h2 className="mb-2 text-lg font-medium text-zinc-900">Usadzanie przez grupę</h2>

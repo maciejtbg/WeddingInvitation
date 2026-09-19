@@ -4,8 +4,9 @@ import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingById } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
 import { adminListGroups } from "@/lib/db/groups";
+import { adminListSeats, adminListTables } from "@/lib/db/tables";
 import { listGuestIdsAwaitingReply } from "@/lib/db/chat";
-import type { Guest, GuestGroup, Wedding } from "@/lib/db/types";
+import type { Guest, GuestGroup, SeatWithGuestName, Wedding } from "@/lib/db/types";
 import {
   addGuestAction,
   deleteGuestAction,
@@ -39,6 +40,8 @@ export default async function GuestsPage({
   const guests = adminListGuests(wedding.id);
   const groups = adminListGroups(wedding.id);
   const awaitingReply = new Set(listGuestIdsAwaitingReply(wedding.id));
+  const seatByGuestId = new Map(adminListSeats(wedding.id).map((s) => [s.guestId, s] as const));
+  const tableLabelById = new Map(adminListTables(wedding.id).map((t) => [t.id, t.label] as const));
 
   const openedCount = guests.filter((g) => g.firstVisitedAt).length;
   const yesCount = guests.filter((g) => g.rsvpStatus === "YES").length;
@@ -179,7 +182,14 @@ export default async function GuestsPage({
       {guests.length === 0 ? (
         <p className="text-sm text-zinc-500">Nie dodaliście jeszcze żadnego gościa.</p>
       ) : (
-        <GroupedGuestList wedding={wedding} guests={guests} groups={groups} awaitingReply={awaitingReply} />
+        <GroupedGuestList
+          wedding={wedding}
+          guests={guests}
+          groups={groups}
+          awaitingReply={awaitingReply}
+          seatByGuestId={seatByGuestId}
+          tableLabelById={tableLabelById}
+        />
       )}
     </div>
   );
@@ -195,11 +205,15 @@ function GroupedGuestList({
   guests,
   groups,
   awaitingReply,
+  seatByGuestId,
+  tableLabelById,
 }: {
   wedding: Wedding;
   guests: Guest[];
   groups: GuestGroup[];
   awaitingReply: Set<string>;
+  seatByGuestId: Map<string, SeatWithGuestName>;
+  tableLabelById: Map<string, string>;
 }) {
   const byGroup = new Map<string, Guest[]>();
   const ungrouped: Guest[] = [];
@@ -236,6 +250,8 @@ function GroupedGuestList({
             guest={guest}
             groups={groups}
             awaitingReply={awaitingReply}
+            seat={seatByGuestId.get(guest.id) ?? null}
+            tableLabelById={tableLabelById}
           />
         ))}
       </div>
@@ -261,6 +277,8 @@ function GroupedGuestList({
                 guest={guest}
                 groups={groups}
                 awaitingReply={awaitingReply}
+                seat={seatByGuestId.get(guest.id) ?? null}
+                tableLabelById={tableLabelById}
               />
             ))}
           </div>
@@ -275,11 +293,15 @@ function GuestCard({
   guest,
   groups,
   awaitingReply,
+  seat,
+  tableLabelById,
 }: {
   wedding: Wedding;
   guest: Guest;
   groups: GuestGroup[];
   awaitingReply: Set<string>;
+  seat: SeatWithGuestName | null;
+  tableLabelById: Map<string, string>;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-white p-4">
@@ -301,6 +323,11 @@ function GuestCard({
           {guest.firstVisitedAt
             ? `✓ otworzył(a) zaproszenie ${guest.firstVisitedAt.slice(0, 10)}`
             : "jeszcze nie otworzył(a) zaproszenia"}
+        </p>
+        <p className={`mt-0.5 text-xs ${seat ? "text-zinc-500" : "text-zinc-400 italic"}`}>
+          {seat
+            ? `🪑 Miejsce: ${tableLabelById.get(seat.tableId) ?? "nieznany stół"}, #${seat.seatIndex + 1}`
+            : "brak przypisanego miejsca"}
         </p>
         {groups.length > 0 && (
           <form action={assignGuestGroupAction} className="mt-1 flex items-center gap-1">

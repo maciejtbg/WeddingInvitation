@@ -29,6 +29,44 @@ export function minRectWidth(seatsCount: number, height: number): number {
   return Math.max(MIN_RECT_WIDTH, Math.ceil((seatsCount * SEAT_PITCH) / 2 - height));
 }
 
+export interface OverlapCheckTable {
+  id: string;
+  x: number;
+  y: number;
+  shape: "ROUND" | "RECT";
+  radius: number;
+  width: number;
+  height: number;
+}
+
+// Odstęp, poniżej którego dwa stoły liczą się jako "nakładające się" -
+// niewielki bufor (nie 0), żeby stoły mogły stać blisko siebie (np. celowo
+// zsunięte, patrz disabledSeatIndexes) bez wpadania w fałszywy alarm przy
+// każdym pikselu.
+const OVERLAP_GAP = 6;
+
+/** Promień koła OPISANEGO na stole - dla RECT to połowa przekątnej, więc
+ * krąg jest niezależny od obrotu (koło samo w sobie nie ma "obrotu"). Celowe
+ * uproszczenie: zamiast dokładnej kolizji obróconych prostokątów (SAT),
+ * każdy stół traktujemy jako koło opisane na jego kształcie - trochę
+ * ostrożniejsze niż to konieczne dla dwóch prostokątów ustawionych "po
+ * skosie" względem siebie, ale wystarczające jako "nie kładź stołów jeden
+ * na drugim" i dużo prostsze niż pełna geometria obróconych brył. */
+function boundingRadius(table: OverlapCheckTable): number {
+  return table.shape === "ROUND" ? table.radius : Math.sqrt((table.width / 2) ** 2 + (table.height / 2) ** 2);
+}
+
+/** Czy dwa stoły (środek + promień opisany) nakładałyby się na siebie -
+ * patrz boundingRadius. Używane przy przeciąganiu stołu w planerze (patrz
+ * handleDragEnd w TablePlanner.tsx), żeby para nie mogła upuścić jednego
+ * stołu na drugi. */
+export function tablesOverlap(a: OverlapCheckTable, b: OverlapCheckTable): boolean {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  return distance < boundingRadius(a) + boundingRadius(b) + OVERLAP_GAP;
+}
+
 export interface SeatGeometryTable {
   shape: "ROUND" | "RECT";
   seatsCount: number;

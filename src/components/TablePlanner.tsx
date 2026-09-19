@@ -15,6 +15,7 @@ import { Circle, Ellipse, Group, Layer, Line, Rect, RegularPolygon, Stage, Text 
 import type Konva from "konva";
 import type {
   Guest,
+  GuestGroup,
   SeatWithGuestName,
   TableShape,
   WeddingTable,
@@ -32,6 +33,7 @@ import {
   renameTableAction,
   updateSeatsCountAction,
   toggleSeatDisabledAction,
+  toggleTableGroupAllowanceAction,
   createLayoutItemAction,
   updateLayoutItemPositionAction,
   renameLayoutItemAction,
@@ -40,7 +42,8 @@ import {
   deleteLayoutItemAction,
 } from "@/app/admin/tables/actions";
 import { deleteTableLocal, loadTablesLocal, saveTableLocal } from "@/lib/tablePlannerLocalStore";
-import { SEAT_RADIUS, MAX_TABLE_DIMENSION, seatPositions as sharedSeatPositions } from "@/lib/tableGeometry";
+import { SEAT_RADIUS, MAX_TABLE_DIMENSION, seatPositions as sharedSeatPositions, tablesOverlap } from "@/lib/tableGeometry";
+import { computeSeatingWarnings } from "@/lib/seatingWarnings";
 
 interface Props {
   weddingId: string;
@@ -49,8 +52,19 @@ interface Props {
   guests: Guest[];
   /** tableId -> nazwy grup, którym ten stół jest dozwolony (patrz
    * src/lib/db/groups.ts, adminListGroupNamesByTable) - puste, jeśli stół
-   * nie jest ograniczony do żadnej konkretnej grupy. */
+   * nie jest ograniczony do żadnej konkretnej grupy. Tylko do WYŚWIETLENIA
+   * przy etykiecie stołu - dwukierunkowy przełącznik niżej (allowedGroupIdsByTable)
+   * to osobny, edytowalny stan. */
   groupNamesByTable: Record<string, string[]>;
+  /** Wszystkie grupy tego wesela - do przełącznika "ta grupa może siadać
+   * przy tym stole" w panelu bocznym wybranego stołu. */
+  groups: GuestGroup[];
+  /** groupId -> id-ki dozwolonych stołów - ten sam kształt, w jakim trzyma
+   * to baza i w jakim computeSeatingWarnings oczekuje danych. Widok
+   * "tableId -> groupId[]" potrzebny do zaznaczenia checkboxów przy
+   * WYBRANYM stole jest liczony z tego niżej (useMemo), żeby nie trzymać
+   * dwóch kopii tych samych danych. */
+  initialAllowancesByGroup: Record<string, string[]>;
   /** Znaczniki (DJ, bufet...), ściany i bryły planu sali - patrz
    * src/lib/db/layoutItems.ts. */
   initialLayoutItems: LayoutItem[];
@@ -79,11 +93,21 @@ export default function TablePlanner({
   initialSeats,
   guests,
   groupNamesByTable,
+  groups,
+  initialAllowancesByGroup,
   initialLayoutItems,
 }: Props) {
   const [tables, setTables] = useState<WeddingTable[]>(initialTables);
   const [seats, setSeats] = useState<SeatWithGuestName[]>(initialSeats);
   const [layoutItems, setLayoutItems] = useState<LayoutItem[]>(initialLayoutItems);
+  // groupId -> tableId[] - stan kanoniczny (ten sam kształt co w bazie i w
+  // computeSeatingWarnings); widok "tableId -> groupId[]" potrzebny do
+  // zaznaczenia checkboxów przy wybranym stole jest liczony z tego niżej
+  // (allowedGroupIdsByTable), żeby nie trzymać dwóch kopii tych samych
+  // danych, które mogłyby się rozjechać.
+  const [allowancesByGroup, setAllowancesByGroup] = useState<Record<string, string[]>>(
+    initialAllowancesByGroup
+  );
   const [rooms, setRooms] = useState<string[]>(() => {
     const fromTables = Array.from(
       new Set([
@@ -290,6 +314,36 @@ export default function TablePlanner({
   const assignedGuestIds = useMemo(() => new Set(seats.map((s) => s.guestId)), [seats]);
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
   const selectedTableSeats = selectedTable ? seatsByTable.get(selectedTable.id) ?? [] : [];
+
+  /** Odwrotność allowancesByGroup - tylko do zaznaczenia checkboxów grup
+   * przy WYBRANYM stole (patrz panel boczny niżej), liczona z tego samego,
+   * jedynego źródła prawdy zamiast trzymana jako osobny stan. */
+  const allowedGroupIdsByTable = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const [groupId, tableIds] of Object.entries(allowancesByGroup)) {
+      for (const tableId of tableIds) {
+        (map[tableId] ??= []).push(groupId);
+      }
+    }
+    return map;
+  }, [allowancesByGroup]);
+
+  /** Niespójności grupa/stół (pojemność, gość siedzący poza dozwolonym dla
+   * jego grupy stołem) - patrz src/lib/seatingWarnings.ts. Ta sama funkcja,
+   * co na stronie Grupy gości, więc oba miejsca zgadzają się co do tego, co
+   * jest problemem - tu liczona na żywo z aktualnego stanu kanwy, żeby para
+   * widziała skutek np. usunięcia stołu od razu, bez przeładowania strony. */
+  const seatingWarnings = useMemo(
+    () =>
+      computeSeatingWarnings({
+        guests,
+        groups,
+        allowancesByGroup,
+        tables,
+        seats,
+      }),
+    [guests, groups, allowancesByGroup, tables, seats]
+  );
   const selectedLayoutItem = layoutItems.find((i) => i.id === selectedLayoutItemId) ?? null;
 
   /** Tylko jedno zaznaczenie naraz - stół albo znacznik/ściana/bryła sali. */
@@ -330,10 +384,23 @@ export default function TablePlanner({
     }, SAVE_DEBOUNCE_MS);
   }
 
-  function handleDragEnd(table: WeddingTable, x: number, y: number) {
-    const updated = { ...table, x, y };
-    setTables((prev) => prev.map((t) => (t.id === table.id ? updated : t)));
-    scheduleServerSave(updated);
+  /** `node` to przeciągnięty obiekt Konva - potrzebny WYŁĄCZNIE żeby przy
+   * kolizji cofnąć go wizualnie na starą pozycję (`node.position(...)`).
+   * Konva trzyma własną, wewnętrzną pozycję węzła niezależną od React -
+   * sama odmowa aktualizacji stanu `tables` by stół zostawiła "za
+   * przeciągnięciem" na kanwie, wracając na starą pozycję dopiero przy
+   * następnym pełnym przerenderowaniu. */
+  function handleDragEnd(table: WeddingTable, x: number, y: number, node: Konva.Node) {
+    const candidate = { ...table, x, y };
+    const others = tables.filter((t) => t.id !== table.id && t.roomName === table.roomName);
+    if (others.some((other) => tablesOverlap(candidate, other))) {
+      node.position({ x: table.x, y: table.y });
+      node.getLayer()?.batchDraw();
+      reportError(new Error("Stoły nie mogą się na siebie nakładać - przesunięcie cofnięte."));
+      return;
+    }
+    setTables((prev) => prev.map((t) => (t.id === table.id ? candidate : t)));
+    scheduleServerSave(candidate);
   }
 
   async function handleAddTable(shape: TableShape) {
@@ -375,7 +442,55 @@ export default function TablePlanner({
       await deleteTableLocal(table.id).catch(() => {});
       setTables((prev) => prev.filter((t) => t.id !== table.id));
       setSeats((prev) => prev.filter((s) => s.tableId !== table.id));
+      // Baza kasuje odpowiadające wiersze group_table_allowances kaskadowo
+      // (ON DELETE CASCADE) - to tylko odzwierciedla to samo w lokalnym
+      // stanie, żeby panel ostrzeżeń (seatingWarnings) natychmiast pokazał
+      // spadek pojemności grupy, gdyby to był jej jedyny dozwolony stół.
+      setAllowancesByGroup((prev) => {
+        const next: Record<string, string[]> = {};
+        for (const [groupId, tableIds] of Object.entries(prev)) {
+          next[groupId] = tableIds.filter((id) => id !== table.id);
+        }
+        return next;
+      });
       clearSelection();
+    } catch (err) {
+      reportError(err);
+    }
+  }
+
+  /** Przypisanie/odpięcie stołu od grupy wprost z panelu bocznego - patrz
+   * toggleTableGroupAllowanceAction. Celowo NIE blokuje włączenia, gdy
+   * grupa jeszcze nie ma gości albo stół ma za mało miejsc - tylko pokazuje
+   * ostrzeżenie (para może mieć dobry powód, np. dopiero kompletuje listę),
+   * patrz rozmowa z parą i persistentny panel ostrzeżeń niżej (seatingWarnings). */
+  async function handleToggleTableGroup(table: WeddingTable, group: GuestGroup) {
+    const currentlyAllowed = (allowedGroupIdsByTable[table.id] ?? []).includes(group.id);
+    const nextAllowed = !currentlyAllowed;
+    try {
+      await toggleTableGroupAllowanceAction(weddingId, table.id, group.id, nextAllowed);
+      setAllowancesByGroup((prev) => {
+        const current = prev[group.id] ?? [];
+        const updated = nextAllowed
+          ? [...current, table.id]
+          : current.filter((id) => id !== table.id);
+        return { ...prev, [group.id]: updated };
+      });
+      if (nextAllowed) {
+        const memberCount = guests.filter((g) => g.groupId === group.id).length;
+        if (memberCount === 0) {
+          reportError(new Error(`Grupa "${group.name}" nie ma jeszcze żadnego gościa.`));
+        } else {
+          const freeCapacity = table.seatsCount - (table.disabledSeatIndexes ?? []).length;
+          if (memberCount > freeCapacity) {
+            reportError(
+              new Error(
+                `Grupa "${group.name}" ma ${memberCount} ${memberCount === 1 ? "osobę" : "osób"}, a ten stół ma tylko ${freeCapacity} ${freeCapacity === 1 ? "miejsce" : "miejsc"}.`
+              )
+            );
+          }
+        }
+      }
     } catch (err) {
       reportError(err);
     }
@@ -737,6 +852,21 @@ export default function TablePlanner({
           )}
         </div>
 
+        {seatingWarnings.length > 0 && (
+          <details className="border-b border-amber-200 bg-amber-50 px-4 py-2">
+            <summary className="cursor-pointer text-xs font-medium text-amber-900">
+              ⚠️ {seatingWarnings.length}{" "}
+              {seatingWarnings.length === 1 ? "rzecz warta sprawdzenia" : "rzeczy wartych sprawdzenia"}{" "}
+              (grupy/stoły)
+            </summary>
+            <ul className="mt-1.5 space-y-1 text-xs text-amber-800">
+              {seatingWarnings.map((w, i) => (
+                <li key={i}>• {w.message}</li>
+              ))}
+            </ul>
+          </details>
+        )}
+
         <div ref={containerRef} className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-zinc-50">
           <Stage
             ref={stageRef}
@@ -828,7 +958,7 @@ export default function TablePlanner({
                     y={table.y}
                     rotation={table.rotation}
                     draggable
-                    onDragEnd={(e) => handleDragEnd(table, e.target.x(), e.target.y())}
+                    onDragEnd={(e) => handleDragEnd(table, e.target.x(), e.target.y(), e.target)}
                     onClick={() => selectTable(table.id)}
                     onTap={() => selectTable(table.id)}
                   >
@@ -1000,10 +1130,31 @@ export default function TablePlanner({
               Zamknij
             </button>
           </div>
-          {!!groupNamesByTable[selectedTable.id]?.length && (
-            <p className="mb-3 text-xs text-amber-800">
-              Zarezerwowany dla: {groupNamesByTable[selectedTable.id].join(", ")}
-            </p>
+          {groups.length > 0 && (
+            <div className="mb-4">
+              <p className="mb-1.5 text-xs font-medium text-zinc-500">
+                Dozwolony dla grup (puste = dla wszystkich)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {groups.map((group) => {
+                  const isAllowed = (allowedGroupIdsByTable[selectedTable.id] ?? []).includes(group.id);
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      onClick={() => handleToggleTableGroup(selectedTable, group)}
+                      className={`rounded-full px-2.5 py-1 text-xs ${
+                        isAllowed
+                          ? "bg-zinc-900 text-white"
+                          : "border border-zinc-300 text-zinc-500 hover:border-zinc-400"
+                      }`}
+                    >
+                      {group.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           <div className="mb-4 flex gap-2">

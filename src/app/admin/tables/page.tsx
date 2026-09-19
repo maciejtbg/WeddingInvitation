@@ -3,7 +3,7 @@ import { requireCoupleSessionOrRedirect } from "@/lib/auth/couple";
 import { findWeddingsByCouple } from "@/lib/db/weddings";
 import { adminListGuests } from "@/lib/db/guests";
 import { adminGetPlannerSnapshot } from "@/lib/db/tables";
-import { adminListGroupNamesByTable } from "@/lib/db/groups";
+import { adminListGroupNamesByTable, adminListGroups, adminListAllowancesByGroup } from "@/lib/db/groups";
 import { adminListLayoutItems } from "@/lib/db/layoutItems";
 import TablePlanner from "@/components/TablePlannerLoader";
 
@@ -23,6 +23,8 @@ export default async function TablesPage() {
   const guests = adminListGuests(wedding.id);
   const groupNamesByTable = adminListGroupNamesByTable(wedding.id);
   const layoutItems = adminListLayoutItems(wedding.id);
+  const groups = adminListGroups(wedding.id);
+  const allowancesByGroup = adminListAllowancesByGroup(wedding.id);
 
   return (
     <div className="flex h-screen flex-col">
@@ -42,6 +44,8 @@ export default async function TablesPage() {
           guests={guests}
           groupNamesByTable={groupNamesByTable}
           initialLayoutItems={layoutItems}
+          groups={groups}
+          initialAllowancesByGroup={allowancesByGroup}
         />
       </div>
     </div>

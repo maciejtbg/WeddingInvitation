@@ -9,6 +9,7 @@
     "lint": "eslint",
     "smoke": "node scripts/smoke.mjs",
     "smoke:tables": "node scripts/smoke-tables.mjs",
+    "smoke:planner-groups": "node scripts/smoke-planner-groups.mjs",
     "smoke:seating": "node scripts/smoke-seating-modes.mjs",
     "smoke:invite-card": "node scripts/smoke-invite-card.mjs",
     "smoke:locations": "node scripts/smoke-locations.mjs",
